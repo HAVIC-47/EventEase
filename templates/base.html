@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventEase{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div class="logo">
+            <h1><a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">EventEase</a></h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{% url 'events:event_list' %}">Events</a></li>
+            <li><a href="{% url 'venues:venue_list' %}">Venues</a></li>
+            <li><a href="{% url 'blog:blog_list' %}">Blog</a></li>
+            {% if user.is_authenticated %}
+                {% if user.profile.role == 'admin' or user.profile.role == 'event_manager' %}
+                    <li><a href="{% url 'events:event_create' %}">Create Event</a></li>
+                {% endif %}
+                {% if user.profile.role == 'admin' or user.profile.role == 'venue_manager' %}
+                    <li><a href="{% url 'venues:venue_create' %}">Add Venue</a></li>
+                {% endif %}
+            {% endif %}
+        </ul>
+        <div class="nav-right">
+            <!-- Search Bar -->
+            <input type="text" class="search-bar" placeholder="Search Events...">
+
+            {% if user.is_authenticated %}
+                <!-- Notification Group - Dashboard, Friends, Messages, Notifications -->
+                <div class="notification-group" style="display: flex !important; flex-direction: row !important; align-items: center; gap: 0.3rem; flex-wrap: nowrap;">
+                    <a href="{% url 'users:dashboard' %}" class="notification-bell dashboard-notification" title="Dashboard" aria-label="Dashboard" style="display: inline-flex !important; margin: 0; float: none;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 3v18h18v-2H5V3H3zm4 14h2v-6H7v6zm4 0h2V9h-2v8zm4 0h2v-4h-2v4zm4 0h2V7h-2v10z"/>
+                        </svg>
+                    </a>
+                    <a href="{% url 'users:friends' %}" class="notification-bell friends-notification" title="Friends" aria-label="Friends" style="display: inline-flex !important; margin: 0; float: none;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <span class="notification-count friends-count" id="friends-count" style="display: none !important;">0</span>
+                    </a>
+                    <a href="{% url 'users:messages' %}" class="notification-bell messages-notification" title="Messages" aria-label="Messages" style="display: inline-flex !important; margin: 0; float: none;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z"/>
+                            <path d="M8 10h8M8 14h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span class="notification-count messages-count" id="messages-count" style="display: none !important;">0</span>
+                    </a>
+                    <a href="{% url 'notifications:notification_list' %}" class="notification-bell notifications-notification" title="Notifications - Click to view" style="display: inline-flex !important; margin: 0; float: none;">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                        </svg>
+                        <span class="notification-count" id="notification-count" style="display: none !important;">0</span>
+                    </a>
+                </div>
+
+                <!-- User Profile Icon -->
+                <a href="{% url 'users:profile' %}" class="profile-icon-link">
+                    <div class="profile-icon">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="Profile Picture">
+                        {% else %}
+                            <div class="profile-icon-placeholder">
+                                {{ user.first_name.0|default:user.username.0|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </a>
+            {% else %}
+                <!-- Login/Sign Up -->
+                <a href="{% url 'users:login' %}" class="login-btn">Login</a>
+                <a href="{% url 'users:signup' %}" class="signup-btn">Sign Up</a>
+            {% endif %}
+
+            <!-- Dark/Light Mode Toggle -->
+            <button id="toggle-mode" class="toggle-mode">🌙</button>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <h2>EventEase</h2>
+                    <p class="footer-tagline">Discover and book amazing events near you.</p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Twitter">
+                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M22.46 6c-.79.35-1.64.59-2.53.7a4.48 4.48 0 0 0 1.97-2.48 8.94 8.94 0 0 1-2.83 1.08A4.48 4.48 0 0 0 12 9.5c0 .35.04.7.11 1.03A12.7 12.7 0 0 1 3.1 5.1a4.48 4.48 0 0 0 1.39 5.98c-.7-.02-1.36-.21-1.94-.53v.05a4.48 4.48 0 0 0 3.6 4.4c-.33.09-.68.14-1.04.14-.25 0-.5-.02-.74-.07a4.48 4.48 0 0 0 4.18 3.11A9 9 0 0 1 2 19.54a12.7 12.7 0 0 0 6.88 2.02c8.26 0 12.78-6.84 12.78-12.78 0-.19 0-.39-.01-.58A9.2 9.2 0 0 0 24 4.59a8.9 8.9 0 0 1-2.54.7z"/></svg>
+                        </a>
+                        <a href="#" aria-label="Facebook">
+                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.326 24h11.495v-9.294H9.692v-3.622h3.129V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"/></svg>
+                        </a>
+                        <a href="#" aria-label="Instagram">
+                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.974.974 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.308 3.608-.974.974-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.308-.974-.974-1.246-2.242-1.308-3.608C2.175 15.647 2.163 15.267 2.163 12s.012-3.584.07-4.85c.062-1.366.334-2.633 1.308-3.608.974-.974 2.242-1.246 3.608-1.308C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.013 7.052.072 5.775.13 4.602.388 3.635 1.355 2.668 2.322 2.41 3.495 2.352 4.772.013 8.332 0 8.741 0 12c0 3.259.013 3.668.072 4.948.058 1.277.316 2.45 1.283 3.417.967.967 2.14 1.225 3.417 1.283C8.332 23.987 8.741 24 12 24c3.259 0 3.668-.013 4.948-.072 1.277-.058 2.45-.316 3.417-1.283.967-.967 1.225-2.14 1.283-3.417.059-1.28.072-1.689.072-4.948 0-3.259-.013-3.668-.072-4.948-.058-1.277-.316-2.45-1.283-3.417-.967-.967-2.14-1.225-3.417-1.283C15.668.013 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a3.999 3.999 0 1 1 0-7.998 3.999 3.999 0 0 1 0 7.998zm6.406-11.845a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="{% url 'events:event_list' %}">Events</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h3>Newsletter</h3>
+                    <form>
+                        <input type="email" placeholder="Your email" required>
+                        <button type="submit" class="btn">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 EventEase. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/script.js' %}"></script>
+    
+    <!-- Notification Counter Script -->
+    {% if user.is_authenticated %}
+    <script>
+        // Function to update notification count
+        function updateNotificationCount() {
+            console.log('Checking notifications...'); // Debug log
+            fetch('/notifications/api/count/')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Notification count:', data.count); // Debug log
+                    const countElement = document.getElementById('notification-count');
+                    const bellElement = document.querySelector('.notification-bell');
+                    
+                    if (data.count > 0) {
+                        // Hide the numeric count
+                        countElement.style.display = 'none';
+                        // Add red styling for unseen notifications
+                        bellElement.classList.add('has-unread');
+                        // Force red color with inline styles for testing
+                        bellElement.style.color = '#e74c3c';
+                        bellElement.style.backgroundColor = 'rgba(231, 76, 60, 0.15)';
+                        bellElement.style.border = '2px solid rgba(231, 76, 60, 0.3)';
+                        console.log('Added has-unread class and inline styles'); // Debug log
+                    } else {
+                        countElement.style.display = 'none';
+                        // Remove red styling when no unseen notifications
+                        bellElement.classList.remove('has-unread');
+                        // Reset inline styles
+                        bellElement.style.color = '';
+                        bellElement.style.backgroundColor = '';
+                        bellElement.style.border = '';
+                        console.log('Removed has-unread class and inline styles'); // Debug log
+                    }
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+        
+        // Function to update friends and messages counts
+        function updateSocialCounts() {
+            fetch('{% url "users:get_unread_counts" %}')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Social counts:', data); // Debug log
+                    
+                    // Update friends status
+                    const friendsCountElement = document.getElementById('friends-count');
+                    const friendsBellElement = document.querySelector('.friends-notification');
+                    
+                    if (data.pending_friend_requests > 0) {
+                        // Hide the numeric count (like notification system)
+                        friendsCountElement.style.display = 'none';
+                        // Add red styling for pending requests (same as notifications)
+                        friendsBellElement.classList.add('has-requests');
+                        console.log('Added has-requests class to friends bell'); // Debug log
+                    } else {
+                        friendsCountElement.style.display = 'none';
+                        // Remove red styling when no pending requests
+                        friendsBellElement.classList.remove('has-requests');
+                        console.log('Removed has-requests class from friends bell'); // Debug log
+                    }
+                    
+                    // Update messages status
+                    const messagesCountElement = document.getElementById('messages-count');
+                    const messagesBellElement = document.querySelector('.messages-notification');
+                    
+                    if (data.unread_messages > 0) {
+                        // Hide the numeric count (like notification system)
+                        messagesCountElement.style.display = 'none';
+                        // Add red styling for unread messages (same as notifications)
+                        messagesBellElement.classList.add('has-unread');
+                        console.log('Added has-unread class to messages bell'); // Debug log
+                    } else {
+                        messagesCountElement.style.display = 'none';
+                        // Remove red styling when no unread messages
+                        messagesBellElement.classList.remove('has-unread');
+                        console.log('Removed has-unread class from messages bell'); // Debug log
+                    }
+                })
+                .catch(error => console.error('Error fetching social counts:', error));
+        }
+
+        // Update count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNotificationCount();
+            updateSocialCounts();
+            
+            // Add click handlers to mark notifications as read
+            const notificationBell = document.querySelector('.notification-bell:not(.friends-notification):not(.messages-notification)');
+            const friendsBell = document.querySelector('.friends-notification');
+            const messagesBell = document.querySelector('.messages-notification');
+            
+            // Mark notifications as read when clicked
+            if (notificationBell) {
+                notificationBell.addEventListener('click', function(e) {
+                    if (notificationBell.classList.contains('has-unread')) {
+                        // Mark notifications as read
+                        fetch('{% url "notifications:mark_all_read_api" %}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json',
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // Remove the red notification state immediately
+                                notificationBell.classList.remove('has-unread');
+                                notificationBell.style.color = '';
+                                notificationBell.style.backgroundColor = '';
+                                notificationBell.style.border = '';
+                                console.log('Notifications marked as read');
+                            }
+                        })
+                        .catch(error => console.error('Error marking notifications as read:', error));
+                    }
+                });
+            }
+            
+            // Mark friend requests as seen when clicked
+            if (friendsBell) {
+                friendsBell.addEventListener('click', function(e) {
+                    if (friendsBell.classList.contains('has-requests')) {
+                        // Mark friend requests as seen
+                        fetch('{% url "users:mark_friend_requests_seen" %}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json',
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // Remove the red notification state immediately
+                                friendsBell.classList.remove('has-requests');
+                                console.log('Friend requests marked as seen');
+                            }
+                        })
+                        .catch(error => console.error('Error marking friend requests as seen:', error));
+                    }
+                });
+            }
+            
+            // Mark messages as read when clicked
+            if (messagesBell) {
+                messagesBell.addEventListener('click', function(e) {
+                    if (messagesBell.classList.contains('has-unread')) {
+                        // Mark messages as read
+                        fetch('{% url "users:mark_messages_read" %}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json',
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // Remove the red notification state immediately
+                                messagesBell.classList.remove('has-unread');
+                                console.log('Messages marked as read');
+                            }
+                        })
+                        .catch(error => console.error('Error marking messages as read:', error));
+                    }
+                });
+            }
+        });
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Update counts every 30 seconds
+        setInterval(function() {
+            updateNotificationCount();
+            updateSocialCounts();
+        }, 30000);
+    </script>
+    {% endif %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

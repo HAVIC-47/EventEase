@@ -1,0 +1,614 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}bKash Payment - {{ event.title }} - EventEase{% endblock %}
+
+{% block content %}
+<div class="bkash-container">
+    <!-- bKash Header -->
+    <div class="bkash-header">
+        <div class="bkash-logo">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgMTBIMjBWMzBIMTBWMTBaIiBmaWxsPSIjZTIxMzZlIi8+CjxwYXRoIGQ9Ik0yNSAxMEgzNVYzMEgyNVYxMFoiIGZpbGw9IiNlMjEzNmUiLz4KPHN2Zz4K" alt="bKash" />
+            <span class="bkash-title">bKash</span>
+        </div>
+        <div class="bkash-secure">
+            <span class="secure-icon">🔒</span>
+            <span>Secure Payment</span>
+        </div>
+    </div>
+
+    <!-- Payment Amount Card -->
+    <div class="bkash-amount-card">
+        <div class="merchant-info">
+            <div class="merchant-name">EventEase</div>
+            <div class="merchant-ref">Ref: {{ booking.id }}</div>
+        </div>
+        <div class="payment-amount">
+            <div class="currency">BDT</div>
+            <div class="amount">{{ booking.amount }}</div>
+        </div>
+        <div class="transaction-desc">
+            <strong>{{ event.title }}</strong><br>
+            Event Booking Payment
+        </div>
+    </div>
+
+    <!-- Payment Method Selection -->
+    <div class="bkash-payment-methods">
+        <div class="method-title">Select Payment Method</div>
+        
+        <div class="payment-option active" data-method="wallet">
+            <div class="option-icon">👛</div>
+            <div class="option-details">
+                <div class="option-name">bKash Wallet</div>
+                <div class="option-desc">Pay from your bKash account</div>
+            </div>
+            <div class="option-radio">
+                <input type="radio" name="bkash_method" value="wallet" checked>
+            </div>
+        </div>
+
+        <div class="payment-option" data-method="card">
+            <div class="option-icon">💳</div>
+            <div class="option-details">
+                <div class="option-name">Debit/Credit Card</div>
+                <div class="option-desc">Pay with Visa, MasterCard</div>
+            </div>
+            <div class="option-radio">
+                <input type="radio" name="bkash_method" value="card">
+            </div>
+        </div>
+
+        <div class="payment-option" data-method="bank">
+            <div class="option-icon">🏦</div>
+            <div class="option-details">
+                <div class="option-name">Internet Banking</div>
+                <div class="option-desc">Pay through your bank</div>
+            </div>
+            <div class="option-radio">
+                <input type="radio" name="bkash_method" value="bank">
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Form -->
+    <form id="bkashPaymentForm" method="post" action="{% url 'payments:bkash_process' booking.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="payment_method" value="bkash">
+        <input type="hidden" name="bkash_method" id="selectedMethod" value="wallet">
+        
+        <!-- Mobile Number Input -->
+        <div class="bkash-input-group">
+            <label for="mobile">Mobile Number</label>
+            <div class="input-container">
+                <span class="country-code">+880</span>
+                <input type="tel" id="mobile" name="mobile" placeholder="1XXXXXXXXX" 
+                       pattern="1[0-9]{9}" maxlength="10" required>
+            </div>
+            <div class="input-hint">Enter your bKash registered mobile number</div>
+        </div>
+
+        <!-- PIN Input (for wallet method) -->
+        <div class="bkash-input-group pin-group">
+            <label for="pin">bKash PIN</label>
+            <div class="pin-container">
+                <input type="password" id="pin" name="pin" placeholder="Enter your PIN" 
+                       maxlength="5" pattern="[0-9]{5}">
+                <span class="pin-toggle" onclick="togglePin()">👁️</span>
+            </div>
+            <div class="input-hint">Enter your 5-digit bKash PIN</div>
+        </div>
+
+        <!-- Payment Button -->
+        <button type="submit" class="bkash-pay-btn">
+            <span class="btn-icon">💳</span>
+            <span>Proceed to Pay BDT {{ booking.amount }}</span>
+        </button>
+    </form>
+
+    <!-- Security Notice -->
+    <div class="bkash-security-notice">
+        <div class="security-title">
+            <span class="security-icon">🛡️</span>
+            Security & Privacy
+        </div>
+        <ul class="security-list">
+            <li>Your payment is secured with 256-bit SSL encryption</li>
+            <li>bKash does not store your PIN or card details</li>
+            <li>Transaction is processed through secure bKash gateway</li>
+        </ul>
+    </div>
+
+    <!-- Footer Links -->
+    <div class="bkash-footer">
+        <div class="footer-links">
+            <a href="#" class="footer-link">Terms & Conditions</a>
+            <a href="#" class="footer-link">Privacy Policy</a>
+            <a href="#" class="footer-link">Help & Support</a>
+        </div>
+        <div class="footer-copyright">
+            © 2025 bKash Limited. All rights reserved.
+        </div>
+    </div>
+</div>
+
+<style>
+/* bKash Authentic Styling */
+.bkash-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e2136e 0%, #d10861 50%, #b8055a 100%);
+    color: white;
+    font-family: 'Roboto', 'Arial', sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+.bkash-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.bkash-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.bkash-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.bkash-secure {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+}
+
+.bkash-amount-card {
+    background: white;
+    color: #333;
+    margin: 2rem;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.merchant-info {
+    margin-bottom: 1.5rem;
+}
+
+.merchant-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e2136e;
+    margin-bottom: 0.5rem;
+}
+
+.merchant-ref {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.payment-amount {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.currency {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #e2136e;
+}
+
+.transaction-desc {
+    color: #555;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.bkash-payment-methods {
+    margin: 2rem;
+}
+
+.method-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.payment-option {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.payment-option:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.payment-option.active {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+}
+
+.option-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+}
+
+.option-details {
+    flex: 1;
+}
+
+.option-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+}
+
+.option-desc {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.option-radio input {
+    width: 20px;
+    height: 20px;
+    accent-color: white;
+}
+
+form {
+    margin: 2rem;
+}
+
+.bkash-input-group {
+    margin-bottom: 1.5rem;
+}
+
+.bkash-input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.input-container {
+    display: flex;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.input-container:focus-within {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.country-code {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1rem;
+    font-weight: 600;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.input-container input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 1rem;
+    color: white;
+    font-size: 1rem;
+}
+
+.input-container input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.input-container input:focus {
+    outline: none;
+}
+
+.pin-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.pin-container:focus-within {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.pin-container input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 1rem;
+    color: white;
+    font-size: 1rem;
+    letter-spacing: 0.5rem;
+}
+
+.pin-toggle {
+    padding: 1rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.pin-toggle:hover {
+    opacity: 1;
+}
+
+.input-hint {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}
+
+.pin-group {
+    display: block;
+}
+
+.pin-group.hidden {
+    display: none;
+}
+
+.bkash-pay-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    color: #e2136e;
+    border: none;
+    border-radius: 12px;
+    padding: 1.2rem 2rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+.bkash-pay-btn:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+}
+
+.bkash-pay-btn:active {
+    transform: translateY(0);
+}
+
+.bkash-security-notice {
+    margin: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.security-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.security-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.security-list li {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.security-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.bkash-footer {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.footer-link {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: white;
+}
+
+.footer-copyright {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .bkash-header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .bkash-amount-card,
+    .bkash-payment-methods,
+    form,
+    .bkash-security-notice {
+        margin: 1rem;
+    }
+    
+    .amount {
+        font-size: 2.5rem;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+/* Dark Mode Support */
+body.dark-mode .bkash-container {
+    background: linear-gradient(135deg, #e2136e 0%, #d10861 50%, #b8055a 100%);
+}
+</style>
+
+<script>
+// Payment method selection
+document.querySelectorAll('.payment-option').forEach(option => {
+    option.addEventListener('click', function() {
+        // Remove active class from all options
+        document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
+        
+        // Add active class to clicked option
+        this.classList.add('active');
+        
+        // Update radio button
+        const radio = this.querySelector('input[type="radio"]');
+        radio.checked = true;
+        
+        // Update hidden input
+        document.getElementById('selectedMethod').value = radio.value;
+        
+        // Show/hide PIN field based on method
+        const pinGroup = document.querySelector('.pin-group');
+        if (radio.value === 'wallet') {
+            pinGroup.style.display = 'block';
+            document.getElementById('pin').required = true;
+        } else {
+            pinGroup.style.display = 'none';
+            document.getElementById('pin').required = false;
+        }
+    });
+});
+
+// PIN toggle functionality
+function togglePin() {
+    const pinInput = document.getElementById('pin');
+    const pinToggle = document.querySelector('.pin-toggle');
+    
+    if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        pinToggle.textContent = '🙈';
+    } else {
+        pinInput.type = 'password';
+        pinToggle.textContent = '👁️';
+    }
+}
+
+// Mobile number formatting
+document.getElementById('mobile').addEventListener('input', function() {
+    let value = this.value.replace(/[^0-9]/g, '');
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    this.value = value;
+});
+
+// PIN formatting
+document.getElementById('pin').addEventListener('input', function() {
+    let value = this.value.replace(/[^0-9]/g, '');
+    if (value.length > 5) {
+        value = value.slice(0, 5);
+    }
+    this.value = value;
+});
+
+// Form submission handling
+document.getElementById('bkashPaymentForm').addEventListener('submit', function(e) {
+    const mobile = document.getElementById('mobile').value;
+    const method = document.getElementById('selectedMethod').value;
+    const pin = document.getElementById('pin').value;
+    
+    // Validate mobile number
+    if (!mobile || mobile.length !== 10 || !mobile.startsWith('1')) {
+        e.preventDefault();
+        alert('Please enter a valid mobile number starting with 1');
+        return;
+    }
+    
+    // Validate PIN for wallet method
+    if (method === 'wallet' && (!pin || pin.length !== 5)) {
+        e.preventDefault();
+        alert('Please enter your 5-digit bKash PIN');
+        return;
+    }
+    
+    // Show loading state
+    const btn = document.querySelector('.bkash-pay-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span>Processing...</span>';
+});
+</script>
+{% endblock %}

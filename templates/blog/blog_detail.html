@@ -1,0 +1,1522 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ post.title }} - EventEase Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-detail-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .post-detail-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .post-detail-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .author-avatar-large {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #40B5AD;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+
+    .author-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .post-detail-info h1 {
+        margin: 0 0 0.5rem 0;
+        color: #232323;
+        font-size: 2rem;
+    }
+
+    .post-detail-meta {
+        color: #666;
+        font-size: 0.95rem;
+    }
+
+    .post-detail-image {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin: 2rem 0;
+    }
+
+    .post-images-gallery {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        margin: 2rem 0;
+        background: #f5f5f5;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .carousel-container {
+        position: relative;
+        width: 100%;
+        height: 500px;
+        overflow: hidden;
+    }
+
+    .carousel-slide {
+        display: none;
+        width: 100%;
+        height: 100%;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .carousel-slide.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .gallery-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .gallery-image:hover {
+        transform: scale(1.02);
+    }
+
+    .carousel-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(64, 181, 173, 0.9);
+        color: white;
+        border: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .carousel-arrow:hover {
+        background: #40B5AD;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .carousel-arrow.prev {
+        left: 20px;
+    }
+
+    .carousel-arrow.next {
+        right: 20px;
+    }
+
+    .carousel-indicators {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+
+    .indicator-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .indicator-dot.active {
+        background: #40B5AD;
+        transform: scale(1.3);
+    }
+
+    .carousel-counter {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        z-index: 10;
+    }
+
+    .post-files-section {
+        background: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 2rem 0;
+    }
+
+    .post-files-section h3 {
+        margin: 0 0 1rem 0;
+        color: #232323;
+        font-size: 1.1rem;
+    }
+
+    .file-download-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #232323;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .file-download-link:hover {
+        border-color: #40B5AD;
+        transform: translateX(5px);
+    }
+
+    .file-icon {
+        font-size: 2rem;
+    }
+
+    .file-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .file-name {
+        font-weight: 600;
+        color: #232323;
+    }
+
+    .file-size {
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    /* Lightbox Gallery Styles */
+    .lightbox {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.95);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .lightbox.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .lightbox-content {
+        position: relative;
+        width: 90%;
+        height: 90%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .lightbox-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 40px;
+        color: white;
+        cursor: pointer;
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.5);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .lightbox-close:hover {
+        background: #40B5AD;
+        transform: rotate(90deg);
+    }
+
+    .lightbox-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 50px;
+        color: white;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.5);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        user-select: none;
+    }
+
+    .lightbox-nav:hover {
+        background: #40B5AD;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .lightbox-prev {
+        left: 30px;
+    }
+
+    .lightbox-next {
+        right: 30px;
+    }
+
+    .lightbox-counter {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 18px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 20px;
+        border-radius: 25px;
+    }
+
+    .lightbox-thumbnails {
+        position: absolute;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        max-width: 80%;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 12px;
+    }
+
+    .lightbox-thumbnails::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .lightbox-thumbnails::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    .lightbox-thumbnails::-webkit-scrollbar-thumb {
+        background: #40B5AD;
+        border-radius: 3px;
+    }
+
+    .lightbox-thumb {
+        width: 80px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .lightbox-thumb:hover {
+        opacity: 0.8;
+    }
+
+    .lightbox-thumb.active {
+        opacity: 1;
+        border-color: #40B5AD;
+        box-shadow: 0 0 10px #40B5AD;
+    }
+
+    .post-detail-content {
+        color: #444;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin: 2rem 0;
+    }
+
+    .post-detail-actions {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem 0;
+        border-top: 2px solid #f0f0f0;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .reaction-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .reaction-btn-detail {
+        background: none;
+        border: 2px solid #e0e0e0;
+        padding: 0.6rem 1.2rem;
+        border-radius: 25px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        color: #666;
+    }
+
+    .reaction-btn-detail:hover {
+        border-color: #40B5AD;
+        color: #40B5AD;
+        transform: scale(1.05);
+    }
+
+    .reaction-btn-detail.active {
+        border-color: #40B5AD;
+        background: rgba(64, 181, 173, 0.15);
+        color: #40B5AD;
+    }
+
+    .reaction-emoji-large {
+        font-size: 1.4rem;
+    }
+
+    /* Comments Section */
+    .comments-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .comments-header {
+        font-size: 1.5rem;
+        color: #232323;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .comment-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .reply-btn {
+        background: transparent;
+        color: #40B5AD;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .reply-btn:hover {
+        background: #f0f9f9;
+    }
+
+    .reply-form {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f9f9f9;
+        border-radius: 12px;
+        border-left: 3px solid #40B5AD;
+    }
+
+    .reply-textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .reply-textarea:focus {
+        outline: none;
+        border-color: #40B5AD;
+    }
+
+    .reply-form-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .reply-submit-btn {
+        background: #40B5AD;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .reply-submit-btn:hover {
+        background: #359a93;
+    }
+
+    .cancel-reply-btn {
+        background: #e0e0e0;
+        color: #666;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .cancel-reply-btn:hover {
+        background: #d0d0d0;
+    }
+
+    .replies-section {
+        margin-left: 3rem;
+        margin-top: 1rem;
+        padding-left: 1.5rem;
+        border-left: 3px solid #e0e0e0;
+    }
+
+    .reply-item {
+        background: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .reply-avatar {
+        width: 35px !important;
+        height: 35px !important;
+        font-size: 0.9rem;
+    }
+
+    .reply-image-upload {
+        margin: 1rem 0;
+    }
+
+    .reply-image-label {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #f0f9f9;
+        color: #40B5AD;
+        border: 2px dashed #40B5AD;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .reply-image-label:hover {
+        background: #40B5AD;
+        color: white;
+    }
+
+    .reply-image-input {
+        display: none;
+    }
+
+    .reply-image-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .reply-preview-item {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #e0e0e0;
+    }
+
+    .reply-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .reply-preview-remove {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .reply-preview-remove:hover {
+        background: rgba(255, 0, 0, 1);
+    }
+
+    .comment-images {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .comment-image {
+        max-width: 300px;
+        max-height: 300px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid #e0e0e0;
+    }
+    
+    .comment-image:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        border-color: #40B5AD;
+    }
+
+    .comment-form {
+        background: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .comment-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: 'Poppins', sans-serif;
+        resize: vertical;
+        transition: all 0.3s ease;
+    }
+
+    .comment-textarea:focus {
+        outline: none;
+        border-color: #40B5AD;
+        box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+    }
+
+    .comment-file-input {
+        margin-top: 1rem;
+        padding: 0.5rem;
+        border: 2px dashed #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .comment-submit-btn {
+        background: linear-gradient(135deg, #40B5AD 0%, #36A39C 100%);
+        color: white;
+        padding: 0.7rem 1.5rem;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .comment-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    }
+
+    .comment-item {
+        background: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .comment-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .comment-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .comment-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #40B5AD;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .comment-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .comment-info {
+        font-size: 0.95rem;
+    }
+
+    .comment-username {
+        font-weight: 600;
+        color: #232323;
+    }
+
+    .comment-time {
+        color: #999;
+        font-size: 0.85rem;
+    }
+
+    .comment-content {
+        color: #444;
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
+    }
+
+    .delete-comment-btn {
+        background: none;
+        border: none;
+        color: #e74c3c;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 0.25rem 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .delete-comment-btn:hover {
+        text-decoration: underline;
+    }
+
+    .no-comments {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+
+    .post-actions-btns {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .edit-btn, .delete-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .edit-btn {
+        background: #40B5AD;
+        color: white;
+        border: none;
+    }
+
+    .edit-btn:hover {
+        background: #36A39C;
+    }
+
+    .delete-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .delete-btn:hover {
+        background: #c0392b;
+    }
+
+    /* Dark Mode */
+    body.dark-mode .post-detail-card,
+    body.dark-mode .comments-section {
+        background: #2d3233;
+    }
+
+    body.dark-mode .post-detail-info h1,
+    body.dark-mode .comments-header,
+    body.dark-mode .comment-username {
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .post-detail-meta,
+    body.dark-mode .post-detail-content,
+    body.dark-mode .comment-content {
+        color: #b0b0b0;
+    }
+
+    body.dark-mode .post-detail-header,
+    body.dark-mode .post-detail-actions {
+        border-color: #444;
+    }
+
+    body.dark-mode .comment-form,
+    body.dark-mode .comment-item,
+    body.dark-mode .reply-item,
+    body.dark-mode .reply-form {
+        background: #1a1d1e;
+    }
+
+    body.dark-mode .comment-textarea,
+    body.dark-mode .reply-textarea {
+        background: #2d3233;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+    
+    body.dark-mode .comment-image {
+        border-color: #444;
+    }
+    
+    body.dark-mode .comment-image:hover {
+        border-color: #40B5AD;
+    }
+
+    body.dark-mode .reply-btn:hover {
+        background: #2d3233;
+    }
+
+    body.dark-mode .cancel-reply-btn {
+        background: #2d3233;
+        color: #b0b0b0;
+    }
+
+    body.dark-mode .cancel-reply-btn:hover {
+        background: #3a3e3f;
+    }
+
+    body.dark-mode .replies-section {
+        border-left-color: #444;
+    }
+
+    body.dark-mode .reply-image-label {
+        background: #2d3233;
+        border-color: #40B5AD;
+    }
+
+    body.dark-mode .reply-preview-item {
+        border-color: #444;
+    }
+
+    body.dark-mode .reaction-btn-detail {
+        border-color: #444;
+        color: #999;
+    }
+
+    body.dark-mode .reaction-btn-detail:hover {
+        border-color: #40B5AD;
+        color: #40B5AD;
+    }
+
+    @media (max-width: 768px) {
+        .post-detail-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .post-detail-info h1 {
+            font-size: 1.5rem;
+        }
+
+        .reaction-group {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-detail-container">
+    <div class="post-detail-card">
+        <div class="post-detail-header">
+            <div class="author-avatar-large">
+                {% if post.author.profile.avatar %}
+                    <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}">
+                {% else %}
+                    {{ post.author.username.0|upper }}
+                {% endif %}
+            </div>
+            <div class="post-detail-info">
+                <h1>{{ post.title }}</h1>
+                <div class="post-detail-meta">
+                    By {{ post.author.get_full_name|default:post.author.username }} • {{ post.created_at|timesince }} ago
+                    {% if post.created_at != post.updated_at %} • Edited{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if post.image or post.images.all %}
+        <div class="post-images-gallery">
+            <div class="carousel-container">
+                {% if post.image %}
+                <div class="carousel-slide active">
+                    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="gallery-image" onclick="openLightbox(0)">
+                </div>
+                {% endif %}
+                
+                {% for img in post.images.all %}
+                <div class="carousel-slide {% if not post.image and forloop.first %}active{% endif %}">
+                    <img src="{{ img.image.url }}" alt="Post image" class="gallery-image" onclick="openLightbox({% if post.image %}{{ forloop.counter }}{% else %}{{ forloop.counter0 }}{% endif %})">
+                </div>
+                {% endfor %}
+                
+                {% if post.image %}
+                    {% with total_images=post.images.count|add:1 %}
+                    {% if total_images > 1 %}
+                    <button class="carousel-arrow prev" onclick="changeSlide(-1)">&#10094;</button>
+                    <button class="carousel-arrow next" onclick="changeSlide(1)">&#10095;</button>
+                    
+                    <div class="carousel-counter">
+                        <span id="current-slide">1</span> / {{ total_images }}
+                    </div>
+                    
+                    <div class="carousel-indicators">
+                        <span class="indicator-dot active" onclick="goToSlide(0)"></span>
+                        {% for img in post.images.all %}
+                        <span class="indicator-dot" onclick="goToSlide({{ forloop.counter }})"></span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                {% else %}
+                    {% if post.images.count > 1 %}
+                    <button class="carousel-arrow prev" onclick="changeSlide(-1)">&#10094;</button>
+                    <button class="carousel-arrow next" onclick="changeSlide(1)">&#10095;</button>
+                    
+                    <div class="carousel-counter">
+                        <span id="current-slide">1</span> / {{ post.images.count }}
+                    </div>
+                    
+                    <div class="carousel-indicators">
+                        {% for img in post.images.all %}
+                        <span class="indicator-dot {% if forloop.first %}active{% endif %}" onclick="goToSlide({{ forloop.counter0 }})"></span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="post-detail-content">
+            {{ post.content|linebreaks }}
+        </div>
+
+        {% if post.files.all %}
+        <div class="post-files-section">
+            <h3>📎 Attached Files</h3>
+            {% for file in post.files.all %}
+            <a href="{{ file.file.url }}" download class="file-download-link">
+                <span class="file-icon">📄</span>
+                <span class="file-info">
+                    <span class="file-name">{{ file.file_name }}</span>
+                    <span class="file-size">{{ file.get_file_size_display }}</span>
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="post-detail-actions">
+            <div class="reaction-group">
+                {% if user.is_authenticated %}
+                    <button class="reaction-btn-detail {% if user_reaction == 'like' %}active{% endif %}" 
+                            onclick="reactToPost({{ post.id }}, 'like')">
+                        <span class="reaction-emoji-large">👍</span>
+                        <span>Like</span>
+                    </button>
+                    <button class="reaction-btn-detail {% if user_reaction == 'love' %}active{% endif %}" 
+                            onclick="reactToPost({{ post.id }}, 'love')">
+                        <span class="reaction-emoji-large">❤️</span>
+                        <span>Love</span>
+                    </button>
+                    <button class="reaction-btn-detail {% if user_reaction == 'haha' %}active{% endif %}" 
+                            onclick="reactToPost({{ post.id }}, 'haha')">
+                        <span class="reaction-emoji-large">😂</span>
+                        <span>Haha</span>
+                    </button>
+                    <button class="reaction-btn-detail {% if user_reaction == 'wow' %}active{% endif %}" 
+                            onclick="reactToPost({{ post.id }}, 'wow')">
+                        <span class="reaction-emoji-large">😮</span>
+                        <span>Wow</span>
+                    </button>
+                {% else %}
+                    <span class="reaction-btn-detail">
+                        <span class="reaction-emoji-large">👍</span>
+                        <span>{{ post.get_reactions_count }} Reactions</span>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user.is_authenticated and post.author == user %}
+        <div class="post-actions-btns">
+            <a href="{% url 'blog:blog_edit' post.pk %}" class="edit-btn">✏️ Edit Post</a>
+            <form method="post" action="{% url 'blog:blog_delete' post.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this post?')">
+                    🗑️ Delete Post
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="comments-section">
+        <h2 class="comments-header">💬 Comments ({{ comments.count }})</h2>
+
+        {% if user.is_authenticated %}
+        <div class="comment-form">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ comment_form.content }}
+                {{ comment_form.image }}
+                <button type="submit" class="comment-submit-btn">Post Comment</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="comment-form">
+            <p style="text-align: center; color: #666;">
+                <a href="{% url 'users:login' %}?next={{ request.path }}" style="color: #40B5AD;">Login</a> to leave a comment
+            </p>
+        </div>
+        {% endif %}
+
+        {% if comments %}
+            {% for comment in comments %}
+            {% if not comment.parent %}
+            <div class="comment-item" id="comment-{{ comment.id }}">
+                <div class="comment-header">
+                    <div class="comment-author">
+                        <div class="comment-avatar">
+                            {% if comment.user.profile.avatar %}
+                                <img src="{{ comment.user.profile.avatar.url }}" alt="{{ comment.user.username }}">
+                            {% else %}
+                                {{ comment.user.username.0|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="comment-info">
+                            <div class="comment-username">{{ comment.user.get_full_name|default:comment.user.username }}</div>
+                            <div class="comment-time">{{ comment.created_at|timesince }} ago</div>
+                        </div>
+                    </div>
+                    <div class="comment-actions">
+                        {% if user.is_authenticated %}
+                        <button class="reply-btn" onclick="showReplyForm({{ comment.id }})">
+                            💬 Reply
+                        </button>
+                        {% endif %}
+                        {% if user.is_authenticated and comment.user == user %}
+                        <button class="delete-comment-btn" onclick="deleteComment({{ comment.id }})">
+                            🗑️ Delete
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="comment-content">
+                    {{ comment.content|linebreaks }}
+                </div>
+                
+                <!-- Display single image if exists -->
+                {% if comment.image %}
+                <div class="comment-images">
+                    <img src="{{ comment.image.url }}" 
+                         alt="Comment image" 
+                         class="comment-image" 
+                         onclick="openCommentImageModal('{{ comment.image.url }}')"
+                         loading="lazy">
+                </div>
+                {% endif %}
+                
+                <!-- Display multiple images if exist -->
+                {% if comment.images.all %}
+                <div class="comment-images">
+                    {% for img in comment.images.all %}
+                    <img src="{{ img.image.url }}" 
+                         alt="Comment image" 
+                         class="comment-image" 
+                         onclick="openCommentImageModal('{{ img.image.url }}')"
+                         loading="lazy">
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Reply Form (hidden by default) -->
+                <div id="reply-form-{{ comment.id }}" class="reply-form" style="display: none;">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                        <textarea name="content" placeholder="Write your reply..." required class="reply-textarea"></textarea>
+                        
+                        <!-- Image Upload for Replies -->
+                        <div class="reply-image-upload">
+                            <label for="reply-images-{{ comment.id }}" class="reply-image-label">
+                                📷 Add Images (optional)
+                            </label>
+                            <input type="file" 
+                                   id="reply-images-{{ comment.id }}" 
+                                   name="comment_images" 
+                                   accept="image/*" 
+                                   multiple
+                                   class="reply-image-input"
+                                   onchange="previewReplyImages({{ comment.id }}, this)">
+                            <div id="reply-image-preview-{{ comment.id }}" class="reply-image-preview"></div>
+                        </div>
+                        
+                        <div class="reply-form-actions">
+                            <button type="submit" class="reply-submit-btn">Post Reply</button>
+                            <button type="button" class="cancel-reply-btn" onclick="hideReplyForm({{ comment.id }})">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Display Replies -->
+                {% if comment.replies.all %}
+                <div class="replies-section">
+                    {% for reply in comment.replies.all %}
+                    <div class="reply-item" id="comment-{{ reply.id }}">
+                        <div class="comment-header">
+                            <div class="comment-author">
+                                <div class="comment-avatar reply-avatar">
+                                    {% if reply.user.profile.avatar %}
+                                        <img src="{{ reply.user.profile.avatar.url }}" alt="{{ reply.user.username }}">
+                                    {% else %}
+                                        {{ reply.user.username.0|upper }}
+                                    {% endif %}
+                                </div>
+                                <div class="comment-info">
+                                    <div class="comment-username">{{ reply.user.get_full_name|default:reply.user.username }}</div>
+                                    <div class="comment-time">{{ reply.created_at|timesince }} ago</div>
+                                </div>
+                            </div>
+                            {% if user.is_authenticated and reply.user == user %}
+                            <button class="delete-comment-btn" onclick="deleteComment({{ reply.id }})">
+                                🗑️ Delete
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="comment-content">
+                            {{ reply.content|linebreaks }}
+                        </div>
+                        
+                        <!-- Display single image if exists -->
+                        {% if reply.image %}
+                        <div class="comment-images">
+                            <img src="{{ reply.image.url }}" 
+                                 alt="Reply image" 
+                                 class="comment-image"
+                                 onclick="openCommentImageModal('{{ reply.image.url }}')"
+                                 loading="lazy">
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Display multiple images if exist -->
+                        {% if reply.images.all %}
+                        <div class="comment-images">
+                            {% for img in reply.images.all %}
+                            <img src="{{ img.image.url }}" 
+                                 alt="Reply image" 
+                                 class="comment-image"
+                                 onclick="openCommentImageModal('{{ img.image.url }}')"
+                                 loading="lazy">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="no-comments">
+                <p>No comments yet. Be the first to comment!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function reactToPost(postId, reactionType) {
+    fetch(`/blog/post/${postId}/react/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `reaction_type=${reactionType}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success' || data.status === 'removed') {
+            // Update button states
+            document.querySelectorAll('.reaction-btn-detail').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (data.status === 'success') {
+                event.target.closest('.reaction-btn-detail').classList.add('active');
+            }
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function deleteComment(commentId) {
+    if (!confirm('Are you sure you want to delete this comment?')) {
+        return;
+    }
+
+    fetch(`/blog/comment/${commentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById(`comment-${commentId}`).remove();
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Carousel functionality
+let currentCarouselIndex = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+const indicators = document.querySelectorAll('.indicator-dot');
+const totalSlides = slides.length;
+
+function showSlide(index) {
+    // Remove active class from all slides and indicators
+    slides.forEach(slide => slide.classList.remove('active'));
+    indicators.forEach(indicator => indicator.classList.remove('active'));
+    
+    // Add active class to current slide and indicator
+    if (slides[index]) {
+        slides[index].classList.add('active');
+    }
+    if (indicators[index]) {
+        indicators[index].classList.add('active');
+    }
+    
+    // Update counter
+    const counterElement = document.getElementById('current-slide');
+    if (counterElement) {
+        counterElement.textContent = index + 1;
+    }
+}
+
+function changeSlide(direction) {
+    currentCarouselIndex += direction;
+    
+    // Loop around
+    if (currentCarouselIndex < 0) {
+        currentCarouselIndex = totalSlides - 1;
+    } else if (currentCarouselIndex >= totalSlides) {
+        currentCarouselIndex = 0;
+    }
+    
+    showSlide(currentCarouselIndex);
+}
+
+function goToSlide(index) {
+    currentCarouselIndex = index;
+    showSlide(currentCarouselIndex);
+}
+
+// Reply form functions
+function showReplyForm(commentId) {
+    const replyForm = document.getElementById('reply-form-' + commentId);
+    if (replyForm) {
+        replyForm.style.display = 'block';
+        // Focus the textarea
+        const textarea = replyForm.querySelector('.reply-textarea');
+        if (textarea) {
+            textarea.focus();
+        }
+    }
+}
+
+function hideReplyForm(commentId) {
+    const replyForm = document.getElementById('reply-form-' + commentId);
+    if (replyForm) {
+        replyForm.style.display = 'none';
+        // Clear the textarea
+        const textarea = replyForm.querySelector('.reply-textarea');
+        if (textarea) {
+            textarea.value = '';
+        }
+        // Clear image preview
+        const previewDiv = document.getElementById('reply-image-preview-' + commentId);
+        if (previewDiv) {
+            previewDiv.innerHTML = '';
+        }
+        // Clear file input
+        const fileInput = document.getElementById('reply-images-' + commentId);
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    }
+}
+
+// Image preview for replies
+function previewReplyImages(commentId, input) {
+    const previewDiv = document.getElementById('reply-image-preview-' + commentId);
+    if (!previewDiv) return;
+    
+    previewDiv.innerHTML = '';
+    
+    if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'reply-preview-item';
+                previewItem.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview ${index + 1}">
+                    <button type="button" class="reply-preview-remove" onclick="removeReplyImage(${commentId}, ${index})">×</button>
+                `;
+                previewDiv.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function removeReplyImage(commentId, index) {
+    const fileInput = document.getElementById('reply-images-' + commentId);
+    if (!fileInput) return;
+    
+    const dt = new DataTransfer();
+    const files = Array.from(fileInput.files);
+    
+    files.forEach((file, i) => {
+        if (i !== index) {
+            dt.items.add(file);
+        }
+    });
+    
+    fileInput.files = dt.files;
+    previewReplyImages(commentId, fileInput);
+}
+
+// Keyboard navigation for carousel
+document.addEventListener('keydown', function(e) {
+    if (slides.length > 0 && !document.getElementById('lightbox').classList.contains('active')) {
+        if (e.key === 'ArrowLeft') changeSlide(-1);
+        if (e.key === 'ArrowRight') changeSlide(1);
+    }
+});
+
+// Lightbox Gallery
+const images = [
+    {% if post.image %}
+    "{{ post.image.url }}",
+    {% endif %}
+    {% for img in post.images.all %}
+    "{{ img.image.url }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+let currentIndex = 0;
+
+function openLightbox(index) {
+    currentIndex = index;
+    document.getElementById('lightbox').classList.add('active');
+    showImage();
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+}
+
+function changeImage(direction) {
+    currentIndex += direction;
+    if (currentIndex < 0) currentIndex = images.length - 1;
+    if (currentIndex >= images.length) currentIndex = 0;
+    showImage();
+}
+
+function showImage() {
+    const lightboxImg = document.getElementById('lightbox-img');
+    const counter = document.getElementById('lightbox-counter');
+    
+    lightboxImg.src = images[currentIndex];
+    counter.textContent = `${currentIndex + 1} / ${images.length}`;
+    
+    // Update thumbnail active state
+    document.querySelectorAll('.lightbox-thumb').forEach((thumb, index) => {
+        thumb.classList.toggle('active', index === currentIndex);
+    });
+    
+    // Scroll thumbnail into view
+    const activeThumb = document.querySelector('.lightbox-thumb.active');
+    if (activeThumb) {
+        activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('lightbox').classList.contains('active')) return;
+    
+    if (e.key === 'ArrowLeft') changeImage(-1);
+    if (e.key === 'ArrowRight') changeImage(1);
+    if (e.key === 'Escape') closeLightbox();
+});
+
+// Close on background click
+document.getElementById('lightbox')?.addEventListener('click', function(e) {
+    if (e.target === this) closeLightbox();
+});
+</script>
+
+<!-- Lightbox Modal -->
+<div id="lightbox" class="lightbox">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    
+    <div class="lightbox-content">
+        <span class="lightbox-nav lightbox-prev" onclick="changeImage(-1)">&#10094;</span>
+        <img id="lightbox-img" src="" alt="Gallery Image" class="lightbox-image">
+        <span class="lightbox-nav lightbox-next" onclick="changeImage(1)">&#10095;</span>
+    </div>
+    
+    <div class="lightbox-counter" id="lightbox-counter">1 / 1</div>
+    
+    <div class="lightbox-thumbnails">
+        {% if post.image %}
+        <img src="{{ post.image.url }}" alt="Thumbnail" class="lightbox-thumb" onclick="openLightbox(0)">
+        {% endif %}
+        {% for img in post.images.all %}
+        <img src="{{ img.image.url }}" alt="Thumbnail" class="lightbox-thumb" onclick="openLightbox({% if post.image %}{{ forloop.counter }}{% else %}{{ forloop.counter0 }}{% endif %})">
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Comment Image Modal -->
+<div id="commentImageModal" class="lightbox" onclick="closeCommentImageModal()">
+    <span class="lightbox-close" onclick="closeCommentImageModal()">&times;</span>
+    <div class="lightbox-content">
+        <img id="commentModalImg" src="" alt="Comment Image" class="lightbox-image">
+    </div>
+</div>
+
+<script>
+// Comment Image Modal Functions
+function openCommentImageModal(imageUrl) {
+    const modal = document.getElementById('commentImageModal');
+    const img = document.getElementById('commentModalImg');
+    modal.classList.add('active');
+    img.src = imageUrl;
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCommentImageModal() {
+    const modal = document.getElementById('commentImageModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+// Close on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('commentImageModal').classList.contains('active')) {
+        closeCommentImageModal();
+    }
+});
+</script>
+
+{% endblock %}

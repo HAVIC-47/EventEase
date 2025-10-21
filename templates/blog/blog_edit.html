@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Blog Post - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-edit-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .edit-form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .edit-form-card h1 {
+        color: #232323;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+
+    .edit-form-card p {
+        color: #666;
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #232323;
+        font-weight: 600;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #40B5AD;
+        box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+    }
+
+    .form-file-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px dashed #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .current-image {
+        max-width: 200px;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #40B5AD 0%, #36A39C 100%);
+        color: white;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+    }
+
+    .cancel-btn {
+        background: #e0e0e0;
+        color: #666;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .cancel-btn:hover {
+        background: #d0d0d0;
+    }
+
+    /* Dark Mode */
+    body.dark-mode .edit-form-card {
+        background: #2d3233;
+    }
+
+    body.dark-mode .edit-form-card h1,
+    body.dark-mode .form-group label {
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .edit-form-card p {
+        color: #999;
+    }
+
+    body.dark-mode .form-input,
+    body.dark-mode .form-textarea {
+        background: #1a1d1e;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .form-file-input {
+        border-color: #444;
+        color: #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-edit-container">
+    <div class="edit-form-card">
+        <h1>✏️ Edit Blog Post</h1>
+        <p>Update your blog post</p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Title *</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="error-message">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">Content *</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="error-message">{{ form.content.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.image.id_for_label }}">Image (Optional)</label>
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="Current image" class="current-image">
+                    <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Upload a new image to replace the current one</p>
+                {% endif %}
+                {{ form.image }}
+                {% if form.image.errors %}
+                    <div class="error-message">{{ form.image.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">💾 Save Changes</button>
+                <a href="{% url 'blog:blog_detail' post.pk %}" class="cancel-btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

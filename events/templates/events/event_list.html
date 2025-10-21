@@ -1,0 +1,1356 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Events - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Events</h1>
+            <p>Discover and book amazing events</p>
+        </div>
+            {% if user.is_authenticated %}
+            <div class="header-actions">
+                {% if user.profile.role == 'admin' or user.profile.role == 'event_manager' %}
+                    <a href="{% url 'events:event_create' %}" class="btn btn-primary">
+                        <i class="icon">+</i> Create New Event
+                    </a>
+                {% endif %}
+                {% if user.profile.role == 'admin' or user.profile.role == 'venue_manager' %}
+                    <a href="{% url 'venues:venue_create' %}" class="btn btn-success">
+                        <i class="icon">+</i> Add Venue
+                    </a>
+                {% endif %}
+                {% if user.profile.role == 'admin' or user.profile.role == 'venue_manager' %}
+                    <a href="{% url 'venues:venue_list' %}" class="btn btn-secondary">
+                        <i class="icon">🏢</i> Manage Venues
+                    </a>
+                {% endif %}
+                {% if user.profile.role == 'admin' or user.profile.role == 'event_manager' %}
+                    <a href="{% url 'events:my_events' %}" class="btn btn-secondary">
+                        <i class="icon">📅</i> Manage Events
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Modern Search and Filters -->
+    <div class="search-filters-container">
+        <div class="search-section">
+            <h3>🔍 Find Your Perfect Event</h3>
+            <form method="get" class="modern-search-form" id="searchForm">
+                <!-- Main Search Bar with Quick Actions -->
+                <div class="search-and-actions-wrapper">
+                    <div class="search-bar-wrapper">
+                        <div class="search-input-container">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" 
+                                   name="q" 
+                                   value="{{ search_query }}" 
+                                   placeholder="Search events..." 
+                                   class="main-search-input"
+                                   id="searchInput">
+                            {% if search_query %}
+                                <button type="button" class="clear-search" onclick="clearSearch()">✖</button>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="search-btn">
+                            <span class="btn-text">Search</span>
+                            <span class="btn-icon">→</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Actions moved to right side -->
+                    <div class="quick-actions-section">
+                        <label class="filter-label">🎯 Quick Actions</label>
+                        <div class="quick-filters">
+                            <button type="button" class="quick-filter-btn {% if not search_query and not event_type and not is_free %}active{% endif %}" onclick="clearAllFilters()">
+                                All Events
+                            </button>
+                            <button type="button" class="quick-filter-btn {% if is_free == 'true' %}active{% endif %}" onclick="setFilter('free', 'true')">
+                                Free Only
+                            </button>
+                            <button type="button" class="quick-filter-btn {% if event_type == 'concert' %}active{% endif %}" onclick="setFilter('type', 'concert')">
+                                Concerts
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters -->
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label class="filter-label">📅 Event Type</label>
+                        <div class="custom-select">
+                            <select name="type" class="filter-select" onchange="this.form.submit()">
+                                <option value="">All Types</option>
+                                {% for value, label in event_types %}
+                                    <option value="{{ value }}" {% if value == event_type %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">💰 Pricing</label>
+                        <div class="custom-select">
+                            <select name="free" class="filter-select" onchange="this.form.submit()">
+                                <option value="">All Events</option>
+                                <option value="true" {% if is_free == 'true' %}selected{% endif %}>Free Events</option>
+                                <option value="false" {% if is_free == 'false' %}selected{% endif %}>Paid Events</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">� Status</label>
+                        <div class="custom-select">
+                            <select name="status" class="filter-select" onchange="this.form.submit()">
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if value == status_filter %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">�🔄 Sort By</label>
+                        <div class="custom-select">
+                            <select name="sort" class="filter-select" onchange="this.form.submit()">
+                                {% for value, label in sort_choices %}
+                                    <option value="{{ value }}" {% if value == sort_by %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                {% if search_query or event_type or is_free or status_filter %}
+                    <div class="active-filters">
+                        <span class="active-filters-label">Active filters:</span>
+                        {% if search_query %}
+                            <span class="filter-tag">
+                                Search: "{{ search_query }}"
+                                <button type="button" onclick="removeFilter('q')">×</button>
+                            </span>
+                        {% endif %}
+                        {% if event_type %}
+                            <span class="filter-tag">
+                                Type: 
+                                {% for key, label in event_types %}
+                                    {% if key == event_type %}{{ label }}{% endif %}
+                                {% endfor %}
+                                <button type="button" onclick="removeFilter('type')">×</button>
+                            </span>
+                        {% endif %}
+                        {% if is_free %}
+                            <span class="filter-tag">
+                                {% if is_free == 'true' %}Free Events{% else %}Paid Events{% endif %}
+                                <button type="button" onclick="removeFilter('free')">×</button>
+                            </span>
+                        {% endif %}
+                        {% if status_filter %}
+                            <span class="filter-tag">
+                                Status: 
+                                {% for value, label in status_choices %}
+                                    {% if value == status_filter %}{{ label }}{% endif %}
+                                {% endfor %}
+                                <button type="button" onclick="removeFilter('status')">×</button>
+                            </span>
+                        {% endif %}
+                        <button type="button" class="clear-all-filters" onclick="clearAllFilters()">Clear All</button>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Events Grid -->
+    {% if page_obj %}
+        <div class="events-grid">
+            {% for event in page_obj %}
+                <div class="event-card">
+                    <div class="card-image" style="position:relative;">
+                        {% if event.image %}
+                            <img src="{{ event.image.url }}" alt="{{ event.title }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80" alt="{{ event.title }}">
+                        {% endif %}
+                        <span class="event-status-tag status-{{ event.computed_status }}">
+                            {% if event.computed_status == 'upcoming' %}
+                                🕒 Upcoming
+                            {% elif event.computed_status == 'completed' %}
+                                ✅ Completed
+                            {% else %}
+                                🔴 Live
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="card-content">
+                        <h3>{{ event.title }}</h3>
+                        <p class="card-description">{{ event.description|truncatewords:20 }}</p>
+                        
+                        <!-- Event Rating Display -->
+                        {% if event.review_count > 0 %}
+                            <div class="event-rating">
+                                <div class="rating-stars">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= event.average_rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="rating-value">{{ event.average_rating|floatformat:1 }}</span>
+                                <span class="rating-count">({{ event.review_count }})</span>
+                            </div>
+                        {% else %}
+                            <div class="event-rating no-rating">
+                                <span class="no-rating-text">No reviews yet</span>
+                            </div>
+                        {% endif %}
+                        
+                        <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-primary view-details-btn">View Details</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if event_type %}&type={{ event_type }}{% endif %}{% if is_free %}&free={{ is_free }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if event_type %}&type={{ event_type }}{% endif %}{% if is_free %}&free={{ is_free }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">Previous</a>
+                {% endif %}
+                
+                <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if event_type %}&type={{ event_type }}{% endif %}{% if is_free %}&free={{ is_free }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">Next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if event_type %}&type={{ event_type }}{% endif %}{% if is_free %}&free={{ is_free }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">Last</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-content">
+            <h3>No events found</h3>
+            <p>{% if search_query %}No events match your search criteria.{% else %}There are no events available yet.{% endif %}</p>
+            {% if user.is_authenticated and user.profile.role in 'admin,event_manager' %}
+                <a href="{% url 'events:event_create' %}" class="btn btn-primary">Create First Event</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .event-status-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: #fff;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .event-status-tag.status-upcoming { 
+        background: #40B5AD; 
+        color: white;
+    }
+    .event-status-tag.status-live { 
+        background: #FF5722; 
+        color: white;
+        animation: pulse 2s infinite;
+    }
+    .event-status-tag.status-completed { 
+        background: #4CAF50; 
+        color: white;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    /* Ensure event card images fit edge to edge */
+    .event-card .card-image {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        border-radius: 16px 16px 0 0;
+        width: 100%;
+        height: 200px;
+        position: relative;
+    }
+    .event-card .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+    
+    /* Remove any padding from event cards for edge-to-edge images */
+    .event-card {
+        padding: 0;
+        overflow: hidden;
+    }
+    .event-card .card-content {
+        padding: 1.5rem;
+    }
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0f7fa;
+}
+
+.header-content h1 {
+    color: #40B5AD;
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+.header-content p {
+    color: #666;
+    margin: 0.5rem 0 0 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+}
+
+.header-actions .btn {
+    white-space: nowrap;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    width: 220px;
+    height: 48px;
+    text-align: center;
+}
+
+.header-actions .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: white;
+    border: none;
+}
+
+.header-actions .btn-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+}
+
+.header-actions .btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    border: none;
+}
+
+.header-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Modern Search and Filters Styling */
+.search-filters-container {
+    background: linear-gradient(135deg, #f8fbff 0%, #f0f9ff 100%);
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(64,181,173,0.1);
+    border: 1px solid rgba(64,181,173,0.1);
+}
+
+.search-section h3 {
+    color: #40B5AD;
+    margin: 0 0 0.2rem 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.modern-search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.search-bar-wrapper {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex: 1;
+}
+
+/* New layout for search and quick actions */
+.search-and-actions-wrapper {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+}
+
+.quick-actions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 300px;
+}
+
+.quick-actions-section .filter-label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.search-input-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(64,181,173,0.08);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    max-width: 500px;
+    height: 56px;
+}
+
+.search-input-container:focus-within {
+    border-color: #40B5AD;
+    box-shadow: 0 4px 20px rgba(64,181,173,0.15);
+    transform: translateY(-1px);
+}
+
+.search-icon {
+    padding: 0 1rem;
+    color: #40B5AD;
+    font-size: 1.2rem;
+}
+
+.main-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 1rem 0;
+    font-size: 1rem;
+    color: #333;
+    background: transparent;
+}
+
+.main-search-input::placeholder {
+    color: #999;
+}
+
+.clear-search {
+    background: none;
+    border: none;
+    padding: 0 1rem;
+    color: #999;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: color 0.2s;
+}
+
+.clear-search:hover {
+    color: #666;
+}
+
+.search-btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(64,181,173,0.3);
+    height: 56px;
+    white-space: nowrap;
+}
+
+.search-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(64,181,173,0.4);
+}
+
+.search-btn:active {
+    transform: translateY(0);
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.custom-select {
+    position: relative;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    background: white;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64,181,173,0.1);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #40B5AD;
+    pointer-events: none;
+    font-size: 0.8rem;
+}
+
+.quick-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    height: 56px;
+}
+
+.quick-filter-btn {
+    background: white;
+    border: 2px solid #e1e8ed;
+    color: #666;
+    padding: 0.75rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    font-weight: 500;
+    height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.quick-filter-btn:hover {
+    border-color: #40B5AD;
+    color: #40B5AD;
+    transform: translateY(-1px);
+}
+
+.quick-filter-btn.active {
+    background: #40B5AD;
+    border-color: #40B5AD;
+    color: white;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.3);
+}
+
+.active-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background: rgba(64,181,173,0.05);
+    border-radius: 10px;
+    border-left: 4px solid #40B5AD;
+}
+
+.active-filters-label {
+    font-weight: 600;
+    color: #40B5AD;
+    font-size: 0.9rem;
+}
+
+.filter-tag {
+    background: white;
+    color: #40B5AD;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(64,181,173,0.2);
+}
+
+.filter-tag button {
+    background: none;
+    border: none;
+    color: #40B5AD;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.filter-tag button:hover {
+    background: rgba(64,181,173,0.1);
+}
+
+.clear-all-filters {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-all-filters:hover {
+    background: #ff5252;
+    transform: translateY(-1px);
+}
+
+.filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.1);
+}
+
+.search-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.event-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(240,248,247,0.95) 100%);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(64,181,173,0.15);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(64,181,173,0.2);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+}
+
+.event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(64,181,173,0.25);
+}
+
+.card-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.event-card:hover .card-image img {
+    transform: scale(1.05);
+}
+
+.card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: space-between;
+    min-height: 200px;
+}
+
+.card-content h3 {
+    color: #2e837e;
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    min-height: 2.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-content p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+    text-align: left;
+    font-size: 0.95rem;
+    min-height: 4.8rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Event Rating Styles */
+.event-rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px 0;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.1) 0%, rgba(64, 181, 173, 0.05) 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+.event-rating .rating-stars {
+    display: flex;
+    gap: 2px;
+    color: #FFD700;
+    font-size: 0.9em;
+}
+
+.event-rating .rating-value {
+    font-weight: 700;
+    color: #40B5AD;
+    font-size: 0.95em;
+}
+
+.event-rating .rating-count {
+    color: #666;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.event-rating.no-rating {
+    background: linear-gradient(135deg, rgba(153, 153, 153, 0.1) 0%, rgba(153, 153, 153, 0.05) 100%);
+    border-color: rgba(153, 153, 153, 0.2);
+}
+
+.event-rating.no-rating .no-rating-text {
+    color: #999;
+    font-size: 0.85em;
+    font-style: italic;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    margin-top: auto;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #40B5AD 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(64,181,173,0.3);
+    color: white;
+    text-decoration: none;
+}
+
+/* Consistent View Details Button Styling */
+.view-details-btn {
+    width: 100% !important;
+    min-height: 48px;
+    padding: 0.8rem 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+    text-align: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+    margin: 1rem 0 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    flex-shrink: 0;
+    max-width: 100%;
+}
+
+/* Ensure card content supports full-width buttons */
+.card-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.card-content .view-details-btn {
+    align-self: stretch;
+    flex: 0 0 auto;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 3rem;
+}
+
+.page-link {
+    padding: 0.5rem 1rem;
+    background: #40B5AD;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.page-link:hover {
+    background: #2e837e;
+}
+
+.page-info {
+    color: #666;
+    font-weight: 500;
+}
+
+/* Responsive styles for search and quick actions layout */
+@media (max-width: 992px) {
+    .search-and-actions-wrapper {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: stretch;
+    }
+    
+    .quick-actions-section {
+        min-width: unset;
+        width: 100%;
+    }
+    
+    .search-input-container {
+        max-width: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .events-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .search-bar-wrapper {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .quick-filters {
+        justify-content: center;
+    }
+    
+    .filter-label {
+        text-align: center;
+    }
+}
+
+/* Dark Mode Styles for Events Page */
+body.dark-mode .container {
+    background: #232728;
+    color: #e0e0e0;
+}
+
+body.dark-mode .page-header {
+    background: #232728;
+    border-bottom-color: #40B5AD;
+}
+
+body.dark-mode .header-content h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .header-content p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .header-actions .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+}
+
+body.dark-mode .header-actions .btn-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: #232728;
+}
+
+body.dark-mode .header-actions .btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+}
+
+body.dark-mode .header-actions .btn:hover {
+    color: #ffffff;
+}
+
+/* Dark Mode Search and Filters */
+body.dark-mode .search-filters-container {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .search-section h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .filter-label {
+    color: #40B5AD;
+}
+
+body.dark-mode .search-input-container {
+    background: #2d3233;
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .search-input-container:focus-within {
+    border-color: #40B5AD;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .search-icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .main-search-input {
+    color: #e0e0e0;
+    background: transparent;
+}
+
+body.dark-mode .main-search-input::placeholder {
+    color: #888;
+}
+
+body.dark-mode .clear-search {
+    color: #888;
+}
+
+body.dark-mode .clear-search:hover {
+    color: #40B5AD;
+}
+
+body.dark-mode .search-btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+}
+
+body.dark-mode .search-btn:hover {
+    color: #232728;
+}
+
+body.dark-mode .filter-select {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .filter-select:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .select-arrow {
+    color: #40B5AD;
+}
+
+body.dark-mode .quick-filter-btn {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .quick-filter-btn:hover {
+    border-color: #40B5AD;
+    color: #40B5AD;
+}
+
+body.dark-mode .quick-filter-btn.active {
+    background: #40B5AD;
+    border-color: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .active-filters {
+    background: rgba(64, 181, 173, 0.1);
+    border-left-color: #40B5AD;
+}
+
+body.dark-mode .filter-tag {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .clear-all-filters {
+    background: #e74c3c;
+    color: white;
+}
+
+body.dark-mode .clear-all-filters:hover {
+    background: #c0392b;
+}
+
+/* Dark Mode Events Grid */
+body.dark-mode .events-grid {
+    background: #232728;
+}
+
+body.dark-mode .event-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .event-card:hover {
+    background: #1e3635;
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .event-card h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-card .card-description {
+    color: #b0b0b0;
+}
+
+body.dark-mode .event-status-tag.status-upcoming {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .event-status-tag.status-live {
+    background: #FF5722;
+    color: white;
+}
+
+body.dark-mode .event-status-tag.status-completed {
+    background: #4CAF50;
+    color: white;
+}
+
+/* Dark Mode Pagination */
+body.dark-mode .pagination {
+    background: #2d3233;
+}
+
+body.dark-mode .pagination a {
+    background: #1a2f2e;
+    color: #40B5AD;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .pagination a:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .pagination .current {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .page-info {
+    color: #b0b0b0;
+}
+
+/* Dark Mode No Content */
+body.dark-mode .no-content {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .no-content h3 {
+    color: #40B5AD;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear search functionality
+    window.clearSearch = function() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+    };
+
+    // Clear all filters functionality
+    window.clearAllFilters = function() {
+        const form = document.getElementById('searchForm');
+        if (form) {
+            // Reset all select elements
+            const selects = form.querySelectorAll('select');
+            selects.forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            // Clear search input
+            const searchInput = form.querySelector('input[name="q"]');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            
+            // Remove active class from quick filter buttons
+            const quickFilters = document.querySelectorAll('.quick-filter-btn');
+            quickFilters.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Submit form to update results
+            form.submit();
+        }
+    };
+
+    // Set quick filter functionality
+    window.setFilter = function(filterType, filterValue) {
+        const form = document.getElementById('searchForm');
+        if (form) {
+            // Update corresponding select element
+            const select = form.querySelector(`select[name="${filterType}"]`);
+            if (select) {
+                select.value = filterValue;
+            }
+            
+            // Update quick filter button states
+            const quickFilters = document.querySelectorAll('.quick-filter-btn');
+            quickFilters.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // Submit form to update results
+            form.submit();
+        }
+    };
+
+    // Remove individual filter functionality
+    window.removeFilter = function(filterName) {
+        const form = document.getElementById('searchForm');
+        if (form) {
+            if (filterName === 'q') {
+                // Clear search input
+                const searchInput = form.querySelector('input[name="q"]');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+            } else {
+                // Reset select element
+                const select = form.querySelector(`select[name="${filterName}"]`);
+                if (select) {
+                    select.selectedIndex = 0;
+                }
+            }
+            form.submit();
+        }
+    };
+
+    // Toggle search input clear button visibility
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.querySelector('.clear-search');
+    
+    if (searchInput && clearBtn) {
+        function toggleClearButton() {
+            clearBtn.style.display = searchInput.value ? 'block' : 'none';
+        }
+        
+        searchInput.addEventListener('input', toggleClearButton);
+        toggleClearButton(); // Initial check
+    }
+
+    // Enhance select styling with custom dropdown
+    const selects = document.querySelectorAll('.filter-select');
+    selects.forEach(select => {
+        select.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        select.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+        });
+    });
+
+    // Form submission enhancement
+    const form = document.getElementById('search-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Add loading state to search button
+            const submitBtn = form.querySelector('.search-btn');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+
+    // Initialize active filters display
+    function updateActiveFiltersDisplay() {
+        const form = document.getElementById('search-form');
+        const activeFiltersDiv = document.querySelector('.active-filters');
+        
+        if (!form || !activeFiltersDiv) return;
+        
+        const activeFilters = [];
+        
+        // Check search input
+        const searchInput = form.querySelector('input[name="search"]');
+        if (searchInput && searchInput.value.trim()) {
+            activeFilters.push({
+                type: 'search',
+                label: `Search: "${searchInput.value}"`,
+                name: 'search'
+            });
+        }
+        
+        // Check select filters
+        const selects = form.querySelectorAll('select');
+        selects.forEach(select => {
+            if (select.value && select.value !== '') {
+                const label = select.previousElementSibling?.textContent || select.name;
+                const optionText = select.options[select.selectedIndex].text;
+                activeFilters.push({
+                    type: 'select',
+                    label: `${label}: ${optionText}`,
+                    name: select.name
+                });
+            }
+        });
+        
+        // Update display
+        if (activeFilters.length > 0) {
+            activeFiltersDiv.style.display = 'flex';
+            const tagsContainer = activeFiltersDiv.querySelector('.filter-tags') || 
+                                 activeFiltersDiv.appendChild(document.createElement('div'));
+            tagsContainer.className = 'filter-tags';
+            tagsContainer.style.display = 'flex';
+            tagsContainer.style.gap = '0.5rem';
+            tagsContainer.style.flexWrap = 'wrap';
+            
+            tagsContainer.innerHTML = activeFilters.map(filter => `
+                <span class="filter-tag">
+                    ${filter.label}
+                    <button type="button" onclick="removeFilter('${filter.name}')" title="Remove filter">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+            `).join('');
+        } else {
+            activeFiltersDiv.style.display = 'none';
+        }
+    }
+    
+    // Initialize active filters on page load
+    updateActiveFiltersDisplay();
+});
+</script>
+{% endblock %}

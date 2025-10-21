@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Rating System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f6f7;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .star-rating {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .star-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 2rem;
+            color: #ddd;
+            transition: all 0.2s ease;
+            border-radius: 50%;
+        }
+        .star-button:hover,
+        .star-button.active {
+            color: #FFD700;
+            transform: scale(1.1);
+        }
+        .rating-label {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 20px 0;
+            color: #666;
+            font-weight: 500;
+        }
+        .dark-mode {
+            background: #1a1a1a;
+            color: white;
+        }
+        .dark-mode .container {
+            background: #2a2a2a;
+            color: white;
+        }
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #40B5AD;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+    
+    <div class="container">
+        <h1>Rating System Test</h1>
+        
+        <div class="rating-container">
+            <h3>Rate Your Experience</h3>
+            
+            <div class="star-rating">
+                <button type="button" class="star-button" data-rating="1">
+                    <i>⭐</i>
+                </button>
+                <button type="button" class="star-button" data-rating="2">
+                    <i>⭐</i>
+                </button>
+                <button type="button" class="star-button" data-rating="3">
+                    <i>⭐</i>
+                </button>
+                <button type="button" class="star-button" data-rating="4">
+                    <i>⭐</i>
+                </button>
+                <button type="button" class="star-button" data-rating="5">
+                    <i>⭐</i>
+                </button>
+            </div>
+            
+            <div class="rating-label" id="ratingText">
+                Select a rating
+            </div>
+            
+            <input type="hidden" id="id_rating" value="">
+        </div>
+    </div>
+
+    <script>
+        console.log('Script loaded!');
+        
+        const starButtons = document.querySelectorAll('.star-button');
+        const ratingInput = document.getElementById('id_rating');
+        const ratingLabel = document.getElementById('ratingText');
+        
+        const ratingData = {
+            1: { label: 'Poor', color: '#ef4444' },
+            2: { label: 'Fair', color: '#f59e0b' },
+            3: { label: 'Good', color: '#10b981' },
+            4: { label: 'Very Good', color: '#3b82f6' },
+            5: { label: 'Excellent!', color: '#40B5AD' }
+        };
+        
+        console.log('Elements found:', {
+            stars: starButtons.length,
+            ratingInput: !!ratingInput,
+            ratingLabel: !!ratingLabel
+        });
+        
+        // Set initial label
+        ratingLabel.textContent = 'Select a rating';
+        ratingLabel.style.color = '#666';
+        
+        function highlightStars(rating) {
+            starButtons.forEach((button, index) => {
+                if (index < rating) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+        
+        function updateRatingLabel(rating) {
+            console.log('updateRatingLabel called with rating:', rating);
+            if (ratingLabel && ratingData[rating]) {
+                const data = ratingData[rating];
+                console.log('Setting label to:', data.label);
+                ratingLabel.textContent = data.label;
+                ratingLabel.style.color = data.color;
+            } else if (ratingLabel && rating === 0) {
+                console.log('Setting default label: Select a rating');
+                ratingLabel.textContent = 'Select a rating';
+                ratingLabel.style.color = '#666';
+            }
+        }
+        
+        // Handle star button interactions
+        starButtons.forEach((button, index) => {
+            const rating = index + 1;
+            
+            button.addEventListener('mouseenter', () => {
+                console.log('Mouse enter star', rating);
+                highlightStars(rating);
+                updateRatingLabel(rating);
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                const currentRating = parseInt(ratingInput.value) || 0;
+                console.log('Mouse leave, current rating:', currentRating);
+                highlightStars(currentRating);
+                if (currentRating === 0) {
+                    ratingLabel.textContent = 'Select a rating';
+                    ratingLabel.style.color = '#666';
+                } else {
+                    updateRatingLabel(currentRating);
+                }
+            });
+            
+            button.addEventListener('click', () => {
+                console.log('Star clicked:', rating);
+                ratingInput.value = rating;
+                highlightStars(rating);
+                updateRatingLabel(rating);
+                
+                button.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    button.style.transform = '';
+                }, 200);
+            });
+        });
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+    </script>
+</body>
+</html>

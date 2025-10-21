@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up - EventEase{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    padding-right: 45px;
+    width: 100%;
+}
+
+.password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    color: #666;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+    z-index: 10;
+    user-select: none;
+}
+
+.password-toggle-icon:hover {
+    color: #40B5AD;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-bg">
+    <div class="auth-center">
+        <div class="auth-container">
+            <h2>Join EventEase</h2>
+            <form method="post" class="auth-form" id="signupForm">
+                {% csrf_token %}
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" placeholder="Enter your first name" required>
+                
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" required>
+                
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" placeholder="Choose a unique username" required>
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                
+                <label for="password1">Password:</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="password1" name="password1" placeholder="Create a strong password" required>
+                    <span class="password-toggle-icon" onclick="togglePassword('password1')">
+                        <i class="fas fa-eye" id="password1-eye"></i>
+                    </span>
+                </div>
+                
+                <label for="password2">Confirm Password:</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="password2" name="password2" placeholder="Confirm your password" required>
+                    <span class="password-toggle-icon" onclick="togglePassword('password2')">
+                        <i class="fas fa-eye" id="password2-eye"></i>
+                    </span>
+                </div>
+                
+                <button type="submit" class="auth-btn">Sign Up</button>
+                
+                {% if form.errors %}
+                    <div class="auth-errors">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <p class="error-message">{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="auth-switch">
+                    Already have an account? <a href="{% url 'users:login' %}">Login here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const eyeIcon = document.getElementById(fieldId + '-eye');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    const password1 = document.getElementById('password1').value;
+    const password2 = document.getElementById('password2').value;
+    
+    if (password1 !== password2) {
+        e.preventDefault();
+        alert('Passwords do not match!');
+        return;
+    }
+    
+    if (!validateForm('signupForm')) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

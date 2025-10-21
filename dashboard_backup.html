@@ -1,0 +1,1507 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - EventEase{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <div class="dashboard-hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+                <p>Here's your complete booking overview and activity summary</p>
+            </div>
+            <div class="hero-avatar">
+                {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="Profile Picture">
+                {% else %}
+                    <div class="avatar-placeholder">
+                        {{ user.first_name.0|default:user.username.0|upper }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+        <h2>Your Booking Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_event_bookings }}</div>
+                    <div class="stat-label">Event Bookings</div>
+                    <div class="stat-sublabel">${{ event_spent|floatformat:2 }} spent</div>
+                </div>
+                <div class="stat-icon">🎫</div>
+            </div>
+            
+            <div class="stat-card secondary">
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_venue_bookings }}</div>
+                    <div class="stat-label">Venue Bookings</div>
+                    <div class="stat-sublabel">${{ venue_spent|floatformat:2 }} spent</div>
+                </div>
+                <div class="stat-icon">🏢</div>
+            </div>
+            
+            <div class="stat-card success">
+                <div class="stat-content">
+                    <div class="stat-number">${{ total_spent|floatformat:2 }}</div>
+                    <div class="stat-label">Total Spent</div>
+                    <div class="stat-sublabel">All time spending</div>
+                </div>
+                <div class="stat-icon">💰</div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_bookings }}</div>
+                    <div class="stat-label">Total Bookings</div>
+                    <div class="stat-sublabel">Events + Venues</div>
+                </div>
+                <div class="stat-icon">📈</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-section">
+        <h2>🚀 Quick Actions</h2>
+        <div class="quick-actions-grid">
+            <a href="{% url 'events:event_list' %}" class="action-card">
+                <div class="action-icon">🎪</div>
+                <div class="action-text">
+                    <h3>Browse Events</h3>
+                    <p>Discover amazing experiences</p>
+                </div>
+            </a>
+            <a href="{% url 'venues:venue_list' %}" class="action-card">
+                <div class="action-icon">🏛️</div>
+                <div class="action-text">
+                    <h3>Book Venues</h3>
+                    <p>Find the perfect space</p>
+                </div>
+            </a>
+            <a href="{% url 'users:profile' %}" class="action-card">
+                <div class="action-icon">👤</div>
+                <div class="action-text">
+                    <h3>My Profile</h3>
+                    <p>Update your information</p>
+                </div>
+            </a>
+            <a href="#" class="action-card">
+                <div class="action-icon">⚙️</div>
+                <div class="action-text">
+                    <h3>Settings</h3>
+                    <p>Account preferences</p>
+                </div>
+            </a>
+        </div>
+    </div>
+                <div class="action-icon">👤</div>
+                <div class="action-text">
+                    <h3>Edit Profile</h3>
+                    <p>Update your information</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Booking Management Tabs -->
+    <div class="booking-management">
+        <h2>� Booking Management</h2>
+        
+        <div class="tab-container">
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="all">
+                    <span class="tab-icon">📋</span>
+                    <span class="tab-text">All Bookings</span>
+                    <span class="tab-count">{{ total_bookings }}</span>
+                </button>
+                <button class="tab-btn" data-tab="upcoming">
+                    <span class="tab-icon">🔜</span>
+                    <span class="tab-text">Upcoming</span>
+                    <span class="tab-count">{{ upcoming_events.count|add:upcoming_venues.count }}</span>
+                </button>
+                <button class="tab-btn" data-tab="past">
+                    <span class="tab-icon">⏰</span>
+                    <span class="tab-text">Past</span>
+                    <span class="tab-count">{{ past_events.count|add:past_venues.count }}</span>
+                </button>
+                <button class="tab-btn" data-tab="confirmed">
+                    <span class="tab-icon">✅</span>
+                    <span class="tab-text">Confirmed</span>
+                    <span class="tab-count">{{ confirmed_venues.count }}</span>
+                </button>
+                <button class="tab-btn" data-tab="pending">
+                    <span class="tab-icon">⏳</span>
+                    <span class="tab-text">Pending</span>
+                    <span class="tab-count">{{ pending_venues.count }}</span>
+                </button>
+                <button class="tab-btn" data-tab="cancelled">
+                    <span class="tab-icon">❌</span>
+                    <span class="tab-text">Cancelled</span>
+                    <span class="tab-count">{{ cancelled_events.count|add:cancelled_venues.count }}</span>
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- All Bookings Tab -->
+                <div class="tab-panel active" id="all">
+                    {% if all_event_bookings or all_venue_bookings %}
+                        {% if all_event_bookings %}
+                            <div class="booking-section">
+                                <h3 class="section-title">🎫 Event Bookings</h3>
+                                <div class="bookings-grid">
+                                    {% for booking in all_event_bookings %}
+                                        <div class="booking-card event-card status-{{ booking.status }}">
+                                            <div class="card-header">
+                                                <div class="card-title">{{ booking.event.title }}</div>
+                                                <div class="status-badge status-{{ booking.status }}">
+                                                    {{ booking.get_status_display }}
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">📅</span>
+                                                    <span class="detail-text">{{ booking.event.start_date|date:"M d, Y" }} at {{ booking.event.start_date|time:"g:i A" }}</span>
+                                                </div>
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">📍</span>
+                                                    <span class="detail-text">{{ booking.event.venue_name|default:"TBA" }}</span>
+                                                </div>
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">💰</span>
+                                                    <span class="detail-text">${{ booking.total_amount|floatformat:2 }}</span>
+                                                </div>
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">👥</span>
+                                                    <span class="detail-text">{{ booking.attendees_count }} attendee{{ booking.attendees_count|pluralize }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-actions">
+                                                <a href="{% url 'events:event_detail' booking.event.pk %}" class="btn btn-outline">View Event</a>
+                                                {% if booking.can_cancel %}
+                                                    <form method="post" action="{% url 'users:cancel_booking' 'event' booking.pk %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this booking?')">Cancel</button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if all_venue_bookings %}
+                            <div class="booking-section">
+                                <h3 class="section-title">🏢 Venue Bookings</h3>
+                                <div class="bookings-grid">
+                                    {% for booking in all_venue_bookings %}
+                                        <div class="booking-card venue-card status-{{ booking.status }}">
+                                            <div class="card-header">
+                                                <div class="card-title">{{ booking.event_title }}</div>
+                                                <div class="status-badge status-{{ booking.status }}">
+                                                    {{ booking.get_status_display }}
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">🏢</span>
+                                                    <span class="detail-text">{{ booking.venue.name }}</span>
+                                                </div>
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">📅</span>
+                                                    <span class="detail-text">{{ booking.start_date|date:"M d, Y" }} - {{ booking.end_date|date:"M d, Y" }}</span>
+                                                </div>
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">⏰</span>
+                                                    <span class="detail-text">{{ booking.start_date|time:"g:i A" }} - {{ booking.end_date|time:"g:i A" }}</span>
+                                                </div>
+                                                <div class="booking-detail">
+                                                    <span class="detail-icon">💰</span>
+                                                    <span class="detail-text">${{ booking.total_amount|floatformat:2 }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-actions">
+                                                <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-outline">View Venue</a>
+                                                {% if booking.status in 'pending,confirmed' %}
+                                                    <form method="post" action="{% url 'users:cancel_booking' 'venue' booking.pk %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this booking?')">Cancel</button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <h3>No bookings yet</h3>
+                            <p>Start by browsing our amazing events and venues!</p>
+                            <div class="empty-actions">
+                                <a href="{% url 'events:event_list' %}" class="btn btn-primary">Browse Events</a>
+                                <a href="{% url 'venues:venue_list' %}" class="btn btn-secondary">View Venues</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Other tab panels would be similar but filtered -->
+                <!-- I'll create the upcoming tab as an example -->
+                <div class="tab-panel" id="upcoming">
+                    <h3>🔜 Upcoming Bookings</h3>
+                    {% if upcoming_events or upcoming_venues %}
+                        <!-- Similar structure as all bookings but filtered -->
+                        <!-- Implementation continues... -->
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">🔜</div>
+                            <h3>No upcoming bookings</h3>
+                            <p>You don't have any upcoming events or venue bookings.</p>
+                            <a href="{% url 'events:event_list' %}" class="btn btn-primary">Browse Events</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Add similar panels for other tabs... -->
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Booking Categories Tabs -->
+    <div class="booking-tabs">
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="upcoming">
+                <span class="tab-icon">🔜</span>
+                Upcoming
+                <span class="tab-count">{{ upcoming_events.count|add:upcoming_venues.count }}</span>
+            </button>
+            <button class="tab-btn" data-tab="past">
+                <span class="tab-icon">⏰</span>
+                Past
+                <span class="tab-count">{{ past_events.count|add:past_venues.count }}</span>
+            </button>
+            <button class="tab-btn" data-tab="confirmed">
+                <span class="tab-icon">✅</span>
+                Confirmed
+                <span class="tab-count">{{ confirmed_venues.count }}</span>
+            </button>
+            <button class="tab-btn" data-tab="pending">
+                <span class="tab-icon">⏳</span>
+                Pending
+                <span class="tab-count">{{ pending_venues.count }}</span>
+            </button>
+            <button class="tab-btn" data-tab="cancelled">
+                <span class="tab-icon">❌</span>
+                Cancelled
+                <span class="tab-count">{{ cancelled_events.count|add:cancelled_venues.count }}</span>
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Upcoming Tab -->
+            <div class="tab-panel active" id="upcoming">
+                <h3>Upcoming Bookings</h3>
+                
+                {% if upcoming_events or upcoming_venues %}
+                    <div class="bookings-section">
+                        {% if upcoming_events %}
+                            <h4>📅 Upcoming Events</h4>
+                            <div class="bookings-grid">
+                                {% for booking in upcoming_events %}
+                                    <div class="booking-card event-booking">
+                                        <div class="booking-header">
+                                            <h5>{{ booking.event.title }}</h5>
+                                            <span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display }}</span>
+                                        </div>
+                                        <div class="booking-details">
+                                            <p><strong>Date:</strong> {{ booking.event.start_date|date:"M d, Y" }}</p>
+                                            <p><strong>Time:</strong> {{ booking.event.start_date|time:"g:i A" }}</p>
+                                            <p><strong>Venue:</strong> {{ booking.event.venue_name }}</p>
+                                            <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a href="{% url 'events:event_detail' booking.event.pk %}" class="btn btn-sm btn-outline">View Details</a>
+                                            {% if booking.can_cancel %}
+                                                <form method="post" action="{% url 'users:cancel_booking' 'event' booking.pk %}" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">Cancel</button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if upcoming_venues %}
+                            <h4>🏢 Upcoming Venue Bookings</h4>
+                            <div class="bookings-grid">
+                                {% for booking in upcoming_venues %}
+                                    <div class="booking-card venue-booking">
+                                        <div class="booking-header">
+                                            <h5>{{ booking.event_title }}</h5>
+                                            <span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display }}</span>
+                                        </div>
+                                        <div class="booking-details">
+                                            <p><strong>Venue:</strong> {{ booking.venue.name }}</p>
+                                            <p><strong>Start:</strong> {{ booking.start_date|date:"M d, Y g:i A" }}</p>
+                                            <p><strong>End:</strong> {{ booking.end_date|date:"M d, Y g:i A" }}</p>
+                                            <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-sm btn-outline">View Venue</a>
+                                            <form method="post" action="{% url 'users:cancel_booking' 'venue' booking.pk %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">Cancel</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">📅</div>
+                        <h4>No Upcoming Bookings</h4>
+                        <p>You don't have any upcoming events or venue bookings.</p>
+                        <a href="{% url 'events:event_list' %}" class="btn btn-primary">Browse Events</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Past Tab -->
+            <div class="tab-panel" id="past">
+                <h3>Past Bookings</h3>
+                
+                {% if past_events or past_venues %}
+                    <div class="bookings-section">
+                        {% if past_events %}
+                            <h4>📅 Past Events</h4>
+                            <div class="bookings-grid">
+                                {% for booking in past_events %}
+                                    <div class="booking-card event-booking past">
+                                        <div class="booking-header">
+                                            <h5>{{ booking.event.title }}</h5>
+                                            <span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display }}</span>
+                                        </div>
+                                        <div class="booking-details">
+                                            <p><strong>Date:</strong> {{ booking.event.start_date|date:"M d, Y" }}</p>
+                                            <p><strong>Venue:</strong> {{ booking.event.venue_name }}</p>
+                                            <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a href="{% url 'events:event_detail' booking.event.pk %}" class="btn btn-sm btn-outline">View Details</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if past_venues %}
+                            <h4>🏢 Past Venue Bookings</h4>
+                            <div class="bookings-grid">
+                                {% for booking in past_venues %}
+                                    <div class="booking-card venue-booking past">
+                                        <div class="booking-header">
+                                            <h5>{{ booking.event_title }}</h5>
+                                            <span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display }}</span>
+                                        </div>
+                                        <div class="booking-details">
+                                            <p><strong>Venue:</strong> {{ booking.venue.name }}</p>
+                                            <p><strong>Date:</strong> {{ booking.start_date|date:"M d, Y" }}</p>
+                                            <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-sm btn-outline">View Venue</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">⏰</div>
+                        <h4>No Past Bookings</h4>
+                        <p>You don't have any past bookings yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Confirmed Tab -->
+            <div class="tab-panel" id="confirmed">
+                <h3>Confirmed Venue Bookings</h3>
+                
+                {% if confirmed_venues %}
+                    <div class="bookings-grid">
+                        {% for booking in confirmed_venues %}
+                            <div class="booking-card venue-booking confirmed">
+                                <div class="booking-header">
+                                    <h5>{{ booking.event_title }}</h5>
+                                    <span class="status-badge status-confirmed">✅ Confirmed</span>
+                                </div>
+                                <div class="booking-details">
+                                    <p><strong>Venue:</strong> {{ booking.venue.name }}</p>
+                                    <p><strong>Start:</strong> {{ booking.start_date|date:"M d, Y g:i A" }}</p>
+                                    <p><strong>End:</strong> {{ booking.end_date|date:"M d, Y g:i A" }}</p>
+                                    <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                    <p><strong>Payment:</strong> {{ booking.get_payment_status_display }}</p>
+                                </div>
+                                <div class="booking-actions">
+                                    <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-sm btn-outline">View Venue</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">✅</div>
+                        <h4>No Confirmed Bookings</h4>
+                        <p>You don't have any confirmed venue bookings.</p>
+                        <a href="{% url 'venues:venue_list' %}" class="btn btn-primary">Browse Venues</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pending Tab -->
+            <div class="tab-panel" id="pending">
+                <h3>Pending Venue Bookings</h3>
+                
+                {% if pending_venues %}
+                    <div class="bookings-grid">
+                        {% for booking in pending_venues %}
+                            <div class="booking-card venue-booking pending">
+                                <div class="booking-header">
+                                    <h5>{{ booking.event_title }}</h5>
+                                    <span class="status-badge status-pending">⏳ Pending</span>
+                                </div>
+                                <div class="booking-details">
+                                    <p><strong>Venue:</strong> {{ booking.venue.name }}</p>
+                                    <p><strong>Start:</strong> {{ booking.start_date|date:"M d, Y g:i A" }}</p>
+                                    <p><strong>End:</strong> {{ booking.end_date|date:"M d, Y g:i A" }}</p>
+                                    <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                    <p><strong>Requested:</strong> {{ booking.booking_date|date:"M d, Y" }}</p>
+                                </div>
+                                <div class="booking-actions">
+                                    <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-sm btn-outline">View Venue</a>
+                                    <form method="post" action="{% url 'users:cancel_booking' 'venue' booking.pk %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this booking request?')">Cancel Request</button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">⏳</div>
+                        <h4>No Pending Bookings</h4>
+                        <p>You don't have any pending venue booking requests.</p>
+                        <a href="{% url 'venues:venue_list' %}" class="btn btn-primary">Browse Venues</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Cancelled Tab -->
+            <div class="tab-panel" id="cancelled">
+                <h3>Cancelled Bookings</h3>
+                
+                {% if cancelled_events or cancelled_venues %}
+                    <div class="bookings-section">
+                        {% if cancelled_events %}
+                            <h4>📅 Cancelled Events</h4>
+                            <div class="bookings-grid">
+                                {% for booking in cancelled_events %}
+                                    <div class="booking-card event-booking cancelled">
+                                        <div class="booking-header">
+                                            <h5>{{ booking.event.title }}</h5>
+                                            <span class="status-badge status-cancelled">❌ Cancelled</span>
+                                        </div>
+                                        <div class="booking-details">
+                                            <p><strong>Date:</strong> {{ booking.event.start_date|date:"M d, Y" }}</p>
+                                            <p><strong>Venue:</strong> {{ booking.event.venue_name }}</p>
+                                            <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a href="{% url 'events:event_detail' booking.event.pk %}" class="btn btn-sm btn-outline">View Details</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if cancelled_venues %}
+                            <h4>🏢 Cancelled Venue Bookings</h4>
+                            <div class="bookings-grid">
+                                {% for booking in cancelled_venues %}
+                                    <div class="booking-card venue-booking cancelled">
+                                        <div class="booking-header">
+                                            <h5>{{ booking.event_title }}</h5>
+                                            <span class="status-badge status-{{ booking.status }}">
+                                                {% if booking.status == 'rejected' %}❌ Rejected{% else %}❌ Cancelled{% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="booking-details">
+                                            <p><strong>Venue:</strong> {{ booking.venue.name }}</p>
+                                            <p><strong>Date:</strong> {{ booking.start_date|date:"M d, Y" }}</p>
+                                            <p><strong>Amount:</strong> ${{ booking.total_amount|floatformat:2 }}</p>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-sm btn-outline">View Venue</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <h4>No Cancelled Bookings</h4>
+                        <p>You don't have any cancelled bookings.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Beautiful Modern Dashboard */
+:root {
+    --primary-color: #6366f1;
+    --primary-light: #818cf8;
+    --primary-dark: #4f46e5;
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --warning-gradient: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    --background: #f8fafc;
+    --surface: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--background);
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
+.dashboard-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><circle cx="30" cy="30" r="2"/></g></svg>') repeat;
+    pointer-events: none;
+}
+
+/* Hero Section */
+.dashboard-hero {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 3rem;
+    margin-bottom: 3rem;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.hero-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-text h1 {
+    font-size: 2.75rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+}
+
+.hero-text p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin: 0;
+    font-weight: 500;
+}
+
+.hero-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 4px solid transparent;
+    background: var(--primary-gradient);
+    padding: 4px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+}
+
+.hero-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    border-radius: 20px;
+}
+
+/* Section Titles */
+.dashboard-container h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Stats Section */
+.stats-section {
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: var(--primary-gradient);
+    transition: height 0.3s ease;
+}
+
+.stat-card.primary::before { background: var(--primary-gradient); }
+.stat-card.secondary::before { background: var(--secondary-gradient); }
+.stat-card.success::before { background: var(--success-gradient); }
+.stat-card.warning::before { background: var(--warning-gradient); }
+
+.stat-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 30px 60px rgba(102, 126, 234, 0.3);
+}
+
+.stat-card:hover::before {
+    height: 100%;
+    opacity: 0.1;
+}
+
+.stat-content {
+    flex: 1;
+    z-index: 2;
+    position: relative;
+}
+
+.stat-number {
+    font-size: 2.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.stat-sublabel {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.stat-icon {
+    font-size: 3.5rem;
+    opacity: 0.8;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    z-index: 2;
+    position: relative;
+}
+
+/* Quick Actions */
+.quick-actions-section {
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.action-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.action-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 25px 50px rgba(102, 126, 234, 0.3);
+    text-decoration: none;
+    color: inherit;
+}
+
+.action-card:hover::before {
+    opacity: 0.1;
+}
+
+.action-card:nth-child(1)::before { background: var(--primary-gradient); }
+.action-card:nth-child(2)::before { background: var(--secondary-gradient); }
+.action-card:nth-child(3)::before { background: var(--success-gradient); }
+.action-card:nth-child(4)::before { background: var(--warning-gradient); }
+
+.action-icon {
+    font-size: 3rem;
+    background: var(--primary-gradient);
+    border-radius: 20px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    flex-shrink: 0;
+    z-index: 2;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.action-card:hover .action-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.action-card:nth-child(1) .action-icon { background: var(--primary-gradient); }
+.action-card:nth-child(2) .action-icon { background: var(--secondary-gradient); }
+.action-card:nth-child(3) .action-icon { background: var(--success-gradient); }
+.action-card:nth-child(4) .action-icon { background: var(--warning-gradient); }
+
+.action-text {
+    z-index: 2;
+    position: relative;
+}
+
+.action-text h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.action-text p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Booking Management */
+.booking-management {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.booking-management::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.booking-management h2 {
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-shadow: none;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 16px;
+    padding: 0.75rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    gap: 0.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;
+    font-size: 0.95rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.tab-btn:hover {
+    color: #6366f1;
+    transform: translateY(-2px);
+}
+
+.tab-btn:hover::before {
+    opacity: 0.1;
+}
+
+.tab-btn.active {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.tab-btn.active::before {
+    opacity: 1;
+}
+
+.tab-icon {
+    font-size: 1.25rem;
+    z-index: 1;
+    position: relative;
+}
+
+.tab-text {
+    font-weight: 600;
+    z-index: 1;
+    position: relative;
+}
+
+.tab-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: inherit;
+    border-radius: 12px;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-width: 22px;
+    text-align: center;
+    z-index: 1;
+    position: relative;
+}
+
+.tab-btn.active .tab-count {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Tab Content */
+.tab-content {
+    min-height: 400px;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.section-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.2);
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Booking Cards */
+.booking-section {
+    margin-bottom: 2.5rem;
+}
+
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 2rem;
+}
+
+.booking-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.booking-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    transition: height 0.3s ease;
+}
+
+.booking-card.event-card::before {
+    background: var(--primary-gradient);
+}
+
+.booking-card.venue-card::before {
+    background: var(--secondary-gradient);
+}
+
+.booking-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(102, 126, 234, 0.2);
+}
+
+.booking-card:hover::before {
+    height: 100%;
+    opacity: 0.05;
+}
+
+.card-header {
+    padding: 2rem;
+    background: rgba(248, 250, 252, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.4;
+    flex: 1;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+    background: var(--primary-gradient);
+}
+
+.status-pending { background: var(--warning-gradient); }
+.status-confirmed { background: var(--success-gradient); }
+.status-cancelled { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); }
+.status-attended { background: var(--primary-gradient); }
+.status-no_show { background: linear-gradient(135deg, #a0aec0 0%, #718096 100%); }
+.status-completed { background: var(--success-gradient); }
+.status-rejected { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); }
+
+.card-body {
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.booking-detail {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    padding: 0.75rem;
+    background: rgba(248, 250, 252, 0.5);
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+}
+
+.detail-icon {
+    font-size: 1.25rem;
+    width: 24px;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.detail-text {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.card-actions {
+    padding: 1.5rem 2rem;
+    background: rgba(248, 250, 252, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    gap: 1rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.5);
+    position: relative;
+    z-index: 2;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.btn:hover::before {
+    opacity: 1;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    text-decoration: none;
+    color: white;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+    color: white;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(160, 174, 192, 0.4);
+    text-decoration: none;
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #6366f1;
+    border: 2px solid #6366f1;
+    backdrop-filter: blur(10px);
+}
+
+.btn-outline:hover {
+    background: var(--primary-gradient);
+    color: white;
+    transform: translateY(-3px) scale(1.05);
+    text-decoration: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+    background: rgba(248, 250, 252, 0.5);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.empty-state p {
+    margin-bottom: 2rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+}
+
+.empty-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    .hero-text h1 {
+        font-size: 2.25rem;
+    }
+    
+    .hero-avatar {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .stat-card {
+        padding: 2rem;
+    }
+    
+    .stat-number {
+        font-size: 2.25rem;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bookings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tab-navigation {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .tab-navigation::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .booking-management {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 0.75rem;
+    }
+    
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .tab-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .dashboard-hero {
+        padding: 2rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem;
+    }
+    
+    .action-card {
+        padding: 2rem;
+    }
+}
+
+/* Scroll animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card, .action-card, .booking-card {
+    animation: slideInUp 0.6s ease-out forwards;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.action-card:nth-child(1) { animation-delay: 0.5s; }
+.action-card:nth-child(2) { animation-delay: 0.6s; }
+.action-card:nth-child(3) { animation-delay: 0.7s; }
+.action-card:nth-child(4) { animation-delay: 0.8s; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            
+            // Remove active class from all tabs and panels
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanels.forEach(p => p.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding panel
+            btn.classList.add('active');
+            const targetPanel = document.getElementById(targetTab);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        });
+    });
+    
+    // Add smooth scroll behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    // Add loading animation to buttons
+    const actionButtons = document.querySelectorAll('.btn');
+    actionButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (this.type === 'submit') {
+                this.style.opacity = '0.7';
+                this.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    this.style.opacity = '1';
+                    this.style.pointerEvents = 'auto';
+                }, 2000);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

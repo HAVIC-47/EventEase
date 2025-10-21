@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Button Layout Test</title>
+    <style>
+        .test-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 20px;
+            background: #f5f6f7;
+        }
+        
+        .test-group {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center;
+            gap: 0.3rem;
+            flex-wrap: nowrap !important;
+            border: 2px solid red; /* Debug border */
+        }
+        
+        .test-button {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #40B5AD;
+            color: white;
+            text-decoration: none;
+            margin: 0 !important;
+            flex: 0 0 auto !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Layout Test</h1>
+    
+    <div class="test-container">
+        <input type="text" placeholder="Search Events..." style="padding: 0.5rem 1rem; border-radius: 20px;">
+        
+        <div class="test-group">
+            <a href="#" class="test-button">👥</a>
+            <a href="#" class="test-button">💬</a>
+            <a href="#" class="test-button">🔔</a>
+        </div>
+        
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: #40B5AD; display: flex; align-items: center; justify-content: center; color: white;">👤</div>
+    </div>
+    
+    <p>The buttons above should be horizontal with red border around the group.</p>
+    <p>If they are vertical, there's a fundamental CSS issue.</p>
+</body>
+</html>

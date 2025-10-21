@@ -1,0 +1,734 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Bookings - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>📋 Manage Venue Bookings</h1>
+            <p>Review and manage venue booking requests</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'venues:my_venues' %}" class="btn btn-secondary">
+                <i class="icon">🏢</i> My Venues
+            </a>
+            <a href="{% url 'venues:venue_list' %}" class="btn btn-outline">
+                <i class="icon">🔍</i> Browse Venues
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="?status=all" class="tab {% if current_status == 'all' %}active{% endif %}">
+            All Bookings ({{ total_count }})
+        </a>
+        <a href="?status=pending" class="tab {% if current_status == 'pending' %}active{% endif %}">
+            Pending ({{ pending_count }})
+        </a>
+        <a href="?status=confirmed" class="tab {% if current_status == 'confirmed' %}active{% endif %}">
+            Confirmed ({{ confirmed_count }})
+        </a>
+        <a href="?status=completed" class="tab {% if current_status == 'completed' %}active{% endif %}">
+            Completed ({{ completed_count }})
+        </a>
+        <a href="?status=cancelled" class="tab {% if current_status == 'cancelled' %}active{% endif %}">
+            Cancelled ({{ cancelled_count }})
+        </a>
+        <a href="?status=rejected" class="tab {% if current_status == 'rejected' %}active{% endif %}">
+            Rejected ({{ rejected_count }})
+        </a>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="filters-section">
+        <form method="get" class="filters-form">
+            <input type="hidden" name="status" value="{{ current_status }}">
+            <div class="search-row">
+                <div class="search-input">
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search by event title, client name..." class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">🔍 Search</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bookings List -->
+    <div class="bookings-section">
+        {% csrf_token %}
+        {% if bookings %}
+            {% for booking in bookings %}
+                <div class="booking-card booking-{{ booking.status }}">
+                    <div class="booking-header">
+                        <div class="booking-info">
+                            <h3>{{ booking.event_title }}</h3>
+                            <div class="booking-meta">
+                                <span class="venue-name">🏢 {{ booking.venue.name }}</span>
+                                <span class="client-name">👤 {{ booking.user.get_full_name }}</span>
+                                <span class="booking-date">📅 {{ booking.start_date|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        <div class="booking-status">
+                            <span class="status-badge status-{{ booking.status }}">
+                                {% if booking.status == 'pending' %}⏰
+                                {% elif booking.status == 'confirmed' %}✅
+                                {% elif booking.status == 'completed' %}🎉
+                                {% elif booking.status == 'cancelled' %}❌
+                                {% elif booking.status == 'rejected' %}❌
+                                {% endif %}
+                                {{ booking.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="booking-details">
+                        <div class="detail-row">
+                            <span class="label">Duration:</span>
+                            <span class="value">{{ booking.start_date|date:"M d" }} - {{ booking.end_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Total Amount:</span>
+                            <span class="value">${{ booking.total_amount }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Contact:</span>
+                            <span class="value">{{ booking.contact_email }} | {{ booking.contact_phone }}</span>
+                        </div>
+                        {% if booking.special_requirements %}
+                            <div class="detail-row">
+                                <span class="label">Requirements:</span>
+                                <span class="value">{{ booking.special_requirements|truncatewords:10 }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="booking-actions">
+                        <button class="btn btn-outline btn-sm" onclick="viewBookingDetails({{ booking.id }})">
+                            👁️ View Details
+                        </button>
+                        <a href="mailto:{{ booking.contact_email }}" class="btn btn-info btn-sm">
+                            📧 Contact Client
+                        </a>
+                        {% if booking.status == 'pending' %}
+                            <button class="btn btn-success btn-sm" onclick="updateBookingStatus({{ booking.id }}, 'confirmed')">
+                                ✅ Approve
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="updateBookingStatus({{ booking.id }}, 'rejected')">
+                                ❌ Reject
+                            </button>
+                        {% elif booking.status == 'confirmed' %}
+                            <button class="btn btn-warning btn-sm" onclick="updateBookingStatus({{ booking.id }}, 'completed')">
+                                🎉 Mark Completed
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="updateBookingStatus({{ booking.id }}, 'cancelled')">
+                                ❌ Cancel
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-bookings">
+                <div class="no-bookings-icon">📋</div>
+                <h3>No Bookings Found</h3>
+                <p>{% if current_status == 'all' %}No venue bookings yet.{% else %}No {{ current_status }} bookings found.{% endif %}</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0f7fa;
+}
+
+.page-header h1 {
+    color: #40B5AD;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.filter-tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 2rem;
+    gap: 0.5rem;
+}
+
+.tab {
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    color: #666;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.tab:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+.tab.active {
+    background: #40B5AD;
+    color: white;
+}
+
+.filters-section {
+    margin-bottom: 2rem;
+}
+
+.filters-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-input {
+    flex: 1;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.booking-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.booking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: #f8f9fa;
+}
+
+.booking-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.booking-meta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.booking-meta span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-completed {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-cancelled, .status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.booking-details {
+    padding: 1.5rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.detail-row .label {
+    font-weight: 600;
+    color: #666;
+}
+
+.detail-row .value {
+    color: #333;
+    text-align: right;
+    max-width: 60%;
+}
+
+.booking-actions {
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #40B5AD;
+    color: #40B5AD;
+}
+
+.btn-outline:hover {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-primary {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #369690;
+}
+
+.no-bookings {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #666;
+}
+
+.no-bookings-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.no-bookings h3 {
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e1e8ed;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #40B5AD;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+    background-color: #f1f1f1;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.booking-info-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.info-section h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #40B5AD;
+    padding-bottom: 0.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.info-item .label {
+    font-weight: 600;
+    color: #666;
+}
+
+.info-item .value {
+    color: #333;
+    text-align: right;
+    max-width: 60%;
+    word-wrap: break-word;
+}
+
+.special-requirements {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #40B5AD;
+}
+
+.special-requirements p {
+    margin: 0;
+    color: #333;
+    line-height: 1.5;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #e1e8ed;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+</style>
+
+<script>
+// Get CSRF token function
+function getCSRFToken() {
+    const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (tokenInput) {
+        return tokenInput.value;
+    }
+    // Fallback to cookies if input not found
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function updateBookingStatus(bookingId, status) {
+    console.log('updateBookingStatus called:', bookingId, status);
+    
+    if (confirm(`Are you sure you want to ${status} this booking?`)) {
+        const csrfToken = getCSRFToken();
+        console.log('CSRF Token:', csrfToken);
+        
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
+        
+        console.log('Sending request to:', `/venues/booking/${bookingId}/update-status/`);
+        
+        fetch(`/venues/booking/${bookingId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: `status=${status}`
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (response.ok) {
+                console.log('Success, reloading page');
+                location.reload();
+            } else {
+                console.error('Response not OK:', response.status);
+                alert('Error updating booking status');
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('Error updating booking status');
+        });
+    }
+}
+
+// Booking details modal functionality
+function viewBookingDetails(bookingId) {
+    console.log('viewBookingDetails called:', bookingId);
+    
+    // Fetch booking details from server
+    fetch(`/venues/booking/${bookingId}/details/`)
+        .then(response => {
+            console.log('Details response status:', response.status);
+            return response.json();
+        })
+        .then(booking => {
+            console.log('Booking data received:', booking);
+            if (booking.error) {
+                alert('Error loading booking details: ' + booking.error);
+                return;
+            }
+            showBookingModal(booking);
+        })
+        .catch(error => {
+            console.error('Error fetching booking details:', error);
+            alert('Error loading booking details');
+        });
+}
+
+function showBookingModal(booking) {
+    // Create modal HTML with detailed information
+    const modalHTML = `
+        <div class="modal-overlay" id="bookingModal" onclick="closeBookingModal()">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>📋 Booking Details</h2>
+                    <button class="modal-close" onclick="closeBookingModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="booking-info-grid">
+                        <div class="info-section">
+                            <h3>Event Information</h3>
+                            <div class="info-item">
+                                <span class="label">Event Title:</span>
+                                <span class="value">${booking.event_title}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Description:</span>
+                                <span class="value">${booking.event_description}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Venue:</span>
+                                <span class="value">${booking.venue_name}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Status:</span>
+                                <span class="value status-${booking.status.toLowerCase()}">${booking.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3>Client Information</h3>
+                            <div class="info-item">
+                                <span class="label">Name:</span>
+                                <span class="value">${booking.client_name}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Email:</span>
+                                <span class="value"><a href="mailto:${booking.client_email}">${booking.client_email}</a></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Phone:</span>
+                                <span class="value"><a href="tel:${booking.client_phone}">${booking.client_phone}</a></span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3>Booking Details</h3>
+                            <div class="info-item">
+                                <span class="label">Start Date:</span>
+                                <span class="value">${booking.start_date}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">End Date:</span>
+                                <span class="value">${booking.end_date}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Duration:</span>
+                                <span class="value">${booking.duration_hours} hours (${booking.duration_days} days)</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Total Amount:</span>
+                                <span class="value">$${booking.total_amount}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Payment Status:</span>
+                                <span class="value">${booking.payment_status}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Booking Date:</span>
+                                <span class="value">${booking.booking_date}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3>Special Requirements</h3>
+                            <div class="special-requirements">
+                                <p>${booking.special_requirements}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeBookingModal()">Close</button>
+                    <a href="mailto:${booking.client_email}" class="btn btn-info">📧 Contact Client</a>
+                    ${booking.status === 'Pending' ? `
+                        <button class="btn btn-success" onclick="updateBookingStatus(${booking.id}, 'confirmed'); closeBookingModal();">✅ Approve</button>
+                        <button class="btn btn-danger" onclick="updateBookingStatus(${booking.id}, 'rejected'); closeBookingModal();">❌ Reject</button>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeBookingModal() {
+    const modal = document.getElementById('bookingModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+</script>
+
+{% endblock %}

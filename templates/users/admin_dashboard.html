@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.dashboard-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #40B5AD;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.requests-section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: #40B5AD;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.requests-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.request-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    transition: all 0.3s ease;
+}
+
+.request-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(64, 181, 173, 0.15);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.request-user {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.request-role {
+    background: #e0f7fa;
+    color: #40B5AD;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.request-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.request-reason {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid #40B5AD;
+    margin-bottom: 1rem;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.request-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-view {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #2e837e;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-approve {
+    background: #10b981;
+    color: white;
+}
+
+.btn-approve:hover {
+    background: #059669;
+}
+
+.btn-reject {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-reject:hover {
+    background: #dc2626;
+}
+
+.status-pending {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.status-approved {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.status-rejected {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    color: #6b7280;
+    padding: 3rem;
+    background: #f9fafb;
+    border-radius: 15px;
+    border: 2px dashed #d1d5db;
+}
+
+.empty-state h3 {
+    margin-bottom: 0.5rem;
+    color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 0 1rem;
+    }
+    
+    .request-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .request-meta {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .request-actions {
+        flex-direction: column;
+    }
+}
+
+/* Dark mode styles */
+body.dark-mode .stat-card,
+body.dark-mode .request-card {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .request-reason {
+    background: #374151;
+}
+
+body.dark-mode .empty-state {
+    background: #374151;
+    border-color: #4b5563;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>🛠️ Admin Dashboard</h1>
+        <p>Manage role upgrade requests and system administration</p>
+    </div>
+    
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number">{{ pending_requests.count }}</span>
+            <span class="stat-label">Pending Requests</span>
+        </div>
+        
+        <div class="stat-card">
+            <span class="stat-number">{{ approved_requests.count }}</span>
+            <span class="stat-label">Recently Approved</span>
+        </div>
+        
+        <div class="stat-card">
+            <span class="stat-number">{{ rejected_requests.count }}</span>
+            <span class="stat-label">Recently Rejected</span>
+        </div>
+    </div>
+    
+    <!-- Pending Requests -->
+    <div class="requests-section">
+        <h2 class="section-header">⏳ Pending Requests</h2>
+        
+        {% if pending_requests %}
+            <div class="requests-grid">
+                {% for request in pending_requests %}
+                <div class="request-card">
+                    <div class="request-header">
+                        <div class="request-user">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="request-role">{{ request.get_requested_role_display }}</div>
+                    </div>
+                    
+                    <div class="request-meta">
+                        <span>📧 {{ request.user.email }}</span>
+                        <span>📅 {{ request.created_at|date:"M d, Y" }}</span>
+                        <span class="status-pending">● {{ request.get_status_display }}</span>
+                    </div>
+                    
+                    <div class="request-reason">
+                        "{{ request.reason|truncatewords:20 }}"
+                    </div>
+                    
+                    <div class="request-actions">
+                        <a href="{% url 'users:view_upgrade_request' request.id %}" class="btn btn-view">👁️ View Details</a>
+                        <form method="post" action="{% url 'users:process_upgrade_request' request.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve">
+                            <button type="submit" class="btn btn-approve" onclick="return confirm('Approve this request?')">✅ Approve</button>
+                        </form>
+                        <form method="post" action="{% url 'users:process_upgrade_request' request.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-reject" onclick="return confirm('Reject this request?')">❌ Reject</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>🎉 No Pending Requests</h3>
+                <p>All role upgrade requests have been processed.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Recently Approved -->
+    <div class="requests-section">
+        <h2 class="section-header">✅ Recently Approved</h2>
+        
+        {% if approved_requests %}
+            <div class="requests-grid">
+                {% for request in approved_requests %}
+                <div class="request-card">
+                    <div class="request-header">
+                        <div class="request-user">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="request-role">{{ request.get_requested_role_display }}</div>
+                    </div>
+                    
+                    <div class="request-meta">
+                        <span>📧 {{ request.user.email }}</span>
+                        <span>📅 Approved: {{ request.updated_at|date:"M d, Y" }}</span>
+                        <span class="status-approved">● {{ request.get_status_display }}</span>
+                    </div>
+                    
+                    <div class="request-actions">
+                        <a href="{% url 'users:view_upgrade_request' request.id %}" class="btn btn-view">👁️ View Details</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>📋 No Recent Approvals</h3>
+                <p>No requests have been approved recently.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Recently Rejected -->
+    <div class="requests-section">
+        <h2 class="section-header">❌ Recently Rejected</h2>
+        
+        {% if rejected_requests %}
+            <div class="requests-grid">
+                {% for request in rejected_requests %}
+                <div class="request-card">
+                    <div class="request-header">
+                        <div class="request-user">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="request-role">{{ request.get_requested_role_display }}</div>
+                    </div>
+                    
+                    <div class="request-meta">
+                        <span>📧 {{ request.user.email }}</span>
+                        <span>📅 Rejected: {{ request.updated_at|date:"M d, Y" }}</span>
+                        <span class="status-rejected">● {{ request.get_status_display }}</span>
+                    </div>
+                    
+                    <div class="request-actions">
+                        <a href="{% url 'users:view_upgrade_request' request.id %}" class="btn btn-view">👁️ View Details</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>📋 No Recent Rejections</h3>
+                <p>No requests have been rejected recently.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

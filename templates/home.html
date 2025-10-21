@@ -1,0 +1,1490 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EventEase - Discover Amazing Events{% endblock %}
+
+{% block content %}
+    <!-- Beautiful Hero Section -->
+    <section class="hero-section">
+        <div class="hero-background">
+            <div class="hero-overlay"></div>
+            <div class="hero-particles">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+        </div>
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span>✨ Welcome to EventEase</span>
+                </div>
+                <h1 class="hero-title">
+                    Discover Amazing 
+                    <span class="gradient-text">Events Near You</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Find extraordinary events, book tickets instantly, and experience the best moments around you. 
+                    Your perfect event adventure starts here!
+                </p>
+                <div class="hero-buttons">
+                    <a href="{% url 'events:event_list' %}" class="btn-primary hero-btn">
+                        <span>🎉</span>
+                        Explore Events
+                    </a>
+                    <a href="{% url 'venues:venue_list' %}" class="btn-secondary hero-btn">
+                        <span>🏢</span>
+                        Browse Venues
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Events</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">Venues</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">1000+</div>
+                        <div class="stat-label">Happy Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-image-container">
+                    <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80" alt="Events" class="hero-main-image">
+                    <div class="floating-card card-1">
+                        <div class="card-icon">🎪</div>
+                        <div class="card-text">Live Events</div>
+                    </div>
+                    <div class="floating-card card-2">
+                        <div class="card-icon">🎵</div>
+                        <div class="card-text">Music & Arts</div>
+                    </div>
+                    <div class="floating-card card-3">
+                        <div class="card-icon">🏟️</div>
+                        <div class="card-text">Venues</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Available Events -->
+    <section id="events" class="events">
+        <h2>Recent Events</h2>
+        {% if recent_events %}
+            <div class="horizontal-scroll-container">
+                <div class="horizontal-scroll-list">
+                    {% for event in recent_events %}
+                        <div class="scroll-card event-card">
+                            <div class="card-image" style="position:relative;">
+                                {% if event.image %}
+                                    <img src="{{ event.image.url }}" alt="{{ event.title }}">
+                                {% else %}
+                                    <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80" alt="{{ event.title }}">
+                                {% endif %}
+                                <span class="event-status-tag status-{{ event.status }}">
+                                    {% if event.status == 'upcoming' %}Upcoming{% elif event.status == 'ongoing' %}Live{% else %}Completed{% endif %}
+                                </span>
+                            </div>
+                            <div class="card-content">
+                                <h3>{{ event.title }}</h3>
+                                <p class="card-description">{{ event.description|truncatewords:20 }}</p>
+                                
+                                <!-- Event Rating Display -->
+                                {% if event.review_count > 0 %}
+                                    <div class="event-rating">
+                                        <div class="rating-stars">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= event.average_rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="rating-value">{{ event.average_rating|floatformat:1 }}</span>
+                                        <span class="rating-count">({{ event.review_count }})</span>
+                                    </div>
+                                {% else %}
+                                    <div class="event-rating no-rating">
+                                        <span class="no-rating-text">No reviews yet</span>
+                                    </div>
+                                {% endif %}
+                                
+                                <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-primary view-details-btn">View Details</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="no-content">
+                <p>No events available yet.</p>
+                {% if user.is_authenticated and user.profile.role in 'admin,event_manager' %}
+                    <a href="{% url 'events:event_create' %}" class="btn">Create First Event</a>
+                {% endif %}
+            </div>
+        {% endif %}
+        <a href="{% url 'events:event_list' %}" class="btn view-more">View All Events</a>
+    </section>
+
+<style>
+    .event-status-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: #fff;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .event-status-tag.status-upcoming { background: #40B5AD; }
+    .event-status-tag.status-ongoing { background: #FF9800; }
+    .event-status-tag.status-completed { background: #757575; }
+    
+    /* Ensure event card images fit edge to edge */
+    .event-card .card-image {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        border-radius: 16px 16px 0 0;
+        width: 100%;
+        height: 180px;
+        position: relative;
+    }
+    .event-card .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+    
+    /* Remove any padding from event cards for edge-to-edge images */
+    .scroll-card.event-card {
+        padding: 0;
+        overflow: hidden;
+    }
+    .scroll-card.event-card .card-content {
+        padding: 1.5rem;
+    }
+    
+    /* Event Rating Styles */
+    .event-rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 12px 0;
+        padding: 8px 0;
+    }
+    
+    .event-rating .rating-stars {
+        display: flex;
+        gap: 2px;
+        color: #FFD700;
+        font-size: 0.9em;
+    }
+    
+    .event-rating .rating-value {
+        font-weight: 600;
+        color: #40B5AD;
+        font-size: 0.9em;
+    }
+    
+    .event-rating .rating-count {
+        color: #666;
+        font-size: 0.85em;
+    }
+    
+    .event-rating.no-rating .no-rating-text {
+        color: #999;
+        font-size: 0.85em;
+        font-style: italic;
+    }
+</style>
+
+    <!--Venue Section-->
+    <section id="venues" class="events">
+        <h2>Featured Venues</h2>
+        {% if recent_venues %}
+            <div class="horizontal-scroll-container">
+                <div class="horizontal-scroll-list">
+                    {% for venue in recent_venues %}
+                        <div class="scroll-card venue-card">
+                            <div class="card-image">
+                                {% with venue.images.all|first as primary_image %}
+                                    {% if primary_image %}
+                                        <img src="{{ primary_image.image.url }}" alt="{{ venue.name }}">
+                                    {% elif venue.main_image %}
+                                        <img src="{{ venue.main_image.url }}" alt="{{ venue.name }}">
+                                    {% else %}
+                                        <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="{{ venue.name }}">
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="card-content">
+                                <h3>{{ venue.name }}</h3>
+                                
+                                <!-- Venue Rating Display -->
+                                {% if venue.review_count > 0 %}
+                                    <div class="venue-rating-card">
+                                        <div class="rating-stars">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= venue.average_rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% elif forloop.counter|add:"-1" < venue.average_rating %}
+                                                    <i class="fas fa-star-half-alt"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="rating-score">{{ venue.average_rating|floatformat:1 }}</span>
+                                        <span class="rating-count">({{ venue.review_count }})</span>
+                                    </div>
+                                {% endif %}
+                                
+                                <p class="card-description">{{ venue.description|truncatewords:20 }}</p>
+                                <a href="{% url 'venues:venue_detail' venue.pk %}" class="btn btn-primary view-details-btn">View Details</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="no-content">
+                <p>No venues available yet.</p>
+                {% if user.is_authenticated and user.profile.role in 'admin,venue_manager' %}
+                    <a href="{% url 'venues:venue_create' %}" class="btn">Add First Venue</a>
+                {% endif %}
+            </div>
+        {% endif %}
+        <a href="{% url 'venues:venue_list' %}" class="btn view-more">View All Venues</a>
+    </section>
+
+    <!-- Reviews Section -->
+    <section class="reviews">
+        <div class="reviews-header">
+            <h2>What People Are Saying</h2>
+            <div class="reviews-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'reviews:submit_review' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-star"></i> Write Review
+                    </a>
+                {% else %}
+                    <a href="{% url 'users:login' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-sign-in-alt"></i> Login to Review
+                    </a>
+                {% endif %}
+                <a href="{% url 'reviews:all_reviews' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> View All Reviews
+                </a>
+            </div>
+        </div>
+        
+        {% if latest_reviews %}
+        <div class="review-scroll-container">
+            <div class="review-list">
+                {% for review in latest_reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            {% if review.user.profile.avatar %}
+                            <img src="{{ review.user.profile.avatar.url }}" 
+                                 alt="{{ review.user.get_full_name }}" 
+                                 class="reviewer-avatar">
+                            {% else %}
+                            <div class="reviewer-avatar-placeholder">
+                                {{ review.user.first_name|first }}{{ review.user.last_name|first }}
+                            </div>
+                            {% endif %}
+                            <div class="reviewer-details">
+                                <h6>{{ review.user.get_full_name|default:review.user.username }}</h6>
+                                <div class="review-rating">
+                                    {% for i in review.filled_stars %}
+                                        <i class="fas fa-star"></i>
+                                    {% endfor %}
+                                    {% for i in review.empty_stars %}
+                                        <i class="far fa-star"></i>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <small class="review-date">{{ review.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <h6 class="review-title">{{ review.title }}</h6>
+                    <p class="review-content">{{ review.content|truncatewords:20 }}</p>
+                    {% if review.is_featured %}
+                    <div class="featured-badge">
+                        <i class="fas fa-crown"></i> Featured
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-reviews">
+            <i class="fas fa-star fa-3x text-muted mb-3"></i>
+            <h4>No Reviews Yet</h4>
+            <p class="text-muted">Be the first to share your experience with EventEase!</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'reviews:submit_review' %}" class="btn btn-primary">
+                    <i class="fas fa-star"></i> Write the First Review
+                </a>
+            {% else %}
+                <a href="{% url 'users:login' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login to Write Review
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+
+    <style>
+    /* Beautiful Hero Section */
+    .hero-section {
+        position: relative;
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .hero-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 50%, #667eea 100%);
+        z-index: 1;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 2;
+    }
+    
+    .hero-particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+    }
+    
+    .particle {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    .particle:nth-child(1) {
+        width: 80px;
+        height: 80px;
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+    }
+    
+    .particle:nth-child(2) {
+        width: 60px;
+        height: 60px;
+        top: 60%;
+        left: 80%;
+        animation-delay: 2s;
+    }
+    
+    .particle:nth-child(3) {
+        width: 40px;
+        height: 40px;
+        top: 80%;
+        left: 20%;
+        animation-delay: 4s;
+    }
+    
+    .particle:nth-child(4) {
+        width: 100px;
+        height: 100px;
+        top: 10%;
+        left: 70%;
+        animation-delay: 1s;
+    }
+    
+    .particle:nth-child(5) {
+        width: 50px;
+        height: 50px;
+        top: 40%;
+        left: 5%;
+        animation-delay: 3s;
+    }
+    
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+            opacity: 0.3;
+        }
+        50% {
+            transform: translateY(-20px) rotate(180deg);
+            opacity: 0.7;
+        }
+    }
+    
+    .hero-container {
+        position: relative;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+        z-index: 10;
+    }
+    
+    .hero-content {
+        color: white;
+        animation: slideInLeft 1s ease-out;
+    }
+    
+    .hero-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .gradient-text {
+        background: linear-gradient(45deg, #FFD700, #FFA500, #FF6B6B);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 3s ease-in-out infinite;
+    }
+    
+    @keyframes gradientShift {
+        0%, 100% {
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF6B6B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        50% {
+            background: linear-gradient(45deg, #FF6B6B, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+        line-height: 1.6;
+        margin-bottom: 3rem;
+        opacity: 0.9;
+        max-width: 500px;
+    }
+    
+    .hero-buttons {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50px !important;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #0d7377 0%, #2dd4bf 100%);
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(17, 153, 142, 0.6);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Consistent View Details Button Styling */
+    .view-details-btn {
+        width: 100% !important;
+        min-height: 48px;
+        padding: 0.8rem 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
+        text-align: center;
+        white-space: nowrap;
+        box-sizing: border-box;
+        margin: 1rem 0 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        flex-shrink: 0;
+        max-width: 100%;
+    }
+    
+    /* Ensure card content supports full-width buttons */
+    .card-content {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .card-content .view-details-btn {
+        align-self: stretch;
+        flex: 0 0 auto;
+    }
+    
+    .btn-secondary {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        color: #333;
+        box-shadow: 0 10px 30px rgba(255, 154, 158, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50px !important;
+    }
+    
+    .btn-secondary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-secondary:hover::before {
+        left: 100%;
+    }
+    
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #ff8a80 0%, #ff80ab 50%, #ea80fc 100%);
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(255, 154, 158, 0.6);
+        color: #333;
+        text-decoration: none;
+    }    .hero-stats {
+        display: flex;
+        gap: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #FFD700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .hero-visual {
+        position: relative;
+        animation: slideInRight 1s ease-out;
+    }
+    
+    .hero-image-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .hero-main-image {
+        width: 400px;
+        height: 500px;
+        object-fit: cover;
+        border-radius: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        transform: rotate(5deg);
+        transition: transform 0.3s ease;
+    }
+    
+    .hero-main-image:hover {
+        transform: rotate(0deg) scale(1.05);
+    }
+    
+    .floating-card {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        animation: floatCard 3s ease-in-out infinite;
+    }
+    
+    .card-1 {
+        top: 10%;
+        right: -10%;
+        animation-delay: 0s;
+    }
+    
+    .card-2 {
+        bottom: 20%;
+        left: -15%;
+        animation-delay: 1s;
+    }
+    
+    .card-3 {
+        top: 50%;
+        right: -20%;
+        animation-delay: 2s;
+    }
+    
+    .card-icon {
+        font-size: 1.5rem;
+    }
+    
+    .card-text {
+        font-weight: 600;
+        color: #40B5AD;
+        font-size: 0.9rem;
+    }
+    
+    @keyframes floatCard {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Responsive Design for Hero */
+    @media (max-width: 768px) {
+        .hero-container {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            text-align: center;
+            padding: 1.5rem 0.5rem;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .hero-buttons {
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: nowrap;
+            flex-direction: row;
+        }
+        
+        .hero-btn {
+            padding: 1rem 1.8rem;
+            font-size: 0.95rem;
+            flex: 1;
+            max-width: 180px;
+            text-align: center;
+        }
+        
+        .hero-stats {
+            justify-content: center;
+        }
+        
+        .hero-main-image {
+            width: 300px;
+            height: 380px;
+        }
+        
+        .floating-card {
+            padding: 0.75rem 1rem;
+        }
+        
+        .card-1 {
+            top: 5%;
+            right: 5%;
+        }
+        
+        .card-2 {
+            bottom: 15%;
+            left: 5%;
+        }
+        
+        .card-3 {
+            display: none;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .hero-section {
+            min-height: 80vh;
+        }
+        
+        .hero-container {
+            padding: 1rem 0.25rem;
+        }
+        
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .hero-buttons {
+            gap: 0.8rem;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+        
+        .hero-btn {
+            padding: 0.9rem 1.2rem;
+            font-size: 0.85rem;
+            flex: 1;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .hero-stats {
+            gap: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+        }
+        
+        .hero-main-image {
+            width: 250px;
+            height: 320px;
+        }
+    }
+    /* Horizontal Scrolling Container */
+    .horizontal-scroll-container {
+        width: 100%;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    
+    .horizontal-scroll-list {
+        display: flex;
+        gap: 2rem;
+        padding: 1rem 0;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #40B5AD #f0f0f0;
+        scroll-behavior: smooth;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Webkit scrollbar styling */
+    .horizontal-scroll-list::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .horizontal-scroll-list::-webkit-scrollbar-track {
+        background: #f0f0f0;
+        border-radius: 4px;
+    }
+    
+    .horizontal-scroll-list::-webkit-scrollbar-thumb {
+        background: #40B5AD;
+        border-radius: 4px;
+    }
+    
+    .horizontal-scroll-list::-webkit-scrollbar-thumb:hover {
+        background: #2e837e;
+    }
+    
+    /* Scroll Cards */
+    .scroll-card {
+        flex: 0 0 300px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(64,181,173,0.1);
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(64,181,173,0.1);
+        min-height: 380px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .scroll-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 30px rgba(64,181,173,0.2);
+        border-color: #40B5AD;
+    }
+    
+    /* Card Image */
+    .card-image {
+        width: 100%;
+        height: 180px;
+        overflow: hidden;
+        border-radius: 16px 16px 0 0;
+        position: relative;
+    }
+    
+    .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .scroll-card:hover .card-image img {
+        transform: scale(1.05);
+    }
+    
+    /* Card Content */
+    .card-content {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: space-between;
+        min-height: 200px;
+    }
+    
+    .card-content h3 {
+        color: #2d3748;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        line-height: 1.3;
+        text-align: left;
+        min-height: 2.6rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .scroll-card h3 {
+        color: #2e837e;
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1.3;
+        text-align: center;
+    }
+    
+    .scroll-card .card-description {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        flex-grow: 1;
+        text-align: left;
+        font-size: 0.95rem;
+        min-height: 4.8rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .scroll-card .btn {
+        margin-top: auto;
+        width: 100%;
+        min-height: 44px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    /* Venue Rating Card Styles */
+    .venue-rating-card {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+        padding: 0.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .venue-rating-card .rating-stars {
+        color: #ffd700;
+        font-size: 0.9rem;
+    }
+
+    .venue-rating-card .rating-score {
+        font-weight: bold;
+        color: #40B5AD;
+        font-size: 0.9rem;
+    }
+
+    .venue-rating-card .rating-count {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #2e837e 0%, #40B5AD 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(64,181,173,0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .scroll-card {
+            flex: 0 0 250px;
+            min-height: 360px;
+        }
+        
+        .card-image {
+            height: 150px;
+        }
+        
+        .card-content {
+            padding: 1.25rem;
+        }
+        
+        .scroll-card h3 {
+            font-size: 1.2rem;
+        }
+        
+        .horizontal-scroll-list {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            gap: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .scroll-card {
+            flex: 0 0 220px;
+            min-height: 340px;
+        }
+        
+        .card-image {
+            height: 130px;
+        }
+        
+        .card-content {
+            padding: 1rem;
+        }
+        
+        .scroll-card h3 {
+            font-size: 1.1rem;
+        }
+    }
+
+    /* Legacy styles for other sections */
+    .venue-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .venue-actions .btn {
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-align: center;
+        min-width: 100px;
+    }
+    
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+        border: 1px solid #28a745;
+    }
+    
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+
+    /* Dark Mode Styles */
+    body.dark-mode .hero-section {
+        background: linear-gradient(135deg, #1a2f2e 0%, #2d3233 50%, #232728 100%);
+    }
+
+    body.dark-mode .hero-background {
+        background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 50%, #232728 100%);
+    }
+
+    body.dark-mode .hero-title {
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .gradient-text {
+        background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    body.dark-mode .hero-subtitle {
+        color: #b0b0b0;
+    }
+
+    body.dark-mode .hero-badge span {
+        background: #40B5AD;
+        color: #232728;
+    }
+
+    body.dark-mode .floating-card {
+        background: #1a2f2e;
+        border: 1px solid rgba(64, 181, 173, 0.3);
+        color: #40B5AD;
+    }
+
+    body.dark-mode .card-icon {
+        color: #40B5AD;
+    }
+
+    body.dark-mode .card-text {
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .hero-stats .stat-item {
+        background: #1a2f2e;
+        border: 1px solid rgba(64, 181, 173, 0.3);
+    }
+
+    body.dark-mode .stat-number {
+        color: #40B5AD;
+    }
+
+    body.dark-mode .stat-label {
+        color: #b0b0b0;
+    }
+
+    /* Dark Mode Scroll Cards */
+    body.dark-mode .scroll-card {
+        background: #1a2f2e !important; /* Very dark shade of teal */
+        border: 1px solid rgba(64, 181, 173, 0.3) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    body.dark-mode .scroll-card:hover {
+        background: #1e3635 !important; /* Slightly lighter dark teal on hover */
+        border-color: #40B5AD !important;
+        box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3) !important;
+    }
+
+    body.dark-mode .scroll-card h3 {
+        color: #40B5AD !important;
+    }
+
+    body.dark-mode .scroll-card .card-description {
+        color: #b0b0b0 !important;
+    }
+
+    body.dark-mode .card-content h3 {
+        color: #40B5AD !important;
+    }
+
+    body.dark-mode .event-status-tag {
+        background: rgba(64, 181, 173, 0.9) !important;
+        color: #232728 !important;
+    }
+
+    body.dark-mode .event-status-tag.status-upcoming {
+        background: rgba(64, 181, 173, 0.9) !important;
+        color: #232728 !important;
+    }
+
+    body.dark-mode .event-status-tag.status-ongoing {
+        background: rgba(39, 174, 96, 0.9) !important;
+        color: white !important;
+    }
+
+    body.dark-mode .event-status-tag.status-completed {
+        background: rgba(127, 140, 141, 0.9) !important;
+        color: white !important;
+    }
+
+    /* Dark Mode Events Section */
+    body.dark-mode .events {
+        background: #232728 !important;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .events h2 {
+        color: #40B5AD;
+    }
+
+    /* Dark Mode Venues Section */
+    body.dark-mode .venues {
+        background: #232728 !important;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .venues h2 {
+        color: #40B5AD;
+    }
+
+    body.dark-mode .venue-actions .btn-success {
+        background-color: #40B5AD;
+        color: #232728;
+        border: 1px solid #40B5AD;
+    }
+
+    body.dark-mode .venue-actions .btn-success:hover {
+        background-color: #2e837e;
+        color: #ffffff;
+        border-color: #2e837e;
+    }
+
+    /* Reviews Section Styles */
+    .reviews {
+        background: #f8f9fa;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .reviews-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .reviews-header h2 {
+        color: #40B5AD;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .reviews-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .review-scroll-container {
+        overflow-x: auto;
+        padding: 1rem 0;
+        scrollbar-width: thin;
+        scrollbar-color: #40B5AD #f0f0f0;
+    }
+
+    .review-scroll-container::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .review-scroll-container::-webkit-scrollbar-track {
+        background: #f0f0f0;
+        border-radius: 4px;
+    }
+
+    .review-scroll-container::-webkit-scrollbar-thumb {
+        background: #40B5AD;
+        border-radius: 4px;
+    }
+
+    .review-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #369691;
+    }
+
+    .review-list {
+        display: flex;
+        gap: 1.5rem;
+        padding: 0 1rem;
+        min-width: max-content;
+    }
+
+    .review-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        min-width: 350px;
+        max-width: 350px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        text-align: left;
+    }
+
+    .review-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .reviewer-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .reviewer-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .reviewer-avatar-placeholder {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #40B5AD, #369691);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .reviewer-details h6 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .review-rating {
+        color: #ffc107;
+        font-size: 0.9rem;
+    }
+
+    .review-date {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+
+    .review-title {
+        font-weight: 600;
+        color: #40B5AD;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .review-content {
+        color: #555;
+        line-height: 1.5;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .featured-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+
+    .no-reviews {
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+
+    .no-reviews i {
+        opacity: 0.5;
+    }
+
+    .btn-primary {
+        background-color: #40B5AD;
+        border-color: #40B5AD;
+    }
+
+    .btn-primary:hover {
+        background-color: #369691;
+        border-color: #369691;
+    }
+
+    .btn-outline-primary {
+        color: #40B5AD;
+        border-color: #40B5AD;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #40B5AD;
+        border-color: #40B5AD;
+    }
+
+    /* Dark Mode Reviews */
+    body.dark-mode .reviews {
+        background: #232728;
+    }
+
+    body.dark-mode .reviews-header h2 {
+        color: #40B5AD;
+    }
+
+    body.dark-mode .review-card {
+        background: #1a2f2e;
+        border: 1px solid rgba(64, 181, 173, 0.3);
+    }
+
+    body.dark-mode .review-card:hover {
+        border-color: #40B5AD;
+        box-shadow: 0 15px 40px rgba(64, 181, 173, 0.2);
+    }
+
+    body.dark-mode .reviewer-details h6 {
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .review-title {
+        color: #40B5AD;
+    }
+
+    body.dark-mode .review-content {
+        color: #b0b0b0;
+    }
+
+    body.dark-mode .no-reviews {
+        color: #b0b0b0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .reviews-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .reviews-header h2 {
+            font-size: 2rem;
+        }
+
+        .review-card {
+            min-width: 300px;
+            max-width: 300px;
+        }
+    }
+    </style>
+{% endblock %}

@@ -1,0 +1,955 @@
+
+--- Page 1 ---
+ 
+
+--- Page 2 ---
+CSE-
+ 
+410
+ 
+ 
+Softwar e
+ 
+Development
+ 
+Md.
+ 
+Mubtasim
+ 
+Fuad
+ 
+ 
+Lecturer,
+ 
+Dept.
+ 
+of
+ 
+CSE
+ 
+ 
+E-mail:
+ 
+mubtasim@uap-bd.edu
+ 
+ 
+Course
+ 
+Synopsis
+ 
+ 
+
+--- Page 3 ---
+Students
+ 
+have
+ 
+to
+ 
+develop
+ 
+on
+ 
+real
+ 
+life
+ 
+oriented
+ 
+projects
+ 
+that
+ 
+means
+ 
+solve
+ 
+a
+  
+complex
+ 
+engineering
+ 
+problem
+ 
+in
+ 
+this
+ 
+course.
+ 
+For
+ 
+development
+ 
+purposes,
+  
+
+--- Page 4 ---
+modern
+ 
+technologies
+ 
+are
+ 
+preferred,
+ 
+including
+ 
+frontend
+ 
+frameworks
+ 
+(React.js,
+  
+Angular,
+ 
+Vue.js,
+ 
+etc.),
+ 
+backend
+ 
+platforms
+ 
+(Node.js,
+ 
+ASP.NET
+ 
+Core,
+ 
+Django,
+  
+ 
+etc.),
+ 
+full-stack
+ 
+solutions
+ 
+(Next.js,
+ 
+Laravel,
+ 
+Ruby
+ 
+on
+ 
+Rails,
+ 
+etc.),
+ 
+and
+ 
+a
+ 
+variety
+ 
+of
+  
+database
+ 
+systems
+ 
+(MySQL,
+ 
+PostgreSQL,
+ 
+MongoDB,
+ 
+Oracle,
+ 
+etc.).
+ 
+Open
+ 
+Source
+  
+projects
+ 
+are
+ 
+also
+ 
+preferred
+ 
+as
+ 
+Open
+ 
+source
+ 
+code
+ 
+is
+ 
+typically
+ 
+created
+ 
+through
+ 
+a
+  
+collaborative
+ 
+effort
+ 
+in
+ 
+which
+ 
+programmers
+ 
+improve
+ 
+upon
+ 
+the
+ 
+code
+ 
+and
+ 
+share
+ 
+the
+  
+changes
+ 
+within
+ 
+the
+ 
+community.
+ 
+Moreover,
+ 
+documentation
+ 
+is
+ 
+a
+ 
+major
+ 
+concern
+ 
+for
+  
+the
+ 
+project
+ 
+to
+ 
+ensure
+ 
+the
+ 
+Software
+ 
+Quality
+ 
+Assurance
+ 
+(SQA
+).
+ 
+Hence
+ 
+at
+ 
+the
+ 
+end
+ 
+of
+  
+semester
+ 
+students
+ 
+submit
+ 
+their
+ 
+projects
+ 
+including
+ 
+the
+ 
+documentation
+.
+ 
+2
+ 
+Project
+ 
+Groups
+ 
+ 
+
+--- Page 5 ---
+Project 
+group
+ 
+ 
+ Maximum 
+2
+ 
+or
+ 
+3
+ 
+member s
+ 
+
+--- Page 6 ---
+3
+ 
+Assessment
+ 
+ 
+
+--- Page 7 ---
+Assessment
+ 
+Type
+ 
+%
+ 
+weight
+ 
+Project
+ 
+Evaluation
+ 
+(Assessment)
+ 
+70%
+ 
+ 
+
+--- Page 8 ---
+
+ 
+Continuous
+ 
+Evaluation
+ 
+in
+ 
+Lab
+ 
+30%
+ 
+
+ 
+Presentation
+ 
+20%
+ 
+
+ 
+Viva
+ 
+20%
+ 
+ 
+Report
+ 
+(Doc
+ 
++
+ 
+Video)
+ 
+and
+ 
+CEP
+ 
+Mapping
+ 
+30%
+ 
+Total
+ 
+100%
+ 
+4
+ 
+CO-PO
+ 
+ 
+CO No.  CO Statemen ts:  Upon success ful comple tion of the course,  studen ts should be able to:  Corr esponding POs  
+
+--- Page 9 ---
+CO1 Apply the S/W Engineering knowledg e to provide a working solution on a real world problem  
+CO2 Iden tify, formula te, and analy ze a real world problem based on requir emen t analy sis.  
+CO3 Design/De velop a working solution on a real world problem using s/w designing tools.  
+
+--- Page 10 ---
+CO4 Use modern developmen t tools which are popular among s/w developer s.  
+CO5 Iden tify socie tal, health, safety, legal and cultur al issues related to the project.  1-Engineering Knowledg e 2-Problem Analy sis 3-Design/ developmen t of solutions  
+5-Modern Tool Usag e 6-The Engineer and 
+Socie ty 
+5
+ 
+CO-PO
+ 
+ 
+CO  No. 
+ 
+ CO Statemen ts:  Upon success ful comple tion of the course, studen ts should be able to:  
+CO6 Practice professional ethics and 
+
+--- Page 11 ---
+responsibilities and  norms of engineering practice.  Corr esponding POs  8-Ethics  
+CO7 Work as a team and fulfil individual responsibility . 9-Individual and Team work  
+CO8 Communic ate effectiv ely through presen tation and  write effectiv e reports and documen tations on the  
+project.  CO9 Apply project manag emen t principlesusing Version  
+
+--- Page 12 ---
+Control System, and produce cost value analy sis. CO10 Recogniz e the need for, and have the prepar ation and ability to engage in independen t and life-long learning  in the broades t context of requir emen t chang es and introduction of modern developmen t tools  10-Communic ation  
+11-Pr oject Manag emen t and Finance  12-Lif elong learning 
+6
+ 
+--- Page 13 ---
+
+--- Page 14 ---
+Weighting
+ 
+COs
+ 
+with
+ 
+Assessment
+ 
+methods
+ 
+ 
+Assessment  Type 
+ 
+ Presentation  followed Viva Report and %  weight 
+CO1
+ 
+CO2
+ 
+CO3
+ 
+CO4
+ 
+CO5
+ 
+CO6
+ 
+CO7
+ 
+CO8
+ 
+CO9
+ 
+CO10
+ 40% 10 15 15  
+CEP
+ 
+Mapping30% 5 5 3 5 2 5 5 Continuous  Project   Evaluation  (Assessment)  30% 5 10 5 5 5  
+Total
+ 100%
+5
+ 
+15
+ 
+15
+ 
+5
+ 
+18
+ 
+5
+ 
+5
+ 
+17
+ 
+10
+ 
+5
+ 
+--- Page 15 ---
+7
+ 
+PO Attainmen t  
+Final
+ 
+Year
+ 
+Project
+ Final Year  Final Year  
+Final Year   
+Thesis-Pr oject
+ Final Year Cour ses  Project  
+--- Page 16 ---
+Design   Project  Third Year Cour ses  Third Year   Cour ses  Second Year 
+Cour ses Second 
+Year Cour ses  
+First Year Cour ses First Year   Cour ses  Final Year  Cour ses  
+
+--- Page 17 ---
+
+--- Page 18 ---
+IEA
+ 
+and
+ 
+CEP
+ 
+Accor ding
+ 
+to
+ 
+Washington
+ 
+Accord
+ 
+
+Knowledge
+ 
+Profile
+ 
+(K)
+ 
+ 
+
+Level
+ 
+of
+ 
+Problem
+ 
+Solving(P)
+ 
+ 
+
+Attributes(A)
+ 
+ 
+9
+ 
+--- Page 19 ---
+
+--- Page 20 ---
+Complex
+ 
+Engineering
+ 
+Problems
+ How to Demonstrate 
+through
+ 
+Projects?
+ 
+ 
+10
+ 
+--- Page 21 ---
+
+--- Page 22 ---
+Knowledge
+ 
+Profile
+ 
+(K)
+ 
+ 
+ 
+11
+ 
+--- Page 23 ---
+
+--- Page 24 ---
+Complex
+ 
+Engineering
+ 
+Problems
+ 
+12
+ 
+--- Page 25 ---
+
+--- Page 26 ---
+Complex
+ 
+Engineering
+ 
+Problem
+ 
+Solving
+ 
+(P)
+ 
+13
+ 
+--- Page 27 ---
+
+--- Page 28 ---
+Complex
+ 
+Engineering
+ 
+Activities
+ 
+(A)
+ 
+14
+ 
+--- Page 29 ---
+
+--- Page 30 ---
+Complex
+ 
+Engineering
+ 
+Problems
+ 
+15
+ 
+--- Page 31 ---
+
+--- Page 32 ---
+Complex
+ 
+Engineering
+ 
+Problems
+ 
+16
+ 
+Project
+ 
+Idea
+ 
+ 
+--- Page 33 ---
+This are not comple x engineering problem (CEP),  
+try
+ 
+to
+ 
+mak e
+ 
+it
+ 
+into
+ 
+CEP
+ 
+ 
+--- Page 34 ---
+1. https://nevonprojects.com/year 
+projects-for-computer-engineering/
+ 
+2.
+ 
+https://1000projects.org/
+ 
+17
+ 
+ 
+--- Page 35 ---
+
+--- Page 36 ---
+Complex
+ 
+Engineering
+ 
+Problem
+ 
+18
+ 
+--- Page 37 ---
+
+--- Page 38 ---
+Complex
+ 
+Engineering
+ 
+Problem
+ 
+19
+ 
+--- Page 39 ---
+Comple x Engineering Problem  
+--- Page 40 ---
+Design a simple Bangla Speech Recognition system.  
+Such a system can be incorpor ated with a wheelchair to mak e it voice controlled and  
+--- Page 41 ---
+thus enables a physically handic apped person to move freely without the help of a  
+constant
+ 
+care-
+ 
+giver.
+ 
+Mor eover,
+ 
+the
+ 
+ability
+ 
+to
+ 
+give
+ 
+commands
+ 
+in
+ 
+Bangla
+ 
+will
+ 
+mak e
+ 
+the
+  
+system
+ 
+more
+ 
+user -
+ 
+friendly
+ 
+in
+ 
+the
+ 
+context
+ 
+of
+ 
+Bangladesh.
+ 
+ 
+The system should be speak er-independen t, i.e. it is requir ed that the Bangla speech  
+recognition
+ 
+system
+ 
+should
+ 
+work
+ 
+satisfactorily
+ 
+irrespectiv e
+ 
+of
+ 
+sex,
+ 
+age-group,
+ 
+or
+ 
+dialect
+ 
+of
+  
+the
+ 
+speak er.
+ 
+ 
+Studen ts are requir ed to explor e different methodologies to investigate the problem  
+through
+ 
+design
+ 
+of
+ 
+experimen t
+ 
+and
+ 
+data
+ 
+analy sis
+ 
+and
+ 
+select
+ 
+or
+ 
+develop
+ 
+an
+ 
+optimal
+  
+methodology
+ 
+for
+ 
+design
+ 
+of
+ 
+the
+ 
+system.
+ 
+20 
+--- Page 42 ---
+
+--- Page 43 ---
+Complex
+ 
+Engineering
+ 
+Problem
+ 
+21
+ 
+--- Page 44 ---
+
+--- Page 45 ---
+Complex
+ 
+Engineering
+ 
+Problem
+ 
+22
+ 
+--- Page 46 ---
+Project
+ 
+Proposal
+ 
+(Next
+ 
+lab)
+ 
+ 
+1.
+ 
+Project
+ 
+Title
+ 
+ 
+2.
+ 
+Project
+ 
+Member s
+ 
+ 
+--- Page 47 ---
+3.
+ 
+Motivation
+ 
+ 
+4.
+ 
+Problem
+ 
+Definition
+ 
+ 
+5.
+ 
+Objective,
+ 
+Solution
+ 
+&
+ 
+Project
+ 
+Outputs
+ 
+ 
+6.
+ 
+Impact
+ 
+on
+ 
+Society
+ 
+ 
+7.
+ 
+Critical
+ 
+challenges
+ 
+ 
+8.
+ 
+Conflicting
+ 
+requir ement
+ 
+(Optional)
+ 
+ 
+9.How
+ 
+P
+ 
+and
+ 
+K
+ 
+s
+ 
+are
+ 
+addr essed
+ 
+through
+ 
+the
+ 
+project
+ 
+and
+ 
+mapping
+  
+10.Pr oject
+ 
+Management
+ 
+(Time-table)
+ 
+and
+ 
+Cost
+ 
+analysis
+ 
+23
+ 
+ 
+--- Page 48 ---
+
+--- Page 49 ---
+Thanks
+ 
+to
+ 
+All
+ 
+ 
+24
+ 

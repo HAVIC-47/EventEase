@@ -1,0 +1,947 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment - {{ event.title }} - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="payment-container">
+        <div class="payment-header">
+            <h1>💳 Payment</h1>
+            <div class="breadcrumb">
+                <a href="{% url 'events:event_list' %}">Events</a> > 
+                <a href="{% url 'events:event_detail' event.pk %}">{{ event.title }}</a> > 
+                Payment
+            </div>
+        </div>
+
+        <div class="payment-content">
+            <div class="payment-summary">
+                <h2>Order Summary</h2>
+                <div class="booking-details">
+                    <div class="event-info">
+                        <h3>{{ event.title }}</h3>
+                        <p><strong>Date:</strong> {{ event.start_date|date:"F j, Y" }} at {{ event.start_date|time:"g:i A" }}</p>
+                        <p><strong>Location:</strong> {{ event.venue_name }}</p>
+                        <p><strong>Attendee:</strong> {{ booking.attendee_name }}</p>
+                        <p><strong>Email:</strong> {{ booking.attendee_email }}</p>
+                    </div>
+                    
+                    <div class="ticket-breakdown">
+                        <h4>Tickets</h4>
+                        {% for item in booking.ticket_items.all %}
+                            <div class="ticket-item">
+                                <span>{{ item.ticket_category.name }} × {{ item.quantity }}</span>
+                                <span>${{ item.subtotal }}</span>
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="total-amount">
+                            <strong>Total: ${{ booking.amount }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-form-section">
+                <h2>Payment Method</h2>
+                <form method="post" class="payment-form" id="paymentForm">
+                    {% csrf_token %}
+                    
+                    <div class="payment-methods">
+                        <div class="payment-method">
+                            <input type="radio" id="credit_card" name="payment_method" value="credit_card" checked>
+                            <label for="credit_card">💳 Credit Card</label>
+                        </div>
+                        
+                        <div class="payment-method">
+                            <input type="radio" id="debit_card" name="payment_method" value="debit_card">
+                            <label for="debit_card">💳 Debit Card</label>
+                        </div>
+                        
+                        <div class="payment-method">
+                            <input type="radio" id="paypal" name="payment_method" value="paypal">
+                            <label for="paypal">🔵 PayPal</label>
+                        </div>
+                        
+                        <div class="payment-method bkash-method">
+                            <input type="radio" id="bkash" name="payment_method" value="bkash">
+                            <label for="bkash">
+                                <span class="payment-logo">📱</span>
+                                <span class="payment-text">bKash</span>
+                                <span class="payment-badge">🇧🇩</span>
+                            </label>
+                        </div>
+                        
+                        <div class="payment-method nagad-method">
+                            <input type="radio" id="nagad" name="payment_method" value="nagad">
+                            <label for="nagad">
+                                <span class="payment-logo">💰</span>
+                                <span class="payment-text">Nagad</span>
+                                <span class="payment-badge">🇧🇩</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mock-payment-notice">
+                        <p><strong>Note:</strong> This system supports SSL gateway integration for secure payments.</p>
+                        <p><small>bKash and Nagad payments are processed through SSL Commerz gateway.</small></p>
+                    </div>
+
+                    <div class="payment-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <span class="btn-icon">💳</span>
+                            <span>Complete Payment </span>
+                        </button>
+                        <a href="{% url 'payments:payment_cancel' booking.id %}" class="btn btn-secondary">
+                            <span class="btn-icon">✕</span>
+                            <span>Cancel</span>
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Quick Pay for Testing -->
+                <div class="quick-pay-section">
+                    <h3>⚡ Quick Pay (Demo)</h3>
+                    <p>For testing purposes - instantly mark as paid:</p>
+                    <button onclick="quickPay({{ booking.id }})" class="btn btn-success">
+                        <span class="btn-icon">⚡</span>
+                        <span>Quick Pay ${{ booking.amount }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.payment-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.breadcrumb {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.payment-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.payment-summary,
+.payment-form-section {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.payment-summary h2,
+.payment-form-section h2 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+.event-info h3 {
+    color: #3498db;
+    margin-bottom: 0.5rem;
+}
+
+.event-info p {
+    margin-bottom: 0.3rem;
+    color: #555;
+}
+
+.ticket-breakdown {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.ticket-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding: 0.3rem 0;
+}
+
+.total-amount {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #e8f6f3;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #27ae60;
+}
+
+.payment-methods {
+    margin-bottom: 1.5rem;
+}
+
+.payment-method {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method:hover {
+    border-color: #3498db;
+    background: #f0f8ff;
+}
+
+.payment-method input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.payment-method label {
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* bKash and Nagad specific styling */
+.bkash-method {
+    background: linear-gradient(135deg, #e2136e 0%, #d10861 100%);
+    border-color: #e2136e;
+    color: white;
+}
+
+.bkash-method:hover {
+    background: linear-gradient(135deg, #d10861 0%, #b8055a 100%);
+    border-color: #d10861;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(226, 19, 110, 0.3);
+}
+
+.nagad-method {
+    background: linear-gradient(135deg, #f47920 0%, #e06e1b 100%);
+    border-color: #f47920;
+    color: white;
+}
+
+.nagad-method:hover {
+    background: linear-gradient(135deg, #e06e1b 0%, #c7611a 100%);
+    border-color: #e06e1b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(244, 121, 32, 0.3);
+}
+
+.payment-logo {
+    font-size: 1.4rem;
+}
+
+.payment-text {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.payment-badge {
+    margin-left: auto;
+    font-size: 1.2rem;
+}
+
+.bkash-method input[type="radio"]:checked + label,
+.nagad-method input[type="radio"]:checked + label {
+    color: white;
+    font-weight: 700;
+}
+
+.bkash-method input[type="radio"],
+.nagad-method input[type="radio"] {
+    accent-color: white;
+}
+
+.mock-payment-notice {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: #856404;
+}
+
+.payment-actions {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    position: relative;
+    padding: 1.4rem 3rem;
+    border: none;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    flex: 1;
+    max-width: 350px;
+    min-width: 200px;
+    width: 100%;
+    height: 60px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #369691 0%, #2e837e 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.5);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    border: 2px solid #6c757d;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.2);
+    padding: 1.4rem 3rem;
+    font-size: 1.2rem;
+    flex: 1;
+    max-width: 350px;
+    min-width: 200px;
+    width: 100%;
+    height: 60px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    border-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #40B5AD 0%, #2dd4bf 100%);
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    padding: 1.4rem 3rem;
+    font-size: 1.2rem;
+    flex: 1;
+    max-width: 350px;
+    min-width: 200px;
+    width: 100%;
+    height: 60px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+}
+
+.btn-large {
+    padding: 1.4rem 3rem;
+    font-size: 1.2rem;
+    flex: 1;
+    max-width: 350px;
+    min-width: 200px;
+    width: 100%;
+    height: 60px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+}
+
+/* Add icons to buttons */
+.btn-primary .btn-icon {
+    font-size: 1.3rem;
+}
+
+.btn-secondary .btn-icon {
+    font-size: 1.1rem;
+}
+
+.btn-success .btn-icon {
+    font-size: 1.2rem;
+}
+
+.quick-pay-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #e8f5e8;
+    border-radius: 8px;
+    border: 1px solid #c3e6cb;
+}
+
+.quick-pay-section h3 {
+    color: #155724;
+    margin-bottom: 0.5rem;
+}
+
+.quick-pay-section p {
+    color: #155724;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .payment-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .payment-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        min-width: auto;
+        height: 55px;
+    }
+    
+    .btn-large {
+        padding: 1.2rem 2rem;
+        font-size: 1.1rem;
+        height: 55px;
+    }
+    
+    .payment-container {
+        padding: 0 0.5rem;
+    }
+    
+    .payment-summary,
+    .payment-form-section {
+        padding: 1rem;
+    }
+}
+
+/* Dark Mode Styles for Payment Process */
+body.dark-mode .container {
+    background: #232728;
+}
+
+body.dark-mode .payment-container {
+    background: transparent;
+}
+
+body.dark-mode .payment-header {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    border-bottom: 2px solid #40B5AD;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .payment-header h1 {
+    color: #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .breadcrumb {
+    color: #b0b0b0;
+}
+
+body.dark-mode .breadcrumb a {
+    color: #40B5AD;
+    transition: color 0.3s ease;
+}
+
+body.dark-mode .breadcrumb a:hover {
+    color: #52c4ba;
+}
+
+/* Enhanced Payment Summary Card */
+body.dark-mode .payment-summary {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .payment-summary h2 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 2px solid #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+body.dark-mode .booking-details {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .event-info {
+    background: rgba(64, 181, 173, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+body.dark-mode .event-info h3 {
+    color: #40B5AD;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+body.dark-mode .event-info p {
+    color: #e0e0e0;
+    margin-bottom: 0.3rem;
+}
+
+body.dark-mode .event-info strong {
+    color: #40B5AD;
+}
+
+body.dark-mode .ticket-breakdown {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .ticket-breakdown h4 {
+    color: #40B5AD;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+body.dark-mode .ticket-item {
+    background: rgba(64, 181, 173, 0.1);
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    color: #e0e0e0;
+}
+
+body.dark-mode .total-amount {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced Payment Form Section Card */
+body.dark-mode .payment-form-section {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .payment-form-section h2 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 2px solid #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+body.dark-mode .payment-methods {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    margin-bottom: 1.5rem;
+}
+
+body.dark-mode .payment-method {
+    background: rgba(64, 181, 173, 0.1);
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .payment-method:hover {
+    background: rgba(64, 181, 173, 0.2);
+    border-color: #40B5AD;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .payment-method input[type="radio"]:checked + label {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+body.dark-mode .payment-method label {
+    color: #e0e0e0;
+    font-weight: 500;
+}
+
+/* Dark mode styles for bKash and Nagad */
+body.dark-mode .bkash-method {
+    background: linear-gradient(135deg, #e2136e 0%, #d10861 100%);
+    border-color: #e2136e;
+    color: white;
+    box-shadow: 0 4px 15px rgba(226, 19, 110, 0.2);
+}
+
+body.dark-mode .bkash-method:hover {
+    background: linear-gradient(135deg, #d10861 0%, #b8055a 100%);
+    border-color: #d10861;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(226, 19, 110, 0.4);
+}
+
+body.dark-mode .nagad-method {
+    background: linear-gradient(135deg, #f47920 0%, #e06e1b 100%);
+    border-color: #f47920;
+    color: white;
+    box-shadow: 0 4px 15px rgba(244, 121, 32, 0.2);
+}
+
+body.dark-mode .nagad-method:hover {
+    background: linear-gradient(135deg, #e06e1b 0%, #c7611a 100%);
+    border-color: #e06e1b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(244, 121, 32, 0.4);
+}
+
+body.dark-mode .bkash-method label,
+body.dark-mode .nagad-method label {
+    color: white;
+    font-weight: 600;
+}
+
+body.dark-mode .bkash-method input[type="radio"]:checked + label,
+body.dark-mode .nagad-method input[type="radio"]:checked + label {
+    color: white;
+    font-weight: 700;
+}
+
+body.dark-mode .mock-payment-notice {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    color: #ffc107;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+body.dark-mode .mock-payment-notice strong {
+    color: #ffdb4d;
+}
+
+/* Enhanced Quick Pay Section Card */
+body.dark-mode .quick-pay-section {
+    background: #1a2f2e;
+    border: 1px solid rgba(39, 174, 96, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .quick-pay-section h3 {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: #ffffff;
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+body.dark-mode .quick-pay-section p {
+    color: #b0b0b0;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Enhanced Button Styles for Dark Mode */
+body.dark-mode .payment-actions {
+    background: rgba(64, 181, 173, 0.05);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    margin: 2rem 0;
+}
+
+body.dark-mode .btn {
+    position: relative;
+    border: 2px solid transparent;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    padding: 1.4rem 3rem;
+    font-size: 1.2rem;
+    flex: 1;
+    max-width: 350px;
+    min-width: 200px;
+    width: 100%;
+    height: 60px;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+}
+
+body.dark-mode .btn::before {
+    background: linear-gradient(90deg, transparent, rgba(64, 181, 173, 0.2), transparent);
+}
+
+body.dark-mode .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .btn-primary:hover {
+    background: linear-gradient(135deg, #369691 0%, #2e837e 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.5);
+    border-color: #40B5AD;
+}
+
+body.dark-mode .btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+    border-color: rgba(108, 117, 125, 0.3);
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.5);
+    border-color: #6c757d;
+}
+
+body.dark-mode .btn-success {
+    background: linear-gradient(135deg, #40B5AD 0%, #2dd4bf 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.4);
+    border-color: rgba(64, 181, 173, 0.3);
+    padding: 1.4rem 3rem;
+    font-size: 1.2rem;
+    flex: 1;
+    max-width: 350px;
+    min-width: 200px;
+    width: 100%;
+    height: 60px;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+}
+
+body.dark-mode .btn-success:hover {
+    background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.5);
+    border-color: #40B5AD;
+}
+
+body.dark-mode .quick-pay-section {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.1) 0%, rgba(45, 212, 191, 0.05) 100%);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .quick-pay-section h3 {
+    color: #40B5AD;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Additional Form Styles */
+body.dark-mode .form-group label {
+    color: #40B5AD;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .form-group input::placeholder {
+    color: #888;
+}
+
+body.dark-mode .security-info {
+    background: rgba(64, 181, 173, 0.2);
+    color: #e0e0e0;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .alert {
+    background: rgba(64, 181, 173, 0.2);
+    color: #e0e0e0;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .alert-info {
+    background: rgba(23, 162, 184, 0.2);
+    color: #17a2b8;
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
+body.dark-mode .alert-warning {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-color: rgba(255, 193, 7, 0.3);
+}
+</style>
+
+<script>
+function quickPay(bookingId) {
+    if (confirm('Mark this booking as paid instantly? (Demo only)')) {
+        fetch(`/payments/quick-pay/${bookingId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.href = `/events/{{ event.pk }}/`;
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during payment');
+        });
+    }
+}
+
+// Payment form submission handler
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Prevent default form submission
+    
+    const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+    
+    if (!selectedMethod) {
+        alert('Please select a payment method');
+        return;
+    }
+    
+    const paymentMethod = selectedMethod.value;
+    const bookingId = '{{ booking.id }}';
+    
+    // Redirect to specific payment pages for bKash and Nagad
+    if (paymentMethod === 'bkash') {
+        window.location.href = `/payments/bkash/${bookingId}/`;
+    } else if (paymentMethod === 'nagad') {
+        window.location.href = `/payments/nagad/${bookingId}/`;
+    } else {
+        // For other payment methods, submit form normally
+        this.submit();
+    }
+});
+
+// Payment method selection visual feedback
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Remove active class from all payment methods
+        document.querySelectorAll('.payment-method').forEach(method => {
+            method.classList.remove('selected');
+        });
+        
+        // Add active class to selected method
+        if (this.checked) {
+            this.closest('.payment-method').classList.add('selected');
+        }
+    });
+});
+
+// Add selected class styling
+const style = document.createElement('style');
+style.textContent = `
+    .payment-method.selected {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(64, 181, 173, 0.3);
+        border-color: #40B5AD !important;
+    }
+    
+    body.dark-mode .payment-method.selected {
+        box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

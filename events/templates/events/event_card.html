@@ -1,0 +1,288 @@
+<div class="event-card {% if status %}event-{{ status }}{% endif %}">
+    <div class="event-header">
+        <div class="event-status-badge">
+            {% if status == 'live' %}
+                <span class="status-badge live">🔴 LIVE</span>
+            {% elif status == 'upcoming' %}
+                <span class="status-badge upcoming">⏰ UPCOMING</span>
+            {% elif status == 'completed' %}
+                <span class="status-badge completed">✅ COMPLETED</span>
+            {% endif %}
+        </div>
+        <div class="event-actions">
+            <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-sm btn-outline">View</a>
+            <a href="{% url 'events:event_edit' event.pk %}" class="btn btn-sm btn-primary">Edit</a>
+        </div>
+    </div>
+    
+    <div class="event-content">
+        <h3 class="event-title">{{ event.title }}</h3>
+        <p class="event-description">{{ event.description|truncatewords:15 }}</p>
+        
+        <div class="event-meta">
+            <div class="meta-item">
+                <strong>📅 Date:</strong> {{ event.start_date|date:"M j, Y" }}
+                {% if event.end_date != event.start_date %}
+                    - {{ event.end_date|date:"M j, Y" }}
+                {% endif %}
+            </div>
+            <div class="meta-item">
+                <strong>🕒 Time:</strong> {{ event.start_date|time:"g:i A" }}
+            </div>
+            <div class="meta-item">
+                <strong>📍 Location:</strong> {{ event.location|truncatechars:30 }}
+            </div>
+            <div class="meta-item">
+                <strong>👥 Capacity:</strong> {{ event.current_attendees }}/{{ event.max_attendees }}
+            </div>
+            <div class="meta-item">
+                <strong>💰 Price:</strong> 
+                {% if event.is_free %}
+                    Free
+                {% else %}
+                    ${{ event.ticket_price }}
+                {% endif %}
+            </div>
+            {% if event.review_count > 0 %}
+            <div class="meta-item rating-meta">
+                <strong>⭐ Rating:</strong> 
+                <div class="rating-display">
+                    <span class="rating-value">{{ event.average_rating|floatformat:1 }}/5</span>
+                    <div class="rating-stars">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= event.average_rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="rating-count">({{ event.review_count }})</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.event-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e0f7fa;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.2);
+    border-color: #40B5AD;
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.live {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-badge.upcoming {
+    background: #e0f7fa;
+    color: #40B5AD;
+}
+
+.status-badge.completed {
+    background: #e0f7fa;
+    color: #2e837e;
+}
+
+.event-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #2e837e;
+    border-color: #40B5AD;
+}
+
+.btn-outline:hover {
+    background: #e0f7fa;
+    border-color: #40B5AD;
+    color: #2e837e;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2e837e;
+    text-decoration: none;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+.event-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #232323;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
+}
+
+.event-description {
+    color: #2e837e;
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+}
+
+.event-meta {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.meta-item {
+    font-size: 0.875rem;
+    color: #2e837e;
+    display: flex;
+    align-items: center;
+}
+
+.meta-item strong {
+    color: #232323;
+    margin-right: 0.5rem;
+    min-width: 80px;
+}
+
+/* Rating Display Styles */
+.rating-meta .rating-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rating-meta .rating-value {
+    font-weight: 600;
+    color: #E91E63;
+    font-size: 0.9em;
+}
+
+.rating-meta .rating-stars {
+    color: #FFD700;
+    font-size: 0.8em;
+}
+
+.rating-meta .rating-count {
+    color: #666;
+    font-size: 0.8em;
+}
+
+/* Dark Mode Styles for Event Cards */
+body.dark-mode .event-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .event-card:hover {
+    background: #1e3635; /* Slightly lighter dark teal on hover */
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .status-badge.live {
+    background: rgba(220, 38, 38, 0.2);
+    color: #ff6b6b;
+}
+
+body.dark-mode .status-badge.upcoming {
+    background: rgba(64, 181, 173, 0.2);
+    color: #40B5AD;
+}
+
+body.dark-mode .status-badge.completed {
+    background: rgba(127, 140, 141, 0.2);
+    color: #95a5a6;
+}
+
+body.dark-mode .btn-outline {
+    background: transparent;
+    color: #40B5AD;
+    border-color: #40B5AD;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: rgba(64, 181, 173, 0.1);
+    border-color: #40B5AD;
+    color: #40B5AD;
+}
+
+body.dark-mode .btn-primary {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .btn-primary:hover {
+    background: #2e837e;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .event-title {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-description {
+    color: #b0b0b0;
+}
+
+body.dark-mode .meta-item {
+    color: #b0b0b0;
+}
+
+/* Dark mode rating styles */
+body.dark-mode .rating-meta .rating-count {
+    color: #a0aec0;
+}
+
+body.dark-mode .meta-item strong {
+    color: #40B5AD;
+}
+</style>

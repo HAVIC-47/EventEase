@@ -1,0 +1,974 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book {{ venue.name }} - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="booking-container">
+        <div class="booking-header">
+            <h1>📅 Book Venue</h1>
+            <div class="breadcrumb">
+                <a href="{% url 'venues:venue_list' %}">Venues</a> > 
+                <a href="{% url 'venues:venue_detail' venue.pk %}">{{ venue.name }}</a> > 
+                Book
+            </div>
+        </div>
+
+        <div class="booking-content">
+            <!-- Venue Summary -->
+            <div class="venue-summary">
+                <h2>Venue Details</h2>
+                <div class="venue-info">
+                    <div class="venue-image">
+                        {% with venue.images.all|first as primary_image %}
+                            {% if primary_image %}
+                                <img src="{{ primary_image.image.url }}" alt="{{ venue.name }}">
+                            {% elif venue.main_image %}
+                                <img src="{{ venue.main_image.url }}" alt="{{ venue.name }}">
+                            {% else %}
+                                <div class="placeholder-image">
+                                    <span>🏢</span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="venue-details">
+                        <h3>{{ venue.name }}</h3>
+                        <p><strong>Type:</strong> {{ venue.get_venue_type_display }}</p>
+                        <p><strong>Capacity:</strong> {{ venue.capacity }} people</p>
+                        <p><strong>Location:</strong> {{ venue.address }}, {{ venue.city }}</p>
+                        
+                        <div class="pricing-info">
+                            {% if venue.price_per_hour %}
+                                <div class="price-item">
+                                    <span class="price">${{ venue.price_per_hour }}</span>
+                                    <span class="period">per hour</span>
+                                </div>
+                            {% endif %}
+                            {% if venue.price_per_day %}
+                                <div class="price-item">
+                                    <span class="price">${{ venue.price_per_day }}</span>
+                                    <span class="period">per day</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="booking-form-section">
+                <h2>Booking Information</h2>
+                <form method="post" class="booking-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date & Time *</label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                                <div class="error-message">{{ form.start_date.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">When do you need the venue?</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date & Time *</label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                                <div class="error-message">{{ form.end_date.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">When will you finish using the venue?</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.event_title.id_for_label }}" class="form-label">Event Title *</label>
+                        {{ form.event_title }}
+                        {% if form.event_title.errors %}
+                            <div class="error-message">{{ form.event_title.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-help">What is the name of your event?</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.event_description.id_for_label }}" class="form-label">Event Description</label>
+                        {{ form.event_description }}
+                        {% if form.event_description.errors %}
+                            <div class="error-message">{{ form.event_description.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-help">Brief description of your event</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.special_requirements.id_for_label }}" class="form-label">Special Requirements</label>
+                        {{ form.special_requirements }}
+                        {% if form.special_requirements.errors %}
+                            <div class="error-message">{{ form.special_requirements.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-help">Any special setup, equipment, or services needed?</small>
+                    </div>
+
+                    <!-- Pricing Calculation -->
+                    <div class="pricing-calculation">
+                        <h3>💰 Pricing Estimate</h3>
+                        <div class="calculation-info">
+                            <p><strong>Note:</strong> This is an estimate based on the venue's standard rates. 
+                            Final pricing may vary based on your specific requirements and the venue manager's approval.</p>
+                            
+                            {% if venue.price_per_hour %}
+                                <div class="rate-info">
+                                    <span>Hourly Rate: ${{ venue.price_per_hour }}/hour</span>
+                                </div>
+                            {% endif %}
+                            {% if venue.price_per_day %}
+                                <div class="rate-info">
+                                    <span>Daily Rate: ${{ venue.price_per_day }}/day</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="total-estimate">
+                                <span>Final pricing will be confirmed by the venue manager</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="contact-section">
+                        <h3>📞 Your Contact Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.contact_email.id_for_label }}" class="form-label">Contact Email *</label>
+                                {{ form.contact_email }}
+                                {% if form.contact_email.errors %}
+                                    <div class="error-message">{{ form.contact_email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.contact_phone.id_for_label }}" class="form-label">Contact Phone *</label>
+                                {{ form.contact_phone }}
+                                {% if form.contact_phone.errors %}
+                                    <div class="error-message">{{ form.contact_phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="terms-section">
+                        <h3>📋 Terms & Conditions</h3>
+                        <div class="terms-content">
+                            <ul>
+                                <li>This booking request is subject to venue availability and manager approval</li>
+                                <li>You will be notified within 24-48 hours about the status of your request</li>
+                                <li>Final pricing and terms will be confirmed by the venue manager</li>
+                                <li>Cancellation policies may vary - please discuss with the venue manager</li>
+                                <li>You are responsible for any damages that occur during your event</li>
+                                <li>The venue reserves the right to refuse service for any reason</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="terms-checkbox">
+                            <input type="checkbox" id="accept-terms" name="accept_terms" required>
+                            <label for="accept-terms">
+                                I agree to the terms and conditions and understand that this is a booking request
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            📅 Submit Booking Request
+                        </button>
+                        <a href="{% url 'venues:venue_detail' venue.pk %}" class="btn btn-secondary">
+                            ❌ Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Venue Manager Contact -->
+            <div class="manager-contact">
+                <h3>💬 Questions? Contact the Venue Manager</h3>
+                <div class="manager-info">
+                    <div class="manager-avatar">
+                        {% if venue.manager.profile.avatar %}
+                            <img src="{{ venue.manager.profile.avatar.url }}" alt="{{ venue.manager.get_full_name }}">
+                        {% else %}
+                            <div class="avatar-placeholder">{{ venue.manager.first_name|first }}{{ venue.manager.last_name|first }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="manager-details">
+                        <h4>{{ venue.manager.get_full_name }}</h4>
+                        {% if venue.contact_email %}
+                            <p>📧 {{ venue.contact_email }}</p>
+                        {% endif %}
+                        {% if venue.contact_phone %}
+                            <p>📞 {{ venue.contact_phone }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.booking-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.booking-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.booking-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.breadcrumb {
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+.breadcrumb a {
+    color: white;
+    text-decoration: none;
+}
+
+.booking-content {
+    padding: 2rem;
+}
+
+.venue-summary {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.venue-summary h2 {
+    color: #333;
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+}
+
+.venue-info {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.venue-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.venue-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-image {
+    width: 100%;
+    height: 100%;
+    background: #e1e8ed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #666;
+}
+
+.venue-details h3 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.venue-details p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.pricing-info {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.price-item {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 6px;
+    text-align: center;
+    border: 2px solid #e1e8ed;
+}
+
+.price-item .price {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #40B5AD;
+}
+
+.price-item .period {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.booking-form-section {
+    margin-bottom: 2rem;
+}
+
+.booking-form-section h2 {
+    color: #333;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.3rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #40B5AD;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-control, input, select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.form-control:focus, input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #40B5AD;
+}
+
+.readonly {
+    background: #f8f9fa;
+    cursor: not-allowed;
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.pricing-calculation {
+    background: #e8f5e8;
+    border: 2px solid #27ae60;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.pricing-calculation h3 {
+    color: #27ae60;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+}
+
+.calculation-info p {
+    color: #333;
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+}
+
+.rate-info {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    border-left: 4px solid #27ae60;
+}
+
+.total-estimate {
+    background: #d4edda;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+    text-align: center;
+    font-weight: 600;
+    color: #155724;
+}
+
+.contact-section, .terms-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.contact-section h3, .terms-section h3 {
+    color: #333;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.terms-content ul {
+    margin: 0 0 1rem 0;
+    padding-left: 1.5rem;
+    color: #666;
+}
+
+.terms-content li {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.terms-checkbox {
+    background: #e3f2fd;
+    border: 2px solid #40B5AD;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.terms-checkbox input[type="checkbox"] {
+    margin-top: 0.25rem;
+    transform: scale(1.2);
+}
+
+.terms-checkbox label {
+    color: #333;
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #369691;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.manager-contact {
+    background: #e3f2fd;
+    border: 1px solid #40B5AD;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.manager-contact h3 {
+    color: #40B5AD;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.manager-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.manager-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.manager-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #40B5AD;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.manager-details h4 {
+    margin: 0 0 0.25rem 0;
+    color: #333;
+}
+
+.manager-details p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .venue-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .pricing-info {
+        justify-content: center;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        justify-content: center;
+    }
+    
+    .manager-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .terms-checkbox {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .terms-checkbox input[type="checkbox"] {
+        margin-top: 0;
+    }
+}
+
+/* Custom styling for Django form widgets */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    appearance: none;
+}
+
+/* Dark Mode Styles for Venue Booking */
+body.dark-mode .container {
+    background: #232728;
+}
+
+body.dark-mode .booking-container {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .booking-header {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    border-bottom: 2px solid #40B5AD;
+}
+
+body.dark-mode .booking-header h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .breadcrumb {
+    color: #b0b0b0;
+}
+
+body.dark-mode .breadcrumb a {
+    color: #40B5AD;
+}
+
+body.dark-mode .venue-summary {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .venue-summary h2 {
+    color: #40B5AD;
+}
+
+body.dark-mode .venue-details h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .venue-details p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .venue-details strong {
+    color: #40B5AD;
+}
+
+body.dark-mode .pricing-info {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .price {
+    color: #40B5AD;
+}
+
+body.dark-mode .period {
+    color: #b0b0b0;
+}
+
+body.dark-mode .placeholder-image {
+    background: #2d3233;
+    color: #40B5AD;
+}
+
+body.dark-mode .booking-form {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .form-section h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .form-group label {
+    color: #40B5AD;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus,
+body.dark-mode .form-group textarea:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .form-group input::placeholder,
+body.dark-mode .form-group textarea::placeholder {
+    color: #888;
+}
+
+body.dark-mode .help-text {
+    color: #b0b0b0;
+}
+
+body.dark-mode .booking-summary {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .booking-summary h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .summary-item {
+    border-bottom: 1px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .summary-item:last-child {
+    border-bottom: none;
+}
+
+body.dark-mode .summary-total {
+    background: #2d3233;
+    color: #40B5AD;
+}
+
+body.dark-mode .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+}
+
+body.dark-mode .btn-primary:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #2a7671 100%);
+    color: #ffffff;
+}
+
+body.dark-mode .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #5a6268;
+}
+
+body.dark-mode select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2340B5AD' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Enhanced Dark Mode Card Styling for Venue Booking */
+body.dark-mode .booking-form-section {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .booking-form-section h2 {
+    color: #40B5AD;
+    border-bottom: 2px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .pricing-calculation {
+    background: #1a2f2e;
+    border: 2px solid rgba(64, 181, 173, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .pricing-calculation h3 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: -1rem -1rem 1rem -1rem;
+}
+
+body.dark-mode .calculation-info {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+body.dark-mode .calculation-info p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .calculation-info strong {
+    color: #40B5AD;
+}
+
+body.dark-mode .rate-info {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    margin: 0.5rem 0;
+}
+
+body.dark-mode .rate-info span {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+body.dark-mode .total-estimate {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.2) 0%, rgba(54, 150, 145, 0.2) 100%);
+    border: 1px solid rgba(64, 181, 173, 0.4);
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-top: 1rem;
+}
+
+body.dark-mode .total-estimate span {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+body.dark-mode .contact-section {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .contact-section h3 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: -1rem -1rem 1rem -1rem;
+}
+
+body.dark-mode .terms-section {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .terms-section h3 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: -1rem -1rem 1rem -1rem;
+}
+
+body.dark-mode .terms-content {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-row {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .error-message {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(231, 76, 60, 0.2) 100%);
+    color: #ff6b6b;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    margin-top: 0.5rem;
+}
+
+body.dark-mode .form-actions {
+    background: #232728;
+    border-top: 2px solid rgba(64, 181, 173, 0.3);
+    border-radius: 0 0 12px 12px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-resize textarea
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+    
+    // Cost calculation
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    const costEstimate = document.querySelector('.total-estimate span');
+    
+    function calculateCost() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && endDate > startDate) {
+            const duration = (endDate - startDate) / (1000 * 60 * 60); // hours
+            const hourlyRate = {{ venue.price_per_hour|default:0 }};
+            const dailyRate = {{ venue.price_per_day|default:0 }};
+            
+            let cost = 0;
+            if (hourlyRate > 0) {
+                cost = hourlyRate * duration;
+                costEstimate.textContent = `Estimated cost: $${cost.toFixed(2)} (${duration.toFixed(1)} hours × $${hourlyRate}/hour)`;
+            } else if (dailyRate > 0) {
+                const days = Math.max(1, Math.ceil(duration / 24));
+                cost = dailyRate * days;
+                costEstimate.textContent = `Estimated cost: $${cost.toFixed(2)} (${days} day${days > 1 ? 's' : ''} × $${dailyRate}/day)`;
+            } else {
+                costEstimate.textContent = 'Contact venue manager for pricing';
+            }
+        } else {
+            costEstimate.textContent = 'Final pricing will be confirmed by the venue manager';
+        }
+    }
+    
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', calculateCost);
+        endDateInput.addEventListener('change', calculateCost);
+    }
+    
+    // Form validation
+    const form = document.querySelector('.booking-form');
+    const termsCheckbox = document.getElementById('accept-terms');
+    
+    form.addEventListener('submit', function(e) {
+        if (!termsCheckbox.checked) {
+            e.preventDefault();
+            alert('Please accept the terms and conditions to continue.');
+            termsCheckbox.focus();
+        }
+    });
+});
+</script>
+{% endblock %}

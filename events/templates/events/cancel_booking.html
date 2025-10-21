@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cancel Booking - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="cancel-container">
+        <div class="cancel-header">
+            <h1>🚫 Cancel Booking</h1>
+            <div class="breadcrumb">
+                <a href="{% url 'events:my_events' %}">My Events</a> > Cancel Booking
+            </div>
+        </div>
+
+        <div class="cancel-content">
+            <div class="warning-section">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-text">
+                    <h2>Are you sure you want to cancel this booking?</h2>
+                    <p>This action cannot be undone. Your registration for this event will be permanently cancelled.</p>
+                </div>
+            </div>
+
+            <div class="booking-summary">
+                <h3>Booking Details</h3>
+                <div class="event-info">
+                    <div class="event-image">
+                        {% if booking.event.image %}
+                            <img src="{{ booking.event.image.url }}" alt="{{ booking.event.title }}">
+                        {% else %}
+                            <div class="placeholder-image">
+                                <span>📅</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="event-details">
+                        <h4>{{ booking.event.title }}</h4>
+                        <p><strong>Date:</strong> {{ booking.event.start_date|date:"F j, Y" }} at {{ booking.event.start_date|time:"g:i A" }}</p>
+                        <p><strong>Location:</strong> {{ booking.event.venue_name }}</p>
+                        <p><strong>Booking Date:</strong> {{ booking.booking_date|date:"F j, Y" }}</p>
+                        <p><strong>Status:</strong> {{ booking.get_status_display }}</p>
+                        {% if not booking.event.is_free %}
+                            <p><strong>Amount Paid:</strong> ৳{{ booking.total_amount }}</p>
+                        {% else %}
+                            <p><strong>Amount:</strong> Free</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if booking.special_requests %}
+                    <div class="special-requests">
+                        <h4>Special Requests</h4>
+                        <p>{{ booking.special_requests }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if not booking.event.is_free %}
+                <div class="refund-info">
+                    <h3>💰 Refund Information</h3>
+                    <div class="refund-details">
+                        <p><strong>Cancellation Policy:</strong> Please contact the event organizer for refund details.</p>
+                        <p><strong>Organizer Contact:</strong> {{ booking.event.contact_email }}</p>
+                        {% if booking.event.contact_phone %}
+                            <p><strong>Phone:</strong> {{ booking.event.contact_phone }}</p>
+                        {% endif %}
+                        <div class="refund-notice">
+                            <p><strong>Note:</strong> Refund processing time and policies may vary by event organizer. 
+                            We recommend contacting them directly for specific refund terms.</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="impact-notice">
+                <h3>What happens when I cancel?</h3>
+                <ul>
+                    <li>Your registration for this event will be removed</li>
+                    <li>You will no longer receive event updates or notifications</li>
+                    <li>Your spot will become available for other attendees</li>
+                    {% if not booking.event.is_free %}
+                        <li>For refunds, you'll need to contact the event organizer directly</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <form method="post" class="cancel-form">
+                {% csrf_token %}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger btn-large">
+                        Yes, Cancel My Booking
+                    </button>
+                    <a href="{% url 'events:my_events' %}" class="btn btn-secondary btn-large">
+                        Keep My Booking
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.cancel-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.1);
+    overflow: hidden;
+}
+
+.cancel-header {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.cancel-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.breadcrumb {
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+.breadcrumb a {
+    color: white;
+    text-decoration: none;
+}
+
+.cancel-content {
+    padding: 2rem;
+}
+
+.warning-section {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: #fff5f5;
+    border: 2px solid #fed7d7;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.warning-icon {
+    font-size: 2rem;
+    color: #e74c3c;
+}
+
+.warning-text h2 {
+    color: #e74c3c;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+}
+
+.warning-text p {
+    color: #333;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.booking-summary {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.booking-summary h3 {
+    color: #333;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+}
+
+.event-info {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.event-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-image {
+    width: 100%;
+    height: 100%;
+    background: #e1e8ed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #666;
+}
+
+.event-details h4 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.event-details p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.special-requests {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+    border-left: 4px solid #40B5AD;
+}
+
+.special-requests h4 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+.special-requests p {
+    margin: 0;
+    color: #666;
+    line-height: 1.4;
+}
+
+.refund-info {
+    background: #fff8e1;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.refund-info h3 {
+    color: #ff8f00;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+}
+
+.refund-details p {
+    margin: 0.5rem 0;
+    color: #333;
+}
+
+.refund-notice {
+    background: #e8f5e8;
+    border-left: 4px solid #27ae60;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.impact-notice {
+    background: #e3f2fd;
+    border: 1px solid #40B5AD;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.impact-notice h3 {
+    color: #40B5AD;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.impact-notice ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #333;
+}
+
+.impact-notice li {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.cancel-form {
+    border-top: 1px solid #e1e8ed;
+    padding-top: 2rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+@media (max-width: 768px) {
+    .warning-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .event-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

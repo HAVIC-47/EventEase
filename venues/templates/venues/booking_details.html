@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Details - {{ booking.event_title }} - EventEase{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px; margin: 2rem auto; padding: 2rem;">
+    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        
+        <!-- Back Button -->
+        <div style="margin-bottom: 2rem;">
+            <a href="{% url 'venues:my_venues' %}" style="
+                display: inline-flex; 
+                align-items: center; 
+                gap: 0.5rem; 
+                padding: 0.75rem 1.5rem; 
+                background: transparent; 
+                color: #40B5AD; 
+                border: 2px solid #40B5AD; 
+                border-radius: 8px; 
+                text-decoration: none; 
+                font-weight: 500; 
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='#40B5AD'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#40B5AD';">
+                ← Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Include the modal content -->
+        {% include 'venues/booking_details_modal.html' %}
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e8ecef; display: flex; gap: 1rem; justify-content: center;">
+            {% if booking.status == 'pending' %}
+                <a href="{% url 'venues:cancel_venue_booking' booking.id %}" 
+                   onclick="return confirm('Are you sure you want to cancel this booking request?')"
+                   style="
+                       padding: 0.75rem 1.5rem; 
+                       background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%); 
+                       color: white; 
+                       border: none; 
+                       border-radius: 8px; 
+                       text-decoration: none; 
+                       font-weight: 500; 
+                       transition: all 0.3s ease;
+                   " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(220, 53, 69, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    ❌ Cancel Booking
+                </a>
+            {% elif booking.status in 'confirmed,completed' %}
+                <a href="{% url 'venues:generate_invoice' booking.id %}" 
+                   style="
+                       padding: 0.75rem 1.5rem; 
+                       background: linear-gradient(135deg, #28a745 0%, #34ce57 100%); 
+                       color: white; 
+                       border: none; 
+                       border-radius: 8px; 
+                       text-decoration: none; 
+                       font-weight: 500; 
+                       transition: all 0.3s ease;
+                   " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(40, 167, 69, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    📄 Download Invoice
+                </a>
+                {% if booking.status == 'completed' %}
+                    <a href="{% url 'venues:submit_review' booking.id %}" 
+                       style="
+                           padding: 0.75rem 1.5rem; 
+                           background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%); 
+                           color: white; 
+                           border: none; 
+                           border-radius: 8px; 
+                           text-decoration: none; 
+                           font-weight: 500; 
+                           transition: all 0.3s ease;
+                       " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(64, 181, 173, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        ⭐ Write Review
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1002 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fafbfc;
+    min-height: calc(100vh - 200px);
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    border: 1px solid #e8ecef;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.15);
+}
+
+.stat-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #40B5AD;
+    margin: 0;
+}
+
+.stat-label {
+    color: #666;
+    margin: 0.5rem 0 0 0;
+    font-weight: 500;
+}
+
+.booking-tabs {
+    background: white;
+    border-radius: 16px;
+    padding: 0.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8ecef;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #666;
+}
+
+.tab-btn:hover:not(.active) {
+    background: #f0f8ff;
+    color: #40B5AD;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+.bookings-section {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8ecef;
+}
+
+.booking-card {
+    background: #fafbfc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+.booking-card:hover {
+    transform: translateX(2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.booking-card.upcoming {
+    border-left-color: #40B5AD;
+    background: linear-gradient(135deg, #f0fdfc 0%, #fafbfc 100%);
+}
+
+.booking-card.past {
+    border-left-color: #718096;
+    background: linear-gradient(135deg, #f7fafc 0%, #fafbfc 100%);
+}
+
+.booking-card.pending {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #fffef7 0%, #fafbfc 100%);
+}
+
+.booking-card.cancelled {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #fffafa 0%, #fafbfc 100%);
+}
+
+.booking-card.confirmed {
+    border-left-color: #17a2b8;
+    background: linear-gradient(135deg, #f0f9ff 0%, #fafbfc 100%);
+}
+
+.booking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.booking-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.booking-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-upcoming { background: #40B5AD; color: white; }
+.status-past { background: #28a745; color: white; }
+.status-pending { background: #FFA500; color: white; }
+.status-cancelled { background: #dc3545; color: white; }
+.status-confirmed { background: #17a2b8; color: white; }
+
+.booking-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.booking-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #369a94 0%, #4db5af 100%);
+    transform: translateY(-1px);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-primary.invoice-btn {
+    background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+    color: white;
+    font-weight: 600;
+}
+
+.btn-primary.invoice-btn:hover {
+    background: linear-gradient(135deg, #218838 0%, #28a745 100%);
+    transform: translateY(-1px);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #40B5AD;
+    border: 2px solid #40B5AD;
+}
+
+.btn-outline:hover {
+    background: #40B5AD;
+    color: white;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    text-decoration: none;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    text-decoration: none;
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    border: none;
+}
+
+/* Review Status Styles */
+.review-status {
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.review-available {
+    color: #28a745;
+    background-color: #d4edda;
+}
+
+.review-completed {
+    color: #40B5AD;
+    background-color: #d1ecf1;
+}
+
+.review-waiting {
+    color: #856404;
+    background-color: #fff3cd;
+}
+
+.btn-success:hover {
+    background: linear-gradient(45deg, #218838, #1fa188);
+    text-decoration: none;
+    color: white;
+}
+
+.btn-info {
+    background: linear-gradient(45deg, #17a2b8, #138496);
+    color: white;
+    border: none;
+}
+
+.btn-info:hover {
+    background: linear-gradient(45deg, #138496, #117a8b);
+    text-decoration: none;
+    color: white;
+}
+
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #666;
+}
+
+.empty-state h3 {
+    color: #40B5AD;
+    margin-bottom: 1rem;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+    
+    .dashboard-header {
+        padding: 1.5rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .booking-tabs {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .tab-btn {
+        flex: none;
+        min-width: 120px;
+    }
+    
+    .booking-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-actions {
+        flex-direction: column;
+    }
+}
+
+/* Dark Mode Styles for Dashboard */
+body.dark-mode .dashboard-container {
+    background: #232728;
+    color: #e0e0e0;
+}
+
+body.dark-mode .dashboard-header {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .dashboard-header h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .stat-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .stat-card:hover {
+    background: #1e3635;
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .stat-icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .stat-number {
+    color: #40B5AD;
+}
+
+body.dark-mode .stat-label {
+    color: #b0b0b0;
+}
+
+body.dark-mode .booking-tabs {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .tab-btn {
+    color: #b0b0b0;
+}
+
+body.dark-mode .tab-btn:hover:not(.active) {
+    background: rgba(64, 181, 173, 0.1);
+    color: #40B5AD;
+}
+
+body.dark-mode .tab-btn.active {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    color: #232728;
+}
+
+body.dark-mode .tab-content {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .booking-card {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .booking-card:hover {
+    background: #1e3635;
+    border-color: #40B5AD;
+}
+
+body.dark-mode .booking-header h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .booking-meta {
+    color: #b0b0b0;
+}
+
+body.dark-mode .booking-status {
+    color: #e0e0e0;
+}
+
+body.dark-mode .booking-status.confirmed {
+    background: rgba(39, 174, 96, 0.2);
+    color: #2ecc71;
+    border: 1px solid #2ecc71;
+}
+
+body.dark-mode .booking-status.pending {
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+    border: 1px solid #f39c12;
+}
+
+body.dark-mode .booking-status.cancelled {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+}
+
+body.dark-mode .booking-details {
+    background: #232728;
+}
+
+body.dark-mode .detail-item {
+    color: #b0b0b0;
+}
+
+body.dark-mode .detail-item strong {
+    color: #40B5AD;
+}
+
+body.dark-mode .booking-actions .btn {
+    background: #40B5AD;
+    color: #232728;
+    border: 1px solid #40B5AD;
+}
+
+body.dark-mode .booking-actions .btn:hover {
+    background: #2e837e;
+    color: #ffffff;
+}
+
+body.dark-mode .booking-actions .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+body.dark-mode .booking-actions .btn-success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+}
+
+body.dark-mode .booking-actions .btn-info {
+    background: linear-gradient(45deg, #17a2b8, #138496);
+    color: white;
+}
+
+body.dark-mode .booking-actions .btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+body.dark-mode .empty-bookings {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .empty-bookings h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .empty-bookings p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .bookings-section {
+    background: #232728;
+}
+
+body.dark-mode .bookings-section h2 {
+    color: #40B5AD !important;
+}
+
+body.dark-mode .bookings-section h3 {
+    color: #40B5AD !important;
+}
+
+body.dark-mode .detail-label {
+    color: #40B5AD;
+}
+
+body.dark-mode .detail-value {
+    color: #e0e0e0;
+}
+
+body.dark-mode .booking-actions {
+    background: #232728;
+    border-top: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .btn-outline {
+    border-color: #40B5AD;
+    color: #40B5AD;
+    background: transparent;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+}
+
+body.dark-mode .btn-primary:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #2a7671 100%);
+    color: #ffffff;
+}
+
+body.dark-mode .btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+body.dark-mode .btn-danger:hover {
+    background: #c82333;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>📊 My Dashboard</h1>
+        <p>Welcome back! Here's an overview of your bookings and activities.</p>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🎫</div>
+            <h3 class="stat-number">{{ total_events }}</h3>
+            <p class="stat-label">Events Booked</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏢</div>
+            <h3 class="stat-number">{{ total_venues }}</h3>
+            <p class="stat-label">Venues Booked</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <h3 class="stat-number">${{ total_spent|floatformat:0 }}</h3>
+            <p class="stat-label">Total Spent</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <h3 class="stat-number">{{ total_bookings }}</h3>
+            <p class="stat-label">Total Bookings</p>
+        </div>
+    </div>
+
+    <!-- Booking Tabs -->
+    <div class="booking-tabs">
+        <button class="tab-btn active" onclick="showTab('upcoming')">🔜 Upcoming</button>
+        <button class="tab-btn" onclick="showTab('past')">📅 Past</button>
+        <button class="tab-btn" onclick="showTab('confirmed')">✅ Confirmed</button>
+        <button class="tab-btn" onclick="showTab('pending')">⏰ Pending</button>
+        <button class="tab-btn" onclick="showTab('cancelled')">❌ Cancelled</button>
+    </div>
+
+    <!-- Upcoming Bookings -->
+    <div id="upcoming-content" class="tab-content active">
+        <div class="bookings-section">
+            <h2 style="margin-top: 0; color: #333; margin-bottom: 2rem;">🔜 Upcoming Bookings</h2>
+            
+            <h3 style="color: #40B5AD; margin-bottom: 1rem;">Events</h3>
+            {% for booking in upcoming_events %}
+                <div class="booking-card upcoming">
+                    <div class="booking-header">
+                        <h3 class="booking-title">{{ booking.event.title }}</h3>
+                        <span class="booking-status status-upcoming">Upcoming</span>
+                    </div>
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Event Date</span>
+                            <span class="detail-value">{{ booking.event.start_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location</span>
+                            <span class="detail-value">{{ booking.event.venue_name|default:"TBA" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tickets</span>
+                            <span class="detail-value">{{ booking.attendees_count }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount</span>
+                            <span class="detail-value">${{ booking.total_amount }}</span>
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'events:event_detail' booking.event.pk %}" class="btn btn-outline">👁️ View Event</a>
+                        {% if booking.status == 'confirmed' %}
+                        <a href="{% url 'users:download_event_invoice' booking.id %}" class="btn btn-primary">📄 Download Invoice</a>
+                        {% else %}
+                        <form method="post" action="{% url 'users:cancel_booking' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="booking_type" value="event">
+                            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel booking?')">❌ Cancel</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: #666; text-align: center; padding: 2rem;">No upcoming event bookings.</p>
+            {% endfor %}
+
+            <h3 style="color: #40B5AD; margin: 2rem 0 1rem 0;">Venues</h3>
+            {% for booking in upcoming_venues %}
+                <div class="booking-card upcoming">
+                    <div class="booking-header">
+                        <h3 class="booking-title">{{ booking.venue.name }}</h3>
+                        <span class="booking-status status-upcoming">Upcoming</span>
+                    </div>
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Event Date</span>
+                            <span class="detail-value">{{ booking.start_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">End Date</span>
+                            <span class="detail-value">{{ booking.end_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Event Title</span>
+                            <span class="detail-value">{{ booking.event_title }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount</span>
+                            <span class="detail-value">${{ booking.total_amount }}</span>
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-outline">👁️ View Venue</a>
+                        {% if booking.status == 'confirmed' %}
+                        <a href="{% url 'users:download_venue_invoice' booking.id %}" class="btn btn-primary">📄 Download Invoice</a>
+                        {% else %}
+                        <form method="post" action="{% url 'users:cancel_booking' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="booking_type" value="venue">
+                            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel booking?')">❌ Cancel</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: #666; text-align: center; padding: 2rem;">No upcoming venue bookings.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Confirmed Venue Bookings Tab -->
+    <div id="confirmed-content" class="tab-content">
+        <div class="bookings-section">
+            <h2 style="margin-top: 0; color: #333; margin-bottom: 2rem;">✅ Confirmed Venue Bookings</h2>
+            
+            {% for booking in confirmed_venues %}
+                <div class="booking-card confirmed">
+                    <div class="booking-header">
+                        <h3 class="booking-title">{{ booking.venue.name }}</h3>
+                        <span class="booking-status status-confirmed">Confirmed</span>
+                    </div>
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Event Date</span>
+                            <span class="detail-value">{{ booking.start_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">End Date</span>
+                            <span class="detail-value">{{ booking.end_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Event Title</span>
+                            <span class="detail-value">{{ booking.event_title }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount</span>
+                            <span class="detail-value">${{ booking.total_amount }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Review Status</span>
+                            <span class="detail-value review-status 
+                                {% if booking.can_review %}review-available{% elif booking.user_review %}review-completed{% else %}review-waiting{% endif %}
+                            ">{{ booking.review_status }}</span>
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-outline">👁️ View Venue</a>
+                        <a href="{% url 'users:download_venue_invoice' booking.id %}" class="btn btn-primary">📄 Download Invoice</a>
+                        
+                        <!-- Review Button Logic -->
+                        {% if booking.user_review %}
+                            <a href="{% url 'reviews:venue_reviews' booking.venue.id %}" class="btn btn-success" title="You have reviewed this venue">✅ View Your Review</a>
+                            <a href="{% url 'reviews:submit_venue_review' booking.venue.id %}" class="btn btn-secondary" title="Update your review">✏️ Update Review</a>
+                        {% elif booking.can_review %}
+                            <a href="{% url 'reviews:submit_venue_review' booking.venue.id %}" class="btn btn-secondary">⭐ Leave Review</a>
+                        {% else %}
+                            <span class="btn btn-secondary disabled" title="{{ booking.review_status }}">⭐ Review</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: #666; text-align: center; padding: 2rem;">No confirmed venue bookings.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pending Bookings Tab -->
+    <div id="pending-content" class="tab-content">
+        <div class="bookings-section">
+            <h2 style="margin-top: 0; color: #333; margin-bottom: 2rem;">⏳ Pending Venue Bookings</h2>
+            
+            {% for booking in pending_venues %}
+                <div class="booking-card pending">
+                    <div class="booking-header">
+                        <h3 class="booking-title">{{ booking.venue.name }}</h3>
+                        <span class="booking-status status-pending">Pending</span>
+                    </div>
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Event Date</span>
+                            <span class="detail-value">{{ booking.start_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">End Date</span>
+                            <span class="detail-value">{{ booking.end_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Event Title</span>
+                            <span class="detail-value">{{ booking.event_title }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount</span>
+                            <span class="detail-value">${{ booking.total_amount }}</span>
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-outline">👁️ View Venue</a>
+                        <form method="post" action="{% url 'users:cancel_booking' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="booking_type" value="venue">
+                            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel request?')">❌ Cancel Request</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: #666; text-align: center; padding: 2rem;">No pending venue bookings.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Past Bookings Tab -->
+    <div id="past-content" class="tab-content">
+        <div class="bookings-section">
+            <h2 style="margin-top: 0; color: #333; margin-bottom: 2rem;">📅 Past Bookings</h2>
+            
+            <h3 style="color: #40B5AD; margin-bottom: 1rem;">Events</h3>
+            {% for booking in past_events %}
+                <div class="booking-card past">
+                    <div class="booking-header">
+                        <h3 class="booking-title">{{ booking.event.title }}</h3>
+                        <span class="booking-status status-past">Completed</span>
+                    </div>
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Event Date</span>
+                            <span class="detail-value">{{ booking.event.start_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location</span>
+                            <span class="detail-value">{{ booking.event.venue_name|default:"TBA" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tickets</span>
+                            <span class="detail-value">{{ booking.attendees_count }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount</span>
+                            <span class="detail-value">${{ booking.total_amount }}</span>
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'events:event_detail' booking.event.pk %}" class="btn btn-outline">👁️ View Event</a>
+                        <a href="{% url 'users:download_event_invoice' booking.id %}" class="btn btn-primary">📄 Download Invoice</a>
+                        {% if booking.can_review %}
+                            <a href="{% url 'reviews:submit_event_review' booking.event.id %}" class="btn btn-success">⭐ Write Review</a>
+                        {% elif booking.user_review %}
+                            <a href="{% url 'reviews:event_reviews' booking.event.id %}" class="btn btn-info">✅ View Your Review</a>
+                        {% else %}
+                            <span class="btn btn-secondary disabled" title="Review not available">⭐ Review</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: #666; text-align: center; padding: 2rem;">No past event bookings.</p>
+            {% endfor %}
+
+            <h3 style="color: #40B5AD; margin: 2rem 0 1rem 0;">Venues</h3>
+            {% for booking in past_venues %}
+                <div class="booking-card past">
+                    <div class="booking-header">
+                        <h3 class="booking-title">{{ booking.venue.name }}</h3>
+                        <span class="booking-status status-past">Completed</span>
+                    </div>
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Event Date</span>
+                            <span class="detail-value">{{ booking.start_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">End Date</span>
+                            <span class="detail-value">{{ booking.end_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Event Title</span>
+                            <span class="detail-value">{{ booking.event_title }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount</span>
+                            <span class="detail-value">${{ booking.total_amount }}</span>
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-outline">👁️ View Venue</a>
+                        <a href="{% url 'users:download_venue_invoice' booking.id %}" class="btn btn-primary">📄 Download Invoice</a>
+                        {% if booking.user_review %}
+                            <a href="{% url 'reviews:venue_reviews' booking.venue.id %}" class="btn btn-success" title="You have reviewed this venue">✅ View Your Review</a>
+                        {% elif booking.can_review %}
+                            <a href="{% url 'reviews:submit_venue_review' booking.venue.id %}" class="btn btn-secondary">⭐ Leave Review</a>
+                        {% else %}
+                            <span class="btn btn-secondary disabled" title="Review not available">⭐ Review</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: #666; text-align: center; padding: 2rem;">No past venue bookings.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Cancelled Bookings Tab -->
+    <div id="cancelled-content" class="tab-content">
+        <div class="bookings-section">
+            <h2 style="margin-top: 0; color: #333; margin-bottom: 2rem;">❌ Cancelled Venue Bookings</h2>
+            
+            {% for booking in cancelled_venues %}
+                <div class="booking-card cancelled">
+                    <div class="booking-header">
+                        <h3 class="booking-title">{{ booking.venue.name }}</h3>
+                        <span class="booking-status status-cancelled">Cancelled</span>
+                    </div>
+                    <div class="booking-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Event Date</span>
+                            <span class="detail-value">{{ booking.start_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">End Date</span>
+                            <span class="detail-value">{{ booking.end_date|date:"M d, Y - g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Event Title</span>
+                            <span class="detail-value">{{ booking.event_title }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Refund Amount</span>
+                            <span class="detail-value">${{ booking.total_amount }}</span>
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'venues:venue_detail' booking.venue.pk %}" class="btn btn-outline">👁️ View Venue</a>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: #666; text-align: center; padding: 2rem;">No cancelled venue bookings.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    const targetContent = document.getElementById(tabName + '-content');
+    if (targetContent) {
+        targetContent.classList.add('active');
+    }
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

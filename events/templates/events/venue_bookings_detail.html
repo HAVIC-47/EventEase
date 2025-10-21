@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Venue Bookings - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{% url 'events:my_events' %}" class="back-btn">← Back to Dashboard</a>
+            <h1>🏢 Venue Bookings</h1>
+            <p>Detailed view of all venue bookings through the system</p>
+        </div>
+        <div class="header-stats">
+            <div class="stat-summary">
+                <div class="stat-item">
+                    <span class="stat-number">{{ total_bookings }}</span>
+                    <span class="stat-label">Total Bookings</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ confirmed_count }}</span>
+                    <span class="stat-label">Confirmed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ pending_count }}</span>
+                    <span class="stat-label">Pending</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${{ total_spent|floatformat:2 }}</span>
+                    <span class="stat-label">Total Spent</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if venue_bookings %}
+        <div class="section">
+            <div class="section-header">
+                <h2>All Venue Bookings ({{ total_bookings }})</h2>
+            </div>
+            
+            <div class="bookings-grid">
+                {% for booking in venue_bookings %}
+                    <div class="booking-card">
+                        <div class="booking-header">
+                            <div class="venue-name">{{ booking.venue.name }}</div>
+                            <span class="status-badge status-{{ booking.status }}">
+                                {% if booking.status == 'confirmed' %}
+                                    ✅ Confirmed
+                                {% elif booking.status == 'pending' %}
+                                    ⏳ Pending
+                                {% elif booking.status == 'cancelled' %}
+                                    ❌ Cancelled
+                                {% else %}
+                                    {{ booking.get_status_display }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="booking-details">
+                            <div class="detail-item">
+                                <strong>📅 Event Date:</strong>
+                                <span>{{ booking.event_date|date:"M j, Y" }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>📍 Location:</strong>
+                                <span>{{ booking.venue.address|truncatechars:40 }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>👥 Capacity:</strong>
+                                <span>{{ booking.venue.capacity }} people</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>💰 Amount:</strong>
+                                <span class="amount">${{ booking.total_amount|floatformat:2 }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>📝 Booked:</strong>
+                                <span>{{ booking.created_at|date:"M j, Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if booking.notes %}
+                            <div class="booking-notes">
+                                <strong>📋 Notes:</strong>
+                                <p>{{ booking.notes|truncatewords:20 }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="no-content">
+            <div class="no-content-icon">🏢</div>
+            <h3>No Venue Bookings</h3>
+            <p>You haven't booked any venues through the system yet. Browse available venues to book one for your events!</p>
+            <a href="{% url 'venues:venue_list' %}" class="btn btn-primary">Browse Venues</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: #f5f6f7;
+    min-height: 100vh;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 20px rgba(45, 212, 191, 0.3);
+    animation: slideInDown 0.6s ease-out;
+}
+
+.header-content {
+    margin-bottom: 2rem;
+}
+
+.back-btn {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    transition: all 0.2s;
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.back-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    color: white;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    margin: 0.5rem 0;
+    font-weight: 700;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.header-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.stat-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}
+
+.section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    color: #232323;
+    margin: 0;
+    font-weight: 600;
+}
+
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    animation: fadeIn 0.8s ease-out 0.3s both;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid #CCFBF1;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.booking-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(45, 212, 191, 0.2);
+    border-color: #2DD4BF;
+}
+
+.booking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.venue-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #232323;
+    flex: 1;
+}
+
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-confirmed {
+    background: #CCFBF1;
+    color: #0D9488;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.booking-details {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.detail-item strong {
+    color: #232323;
+    min-width: 100px;
+}
+
+.detail-item span {
+    color: #0D9488;
+    text-align: right;
+}
+
+.detail-item .amount {
+    color: #2DD4BF;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.booking-notes {
+    border-top: 1px solid #CCFBF1;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.booking-notes strong {
+    color: #232323;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.booking-notes p {
+    color: #0D9488;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.no-content {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    border: 2px dashed #2DD4BF;
+}
+
+.no-content-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #2DD4BF;
+    opacity: 0.6;
+}
+
+.no-content h3 {
+    font-size: 1.5rem;
+    color: #232323;
+    margin-bottom: 0.5rem;
+}
+
+.no-content p {
+    color: #0D9488;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #2DD4BF;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0D9488;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 212, 191, 0.3);
+    text-decoration: none;
+    color: white;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .page-header {
+        padding: 1.5rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .stat-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .bookings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

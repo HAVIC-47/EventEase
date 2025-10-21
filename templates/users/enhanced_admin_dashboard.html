@@ -1,0 +1,959 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enhanced Admin Dashboard - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.dashboard-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+    display: flex;
+    background: white;
+    border-radius: 15px;
+    padding: 0.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    overflow-x: auto;
+}
+
+.nav-tab {
+    flex: 1;
+    min-width: 160px;
+    padding: 1rem;
+    text-align: center;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.nav-tab.active {
+    background: #40B5AD;
+    color: white;
+}
+
+.nav-tab:hover {
+    background: rgba(64, 181, 173, 0.1);
+    color: #40B5AD;
+}
+
+.nav-tab.active:hover {
+    background: #2e837e;
+    color: white;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card[style*="cursor: pointer"]:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.2);
+}
+
+a[href*="admin_comments_management"] .stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.2);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #40B5AD;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Section Styles */
+.section {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* User Table */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.user-table th,
+.user-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.user-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    border-radius: 8px 8px 0 0;
+}
+
+.user-table tr:hover {
+    background: rgba(64, 181, 173, 0.05);
+}
+
+.user-designation {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.designation-admin {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.designation-event-manager {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.designation-venue-manager {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.designation-customer {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+/* Activity Stats */
+.activity-stat {
+    display: inline-block;
+    background: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin: 0.1rem;
+    color: #374151;
+}
+
+.activity-stat.positive {
+    background: #d1fae5;
+    color: #059669;
+}
+
+/* Content Cards */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.content-card {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    transition: transform 0.3s ease;
+}
+
+.content-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.15);
+}
+
+.content-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.content-meta {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.content-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.content-stat {
+    background: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Search and Filter */
+.controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.filter-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+/* Top Performers */
+.top-performers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.performer-card {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.performer-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.performer-count {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.performer-label {
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* Rating Display */
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.star {
+    color: #fbbf24;
+    font-size: 0.9rem;
+}
+
+.rating-text {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+}
+
+/* Recent Activity */
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+}
+
+.activity-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #40B5AD;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-text {
+    color: #374151;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.activity-meta {
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 0 1rem;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+    }
+    
+    .nav-tab {
+        min-width: auto;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .controls {
+        flex-direction: column;
+    }
+    
+    .user-table {
+        font-size: 0.9rem;
+    }
+    
+    .user-table th,
+    .user-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+/* Dark mode support */
+body.dark-mode .section,
+body.dark-mode .stat-card,
+body.dark-mode .nav-tabs {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .user-table th {
+    background: #374151;
+}
+
+body.dark-mode .content-card,
+body.dark-mode .activity-item {
+    background: #374151;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.page-link {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #40B5AD;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background: #40B5AD;
+    color: white;
+}
+
+.page-link.active {
+    background: #40B5AD;
+    color: white;
+    border-color: #40B5AD;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p>Comprehensive platform management and analytics</p>
+    </div>
+    
+    <!-- Platform Overview Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number">{{ total_users }}</span>
+            <span class="stat-label">Total Users</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_events }}</span>
+            <span class="stat-label">Events Created</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_venues }}</span>
+            <span class="stat-label">Venues Listed</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_event_reviews|add:total_venue_reviews }}</span>
+            <span class="stat-label">Total Reviews</span>
+        </div>
+        <a href="{% url 'users:admin_comments_management' %}" style="text-decoration: none;">
+            <div class="stat-card" style="cursor: pointer; transition: all 0.3s ease;">
+                <span class="stat-number">{{ total_event_comments|add:total_venue_comments }}</span>
+                <span class="stat-label">Total Comments</span>
+                <small style="color: #40B5AD; font-weight: 600; margin-top: 0.5rem; display: block;">
+                    Click to manage →
+                </small>
+            </div>
+        </a>
+        <div class="stat-card">
+            <span class="stat-number">{{ total_event_bookings|add:total_venue_bookings }}</span>
+            <span class="stat-label">Total Bookings</span>
+        </div>
+    </div>
+    
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('users')">
+            👥 User Management
+        </button>
+        <button class="nav-tab" onclick="showTab('content')">
+            📊 Content Analytics
+        </button>
+        <button class="nav-tab" onclick="showTab('activity')">
+            🎯 Recent Activity
+        </button>
+        <button class="nav-tab" onclick="showTab('roles')">
+            🛠️ Role Requests
+        </button>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="users-tab" class="tab-content active">
+        <div class="section">
+            <h2 class="section-header">👥 All Registered Users</h2>
+            
+            <!-- Search and Filter Controls -->
+            <div class="controls">
+                <input type="text" id="userSearch" class="search-box" placeholder="Search users by name or email..." onkeyup="filterUsers()">
+                <select id="designationFilter" class="filter-select" onchange="filterUsers()">
+                    <option value="">All Designations</option>
+                    <option value="admin">Admin</option>
+                    <option value="event_manager">Event Manager</option>
+                    <option value="venue_manager">Venue Manager</option>
+                    <option value="customer">Customer</option>
+                </select>
+            </div>
+            
+            <!-- Users Table -->
+            <div style="overflow-x: auto;">
+                <table class="user-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Designation</th>
+                            <th>Events Posted</th>
+                            <th>Venues Posted</th>
+                            <th>Reviews Given</th>
+                            <th>Comments Posted</th>
+                            <th>Bookings Made</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_with_stats %}
+                        <tr data-designation="{{ user.profile.role|default:'customer' }}">
+                            <td>
+                                <div>
+                                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                    <br>
+                                    <small style="color: #6b7280;">{{ user.email }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="user-designation designation-{{ user.profile.role|default:'customer' }}">
+                                    {% if user.profile.role == 'admin' %}
+                                        🛡️ Admin
+                                    {% elif user.profile.role == 'event_manager' %}
+                                        🎪 Event Manager
+                                    {% elif user.profile.role == 'venue_manager' %}
+                                        🏢 Venue Manager
+                                    {% else %}
+                                        👤 Customer
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="activity-stat {% if user.events_posted > 0 %}positive{% endif %}">
+                                    📅 {{ user.events_posted }}
+                                </span>
+                                {% if user.event_bookings_received > 0 %}
+                                <br><small style="color: #6b7280;">{{ user.event_bookings_received }} bookings received</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="activity-stat {% if user.venues_posted > 0 %}positive{% endif %}">
+                                    🏢 {{ user.venues_posted }}
+                                </span>
+                                {% if user.venue_bookings_received > 0 %}
+                                <br><small style="color: #6b7280;">{{ user.venue_bookings_received }} bookings received</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="activity-stat {% if user.event_reviews_given > 0 or user.venue_reviews_given > 0 %}positive{% endif %}">
+                                    ⭐ {{ user.event_reviews_given|add:user.venue_reviews_given }}
+                                </span>
+                                <br>
+                                <small style="color: #6b7280;">
+                                    Events: {{ user.event_reviews_given }} | Venues: {{ user.venue_reviews_given }}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="activity-stat {% if user.event_comments_posted > 0 or user.venue_comments_posted > 0 %}positive{% endif %}">
+                                    💬 {{ user.event_comments_posted|add:user.venue_comments_posted }}
+                                </span>
+                                <br>
+                                <small style="color: #6b7280;">
+                                    Events: {{ user.event_comments_posted }} | Venues: {{ user.venue_comments_posted }}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="activity-stat {% if user.event_bookings_made > 0 or user.venue_bookings_made > 0 %}positive{% endif %}">
+                                    🎫 {{ user.event_bookings_made|add:user.venue_bookings_made }}
+                                </span>
+                                <br>
+                                <small style="color: #6b7280;">
+                                    Events: {{ user.event_bookings_made }} | Venues: {{ user.venue_bookings_made }}
+                                </small>
+                            </td>
+                            <td>
+                                <small style="color: #6b7280;">
+                                    {{ user.date_joined|date:"M d, Y" }}
+                                </small>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #6b7280; padding: 2rem;">
+                                No users found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Performers -->
+        <div class="section">
+            <h2 class="section-header">🏆 Top Performers</h2>
+            <div class="top-performers">
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #374151;">🎪 Top Event Creators</h3>
+                    {% for user in top_event_creators %}
+                    <div class="performer-card" style="margin-bottom: 1rem;">
+                        <div class="performer-name">{{ user.get_full_name|default:user.username }}</div>
+                        <div class="performer-count">{{ user.event_count }}</div>
+                        <div class="performer-label">Events Created</div>
+                    </div>
+                    {% empty %}
+                    <p style="color: #6b7280; text-align: center; padding: 2rem;">No event creators yet.</p>
+                    {% endfor %}
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #374151;">🏢 Top Venue Owners</h3>
+                    {% for user in top_venue_creators %}
+                    <div class="performer-card" style="margin-bottom: 1rem;">
+                        <div class="performer-name">{{ user.get_full_name|default:user.username }}</div>
+                        <div class="performer-count">{{ user.venue_count }}</div>
+                        <div class="performer-label">Venues Listed</div>
+                    </div>
+                    {% empty %}
+                    <p style="color: #6b7280; text-align: center; padding: 2rem;">No venue owners yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Analytics Tab -->
+    <div id="content-tab" class="tab-content">
+        <div class="section">
+            <h2 class="section-header">📅 Recent Events with Analytics</h2>
+            <div class="content-grid">
+                {% for event in events_with_stats %}
+                <div class="content-card">
+                    <div class="content-title">{{ event.title }}</div>
+                    <div class="content-meta">
+                        By {{ event.organizer.get_full_name|default:event.organizer.username }} • {{ event.created_at|date:"M d, Y" }}
+                    </div>
+                    <div class="content-stats">
+                        <div class="content-stat">
+                            ⭐ {{ event.review_total }} Reviews
+                            {% if event.avg_rating %}
+                            <div class="rating-display">
+                                {% for star in "12345" %}
+                                    {% if forloop.counter <= event.avg_rating|floatformat:0 %}
+                                        <span class="star">★</span>
+                                    {% else %}
+                                        <span class="star" style="color: #d1d5db;">★</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="rating-text">({{ event.avg_rating|floatformat:1 }})</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="content-stat">
+                            💬 {{ event.comment_total }} Comments
+                        </div>
+                        <div class="content-stat">
+                            🎫 {{ event.booking_total }} Bookings
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: #6b7280; text-align: center; padding: 2rem;">No events found.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-header">🏢 Recent Venues with Analytics</h2>
+            <div class="content-grid">
+                {% for venue in venues_with_stats %}
+                <div class="content-card">
+                    <div class="content-title">{{ venue.name }}</div>
+                    <div class="content-meta">
+                        By {{ venue.manager.get_full_name|default:venue.manager.username }} • {{ venue.created_at|date:"M d, Y" }}
+                    </div>
+                    <div class="content-stats">
+                        <div class="content-stat">
+                            ⭐ {{ venue.review_total }} Reviews
+                            {% if venue.avg_rating %}
+                            <div class="rating-display">
+                                {% for star in "12345" %}
+                                    {% if forloop.counter <= venue.avg_rating|floatformat:0 %}
+                                        <span class="star">★</span>
+                                    {% else %}
+                                        <span class="star" style="color: #d1d5db;">★</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="rating-text">({{ venue.avg_rating|floatformat:1 }})</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="content-stat">
+                            💬 {{ venue.comment_total }} Comments
+                        </div>
+                        <div class="content-stat">
+                            📅 {{ venue.booking_total }} Bookings
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: #6b7280; text-align: center; padding: 2rem;">No venues found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Tab -->
+    <div id="activity-tab" class="tab-content">
+        <div class="section">
+            <h2 class="section-header">⭐ Recent Event Reviews</h2>
+            {% for review in recent_event_reviews %}
+            <div class="activity-item">
+                <div class="activity-avatar">
+                    {{ review.user.first_name.0|default:review.user.username.0|upper }}
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">
+                        {{ review.user.get_full_name|default:review.user.username }} reviewed "{{ review.event.title }}"
+                    </div>
+                    <div class="activity-meta">
+                        {% for star in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <span class="star">★</span>
+                            {% else %}
+                                <span class="star" style="color: #d1d5db;">★</span>
+                            {% endif %}
+                        {% endfor %}
+                        • {{ review.created_at|timesince }} ago
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color: #6b7280; text-align: center; padding: 2rem;">No recent event reviews.</p>
+            {% endfor %}
+        </div>
+
+        <div class="section">
+            <h2 class="section-header">🏢 Recent Venue Reviews</h2>
+            {% for review in recent_venue_reviews %}
+            <div class="activity-item">
+                <div class="activity-avatar">
+                    {{ review.user.first_name.0|default:review.user.username.0|upper }}
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">
+                        {{ review.user.get_full_name|default:review.user.username }} reviewed "{{ review.venue.name }}"
+                    </div>
+                    <div class="activity-meta">
+                        {% for star in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <span class="star">★</span>
+                            {% else %}
+                                <span class="star" style="color: #d1d5db;">★</span>
+                            {% endif %}
+                        {% endfor %}
+                        • {{ review.created_at|timesince }} ago
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color: #6b7280; text-align: center; padding: 2rem;">No recent venue reviews.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Existing Role Requests Tab -->
+    <div id="roles-tab" class="tab-content">
+        <!-- Pending Requests -->
+        <div class="section">
+            <h2 class="section-header">⏳ Pending Role Requests</h2>
+            
+            {% if pending_requests %}
+                <div class="content-grid">
+                    {% for request in pending_requests %}
+                    <div class="content-card">
+                        <div class="content-title">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="content-meta">
+                            📧 {{ request.user.email }} • 📅 {{ request.created_at|date:"M d, Y" }}
+                        </div>
+                        <div style="margin: 1rem 0;">
+                            <span class="user-designation designation-{{ request.requested_role }}">
+                                {{ request.get_requested_role_display }}
+                            </span>
+                        </div>
+                        <div style="background: white; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #40B5AD;">
+                            "{{ request.reason|truncatewords:20 }}"
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="{% url 'users:view_upgrade_request' request.id %}" 
+                               style="background: #40B5AD; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem;">
+                                👁️ View Details
+                            </a>
+                            <form method="post" action="{% url 'users:process_upgrade_request' request.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" onclick="return confirm('Approve this request?')"
+                                        style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem;">
+                                    ✅ Approve
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'users:process_upgrade_request' request.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" onclick="return confirm('Reject this request?')"
+                                        style="background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem;">
+                                    ❌ Reject
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; color: #6b7280; padding: 3rem; background: #f9fafb; border-radius: 15px; border: 2px dashed #d1d5db;">
+                    <h3 style="margin-bottom: 0.5rem; color: #9ca3af;">🎉 No Pending Requests</h3>
+                    <p>All role upgrade requests have been processed.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recently Approved/Rejected (condensed view) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div class="section">
+                <h2 class="section-header">✅ Recently Approved</h2>
+                {% for request in approved_requests %}
+                <div class="activity-item">
+                    <div class="activity-avatar" style="background: #10b981;">
+                        {{ request.user.first_name.0|default:request.user.username.0|upper }}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">
+                            {{ request.user.get_full_name|default:request.user.username }}
+                        </div>
+                        <div class="activity-meta">
+                            Approved for {{ request.get_requested_role_display }} • {{ request.updated_at|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: #6b7280; text-align: center; padding: 2rem;">No recent approvals.</p>
+                {% endfor %}
+            </div>
+
+            <div class="section">
+                <h2 class="section-header">❌ Recently Rejected</h2>
+                {% for request in rejected_requests %}
+                <div class="activity-item">
+                    <div class="activity-avatar" style="background: #ef4444;">
+                        {{ request.user.first_name.0|default:request.user.username.0|upper }}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">
+                            {{ request.user.get_full_name|default:request.user.username }}
+                        </div>
+                        <div class="activity-meta">
+                            Rejected for {{ request.get_requested_role_display }} • {{ request.updated_at|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: #6b7280; text-align: center; padding: 2rem;">No recent rejections.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tab functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => content.classList.remove('active'));
+    
+    // Remove active class from all tabs
+    const tabs = document.querySelectorAll('.nav-tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-tab').classList.add('active');
+    
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+}
+
+// User filtering functionality
+function filterUsers() {
+    const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+    const designationFilter = document.getElementById('designationFilter').value;
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    
+    rows.forEach(row => {
+        const userCell = row.cells[0];
+        const userName = userCell.textContent.toLowerCase();
+        const userDesignation = row.getAttribute('data-designation');
+        
+        const matchesSearch = userName.includes(searchTerm);
+        const matchesDesignation = !designationFilter || userDesignation === designationFilter;
+        
+        if (matchesSearch && matchesDesignation) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Initialize tooltips or any other JavaScript functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // You can add initialization code here if needed
+    console.log('Enhanced Admin Dashboard loaded successfully!');
+});
+</script>
+{% endblock %}

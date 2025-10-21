@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Cancelled - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="cancel-container">
+        <div class="cancel-header">
+            <h1>❌ Payment Cancelled</h1>
+            <p>Your payment was not completed</p>
+        </div>
+
+        <div class="booking-info">
+            <h2>Booking Information</h2>
+            <p><strong>Event:</strong> {{ event.title }}</p>
+            <p><strong>Booking ID:</strong> #{{ booking.id }}</p>
+            <p><strong>Status:</strong> Payment Pending</p>
+        </div>
+
+        <div class="options">
+            <h3>What would you like to do?</h3>
+            <div class="action-buttons">
+                <a href="{% url 'payments:payment_process' booking.id %}" class="btn btn-primary">
+                    Try Payment Again
+                </a>
+                <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-secondary">
+                    Back to Event
+                </a>
+                <a href="{% url 'events:event_list' %}" class="btn btn-secondary">
+                    Browse Events
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.cancel-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.cancel-header h1 {
+    color: #e74c3c;
+    margin-bottom: 0.5rem;
+}
+
+.booking-info {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+    text-align: left;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.booking-info h2 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #e74c3c;
+    padding-bottom: 0.5rem;
+}
+
+.booking-info p {
+    margin-bottom: 0.5rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.options {
+    margin: 2rem 0;
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.options h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+/* Dark Mode Styles */
+body.dark-mode .container {
+    background: #232728;
+}
+
+body.dark-mode .cancel-container {
+    background: transparent;
+}
+
+body.dark-mode .cancel-header {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .cancel-header h1 {
+    color: #e74c3c;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .cancel-header p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .booking-info {
+    background: #1a2f2e;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .booking-info h2 {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: #ffffff;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 2px solid #e74c3c;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+body.dark-mode .booking-info p {
+    color: #e0e0e0;
+    border-bottom: 1px solid rgba(231, 76, 60, 0.3);
+    background: rgba(231, 76, 60, 0.1);
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+    border-left: 3px solid #e74c3c;
+}
+
+body.dark-mode .booking-info strong {
+    color: #e74c3c;
+}
+
+body.dark-mode .options {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .options h3 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 2px solid #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+body.dark-mode .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .btn-primary:hover {
+    background: linear-gradient(135deg, #369691 0%, #2e837e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .btn-secondary {
+    background: #6c757d;
+    color: white;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+</style>
+{% endblock %}

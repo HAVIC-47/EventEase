@@ -1,0 +1,1692 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Event - {{ event.title }} - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="booking-container">
+        <div class="booking-header">
+            <h1>📅 Book Event</h1>
+            <div class="breadcrumb">
+                <a href="{% url 'events:event_list' %}">Events</a> > 
+                <a href="{% url 'events:event_detail' event.pk %}">{{ event.title }}</a> > 
+                Book
+            </div>
+        </div>
+
+        <div class="booking-content">
+            <!-- Event Summary -->
+            <div class="event-summary">
+                <h2>Event Summary</h2>
+                <div class="event-info">
+                    <div class="event-image">
+                        {% if event.image %}
+                            <img src="{{ event.image.url }}" alt="{{ event.title }}">
+                        {% else %}
+                            <div class="placeholder-image">
+                                <span>📅</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="event-details">
+                        <h3>{{ event.title }}</h3>
+                        <p><strong>Date:</strong> {{ event.start_date|date:"F j, Y" }} at {{ event.start_date|time:"g:i A" }}</p>
+                        <p><strong>Location:</strong> {{ event.venue_name }}</p>
+                        <p><strong>Type:</strong> {{ event.get_event_type_display }}</p>
+                        <div class="price-info">
+                            {% if event.is_free %}
+                                <span class="price free">Free Event</span>
+                            {% else %}
+                                <span class="price paid">৳{{ event.ticket_price }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if is_checkout %}
+                <!-- Checkout Mode - Show selected tickets -->
+                <div class="checkout-summary">
+                    <h2>🛒 Order Summary</h2>
+                    <div class="selected-tickets">
+                        {% for category, data in selected_quantities.items %}
+                            <div class="ticket-line-item">
+                                <div class="ticket-info">
+                                    <h4>{{ category.name }}</h4>
+                                    <p>{{ data.quantity }} ticket{{ data.quantity|pluralize }}</p>
+                                </div>
+                                <div class="ticket-price">
+                                    {% if category.price == 0 %}
+                                        <span class="price-free">FREE</span>
+                                    {% else %}
+                                        <span class="unit-price">৳{{ category.price }} each</span>
+                                        <span class="line-total">৳{{ category.price|floatformat:2 }} × {{ data.quantity }} = ${{ data.line_total|floatformat:2 }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="order-total">
+                        <div class="total-line">
+                            <span class="total-label">Total Tickets:</span>
+                            <span class="total-value">{{ total_tickets }}</span>
+                        </div>
+                        <div class="total-line grand-total">
+                            <span class="total-label">Total Amount:</span>
+                            <span class="total-value">৳{{ total_amount|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Regular booking mode - Show ticket selection -->
+            {% if event.ticket_categories.exists %}
+                <div class="selected-category-section">
+                    <h2>Selected Ticket Category</h2>
+                    <div id="selected-category-display" class="category-display">
+                        <div class="category-placeholder">
+                            <p>Please select a ticket category below</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Booking Form -->
+            <div class="booking-form-section">
+                <h2>Booking Information</h2>
+                <form method="post" class="booking-form" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if is_checkout %}
+                        <!-- Hidden fields for checkout mode -->
+                        {% for category, data in selected_quantities.items %}
+                            <input type="hidden" name="quantity_{{ category.id }}" value="{{ data.quantity }}">
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Ticket Selection - Only show in regular booking mode -->
+                    {% if not is_checkout and event.ticket_categories.exists %}
+                        <div class="ticket-selection-section">
+                            <h3>🎫 Select Tickets</h3>
+                            <p class="section-description">Choose the quantity of tickets for each category. Maximum 6 tickets total per order.</p>
+                            
+                            <div class="tickets-grid">
+                                {% for category in event.ticket_categories.all %}
+                                    {% if category.tickets_available > 0 %}
+                                        <div class="ticket-category-card" data-category-id="{{ category.id }}">
+                                            <div class="category-info">
+                                                <h4 class="category-name">{{ category.name }}</h4>
+                                                {% if category.description %}
+                                                    <p class="category-description">{{ category.description }}</p>
+                                                {% endif %}
+                                                <div class="category-price">৳{{ category.price }}</div>
+                                                <div class="category-availability">
+                                                    {{ category.tickets_available }} available
+                                                </div>
+                                            </div>
+                                            <div class="quantity-selector">
+                                                <label for="id_quantity_{{ category.id }}" class="quantity-label">Quantity:</label>
+                                                <input type="number" name="quantity_{{ category.id }}" id="id_quantity_{{ category.id }}" 
+                                                       class="quantity-input form-control" 
+                                                       data-category-id="{{ category.id }}" 
+                                                       data-price="{{ category.price }}" 
+                                                       data-max="6" 
+                                                       min="0" max="6" value="0" step="1">
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Total Display -->
+                            <div class="booking-total">
+                                <div class="total-tickets">
+                                    Total Tickets: <span id="total-tickets-count">0</span> / 6
+                                </div>
+                                <div class="total-amount">
+                                    Total Amount: <span id="total-amount">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+                    
+                    <!-- Attendee Information -->
+                    <div class="attendee-info-section">
+                        <h3>📝 Ticket Holder Information</h3>
+                        <p class="section-description">Please provide the information for the person who will attend the event.</p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.attendee_name.id_for_label }}" class="form-label">Full Name *</label>
+                                {{ form.attendee_name }}
+                                {% if form.attendee_name.errors %}
+                                    <div class="error-message">{{ form.attendee_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.attendee_email.id_for_label }}" class="form-label">Email Address *</label>
+                                {{ form.attendee_email }}
+                                {% if form.attendee_email.errors %}
+                                    <div class="error-message">{{ form.attendee_email.errors.0 }}</div>
+                                {% endif %}
+                                <small class="help-text">Ticket confirmation will be sent to this email</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.attendee_phone.id_for_label }}" class="form-label">Phone Number *</label>
+                                {{ form.attendee_phone }}
+                                {% if form.attendee_phone.errors %}
+                                    <div class="error-message">{{ form.attendee_phone.errors.0 }}</div>
+                                {% endif %}
+                                <small class="help-text">For event updates and notifications</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.special_requests.id_for_label }}">Special Requests</label>
+                        {{ form.special_requests }}
+                        {% if form.special_requests.errors %}
+                            <div class="error-message">{{ form.special_requests.errors.0 }}</div>
+                        {% endif %}
+                        <small class="help-text">Any dietary restrictions, accessibility needs, or special requirements</small>
+                    </div>
+
+                    <!-- Booking Summary -->
+                    <div class="booking-summary">
+                        <h3>Booking Summary</h3>
+                        <div class="summary-line">
+                            <span>Event:</span>
+                            <span>{{ event.title }}</span>
+                        </div>
+                        <div class="summary-line">
+                            <span>Date:</span>
+                            <span>{{ event.start_date|date:"F j, Y" }}</span>
+                        </div>
+                        <div class="summary-line">
+                            <span>Time:</span>
+                            <span>{{ event.start_date|time:"g:i A" }}</span>
+                        </div>
+                        <div class="summary-line">
+                            <span>Attendees:</span>
+                            {% if is_checkout %}
+                                <span>{{ total_tickets }} person{{ total_tickets|pluralize }}</span>
+                            {% else %}
+                                <span>1 person</span>
+                            {% endif %}
+                        </div>
+                        <div class="summary-line total">
+                            <span>Total:</span>
+                            {% if is_checkout %}
+                                <span class="amount">৳{{ total_amount|floatformat:2 }}</span>
+                            {% elif event.ticket_categories.exists %}
+                                <span class="amount" id="total-amount">Select a ticket category</span>
+                            {% elif event.is_free %}
+                                <span class="amount free">Free</span>
+                            {% else %}
+                                <span class="amount">৳{{ event.ticket_price }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="terms-section">
+                        <h3>Terms & Conditions</h3>
+                        <div class="terms-content">
+                            <ul>
+                                <li>Registration is confirmed upon submission{% if not event.is_free %} and payment{% endif %}</li>
+                                <li>Cancellation policy: Contact organizer for cancellation requests</li>
+                                {% if event.registration_deadline %}
+                                    <li>Registration deadline: {{ event.registration_deadline|date:"F j, Y" }} at {{ event.registration_deadline|time:"g:i A" }}</li>
+                                {% endif %}
+                                {% if event.requirements %}
+                                    <li>Special requirements: {{ event.requirements|truncatewords:20 }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="form-errors">
+                            {% for error in form.non_field_errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Submit Buttons -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            {% if is_checkout %}
+                                {% if event.is_free %}
+                                    Complete Registration
+                                {% else %}
+                                    Complete Booking & Payment
+                                {% endif %}
+                            {% elif event.is_free %}
+                                Register for Free
+                            {% else %}
+                                Continue to Payment
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'events:event_detail' event.pk %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.booking-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(64,181,173,0.1);
+    overflow: hidden;
+}
+
+.booking-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.booking-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.breadcrumb {
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+.breadcrumb a {
+    color: white;
+    text-decoration: none;
+}
+
+.booking-content {
+    padding: 2rem;
+}
+
+.event-summary {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.event-summary h2 {
+    color: #40B5AD;
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+}
+
+.event-info {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.event-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-image {
+    width: 100%;
+    height: 100%;
+    background: #e1e8ed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #666;
+}
+
+.event-details h3 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.4rem;
+}
+
+.event-details p {
+    margin: 0.25rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.price-info {
+    margin-top: 1rem;
+}
+
+.price {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.price.free {
+    background: #e8f5e8;
+    color: #27ae60;
+}
+
+.price.paid {
+    background: #e0f7fa;
+    color: #40B5AD;
+}
+
+.booking-form-section h2 {
+    color: #40B5AD;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #e0f7fa;
+    padding-bottom: 0.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-row .form-group:only-child {
+    grid-column: 1 / -1;
+}
+
+.attendee-info-section {
+    background: #f8f9fa;
+    border: 2px solid #e0f7fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.attendee-info-section h3 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.section-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Ticket Selection Styles */
+.ticket-selection-section {
+    background: #f8f9fa;
+    border: 2px solid #e0f7fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.ticket-selection-section h3 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.tickets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.ticket-category-card {
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ticket-category-card:hover {
+    border-color: #40B5AD;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.1);
+}
+
+.category-info {
+    margin-bottom: 1rem;
+}
+
+.category-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.category-description {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.category-price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #40B5AD;
+    margin-bottom: 0.25rem;
+}
+
+.category-availability {
+    font-size: 0.85rem;
+    color: #28a745;
+    font-weight: 500;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.quantity-input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.booking-total {
+    background: white;
+    border: 2px solid #40B5AD;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
+
+.total-tickets {
+    color: #333;
+}
+
+.total-amount {
+    color: #40B5AD;
+    font-size: 1.1rem;
+}
+
+.form-group label {
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64,181,173,0.1);
+}
+
+.help-text {
+    color: #666;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+.booking-summary {
+    background: #f8f9fa;
+    border: 2px solid #e0f7fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.booking-summary h3 {
+    color: #40B5AD;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.5rem 0;
+    color: #666;
+}
+
+.summary-line.total {
+    border-top: 2px solid #e0f7fa;
+    padding-top: 0.5rem;
+    margin-top: 1rem;
+    font-weight: 600;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.amount {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+.amount.free {
+    color: #27ae60;
+}
+
+.terms-section {
+    background: #fff8e1;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.terms-section h3 {
+    color: #ff8f00;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+.terms-content ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #333;
+}
+
+.terms-content li {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.form-errors {
+    background: #ffeaea;
+    border: 1px solid #e74c3c;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 2rem;
+    border-top: 1px solid #e1e8ed;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2e837e;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+/* Ticket Categories Styles */
+.ticket-categories-info {
+    margin-top: 15px;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f8f9fa;
+}
+
+.category-option {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+}
+
+.category-option:last-child {
+    margin-bottom: 0;
+}
+
+.category-option:hover {
+    border-color: #40B5AD;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.category-name {
+    font-weight: 600;
+    color: #333;
+    text-transform: capitalize;
+}
+
+.category-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #40B5AD;
+}
+
+.category-description {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+}
+
+.category-availability .available {
+    color: #28a745;
+    font-size: 14px;
+}
+
+.category-availability .sold-out {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Selected Category Section */
+.selected-category-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    border: 2px solid #e1e8ed;
+}
+
+.selected-category-section h2 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.category-display {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+.category-placeholder {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.selected-category-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selected-category-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.selected-category-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.selected-category-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #40B5AD;
+}
+
+.selected-category-price.free {
+    color: #28a745;
+}
+
+@media (max-width: 768px) {
+    .event-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+    
+    .selected-category-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .tickets-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .booking-total {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+}
+
+/* ===== ORDER SUMMARY STYLING ===== */
+.checkout-summary {
+    background: linear-gradient(135deg, #f8fcff 0%, #e8f4fd 100%);
+    border: 2px solid #e3f2fd;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(64, 181, 173, 0.1);
+    position: relative;
+    overflow: hidden;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.checkout-summary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #40b5ad, #2e837e, #1e6b66);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.checkout-summary h2 {
+    color: #1e3a8a;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    animation: fadeInDown 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.selected-tickets {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.8s ease-out 0.4s both;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.ticket-line-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    animation: slideInLeft 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.ticket-line-item:last-child {
+    border-bottom: none;
+}
+
+.ticket-line-item:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ticket-info h4 {
+    color: #2563eb;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    position: relative;
+}
+
+.ticket-info h4::before {
+    content: "🎫";
+    margin-right: 0.5rem;
+    font-size: 0.9em;
+}
+
+.ticket-info p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.ticket-price {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.unit-price {
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.line-total {
+    color: #1f2937;
+    font-size: 1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #40b5ad, #2e837e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.price-free {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.order-total {
+    background: linear-gradient(135deg, #40b5ad 0%, #2e837e 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: white;
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.3);
+    position: relative;
+    overflow: hidden;
+    animation: slideInUp 0.8s ease-out 0.6s both;
+}
+
+.order-total::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    50% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+}
+
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+}
+
+.total-line.grand-total {
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    padding-top: 1rem;
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+.total-label {
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.total-label::before {
+    content: "💳";
+    font-size: 0.9em;
+}
+
+.grand-total .total-label::before {
+    content: "💰";
+}
+
+.total-value {
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+.grand-total .total-value {
+    font-size: 1.3em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+    to {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+}
+
+/* Mobile responsiveness for order summary */
+@media (max-width: 768px) {
+    .checkout-summary {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .checkout-summary h2 {
+        font-size: 1.5rem;
+    }
+    
+    .ticket-line-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .ticket-price {
+        text-align: center;
+        align-items: center;
+    }
+    
+    .order-total {
+        padding: 1.25rem;
+    }
+    
+    .total-line {
+        font-size: 0.95rem;
+    }
+    
+    .total-line.grand-total {
+        font-size: 1.1rem;
+    }
+}
+
+/* ===== BOOKING SUMMARY STYLING ===== */
+.booking-summary {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.6s ease-out;
+    position: relative;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.booking-summary h3 {
+    color: #374151;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.booking-summary h3::before {
+    content: "📋";
+    font-size: 1.1em;
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.summary-line:hover {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.05), rgba(46, 131, 126, 0.05));
+    border-radius: 6px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.summary-line:last-child {
+    border-bottom: none;
+}
+
+.summary-line span:first-child {
+    color: #6b7280;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Add icons to summary line labels */
+.summary-line span:first-child[style*="Event"]::before,
+.summary-line:nth-child(1) span:first-child::before {
+    content: "🎪";
+}
+
+.summary-line:nth-child(2) span:first-child::before {
+    content: "📅";
+}
+
+.summary-line:nth-child(3) span:first-child::before {
+    content: "🕐";
+}
+
+.summary-line:nth-child(4) span:first-child::before {
+    content: "👥";
+}
+
+.summary-line span:last-child {
+    color: #374151;
+    font-weight: 600;
+}
+
+.summary-line.total {
+    border-top: 2px solid #d1d5db;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.1), rgba(46, 131, 126, 0.1));
+    border-radius: 8px;
+    padding: 1rem 0.75rem;
+}
+
+.summary-line.total span:first-child {
+    color: #374151;
+    font-weight: 700;
+}
+
+.summary-line.total span:first-child::before {
+    content: "💰";
+}
+
+.summary-line .amount {
+    background: linear-gradient(135deg, #40b5ad, #2e837e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-shadow: none;
+    position: relative;
+}
+
+.summary-line .amount::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #40b5ad, #2e837e);
+    border-radius: 1px;
+    animation: expandWidth 0.8s ease-out 0.5s both;
+}
+
+@keyframes expandWidth {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.summary-line .amount.free {
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.summary-line .amount.free::after {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+/* Mobile responsiveness for booking summary */
+@media (max-width: 768px) {
+    .booking-summary {
+        padding: 1.25rem;
+        margin: 1rem 0;
+    }
+    
+    .booking-summary h3 {
+        font-size: 1.1rem;
+    }
+    
+    .summary-line {
+        font-size: 0.9rem;
+        padding: 0.5rem 0;
+    }
+    
+    .summary-line.total {
+        font-size: 1rem;
+    }
+}
+
+/* Dark Mode Styles for Event Booking */
+body.dark-mode .container {
+    background: #232728;
+}
+
+body.dark-mode .booking-container {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .booking-header {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    border-bottom: 2px solid #40B5AD;
+}
+
+body.dark-mode .booking-header h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .breadcrumb {
+    color: #b0b0b0;
+}
+
+body.dark-mode .breadcrumb a {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-summary {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .event-summary h2 {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-details h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-details p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .event-details strong {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-meta {
+    color: #b0b0b0;
+}
+
+body.dark-mode .price-display {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-image {
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .placeholder-image {
+    background: #2d3233;
+    color: #40B5AD;
+}
+
+body.dark-mode .booking-form {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .form-section h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .form-group label {
+    color: #40B5AD;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus,
+body.dark-mode .form-group textarea:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .form-group input::placeholder,
+body.dark-mode .form-group textarea::placeholder {
+    color: #888;
+}
+
+body.dark-mode .help-text {
+    color: #b0b0b0;
+}
+
+body.dark-mode .ticket-categories {
+    background: #232728;
+}
+
+body.dark-mode .ticket-category {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .ticket-category:hover {
+    background: #1e3635;
+}
+
+body.dark-mode .category-name {
+    color: #40B5AD;
+}
+
+body.dark-mode .category-price {
+    color: #e0e0e0;
+}
+
+body.dark-mode .category-description {
+    color: #b0b0b0;
+}
+
+body.dark-mode .quantity-selector {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .quantity-btn {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .quantity-btn:hover {
+    background: #2e837e;
+}
+
+body.dark-mode .quantity-input {
+    background: transparent;
+    color: #e0e0e0;
+}
+
+body.dark-mode .booking-summary {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .booking-summary h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .summary-item {
+    border-bottom: 1px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .summary-item:last-child {
+    border-bottom: none;
+}
+
+body.dark-mode .summary-label {
+    color: #40B5AD;
+}
+
+body.dark-mode .summary-value {
+    color: #e0e0e0;
+}
+
+body.dark-mode .summary-total {
+    background: #2d3233;
+    color: #40B5AD;
+}
+
+body.dark-mode .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+}
+
+body.dark-mode .btn-primary:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #2a7671 100%);
+    color: #ffffff;
+}
+
+body.dark-mode .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #5a6268;
+}
+
+body.dark-mode .alert {
+    background: rgba(64, 181, 173, 0.2);
+    color: #e0e0e0;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .alert-info {
+    background: rgba(23, 162, 184, 0.2);
+    color: #17a2b8;
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
+body.dark-mode .alert-warning {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+body.dark-mode .error-message {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    const totalTicketsElement = document.getElementById('total-tickets-count');
+    const totalAmountElement = document.getElementById('total-amount');
+    const maxTickets = 6;
+    
+    function updateTotals() {
+        let totalTickets = 0;
+        let totalAmount = 0;
+        
+        quantityInputs.forEach(input => {
+            const quantity = parseInt(input.value) || 0;
+            const price = parseFloat(input.dataset.price) || 0;
+            
+            totalTickets += quantity;
+            totalAmount += quantity * price;
+        });
+        
+        // Update display
+        if (totalTicketsElement) {
+            totalTicketsElement.textContent = totalTickets;
+            // Change color if over limit
+            if (totalTickets > maxTickets) {
+                totalTicketsElement.style.color = '#dc3545';
+                totalTicketsElement.parentElement.style.color = '#dc3545';
+            } else {
+                totalTicketsElement.style.color = '#333';
+                totalTicketsElement.parentElement.style.color = '#333';
+            }
+        }
+        
+        if (totalAmountElement) {
+            if (totalAmount === 0) {
+                totalAmountElement.textContent = '$0.00';
+            } else {
+                totalAmountElement.textContent = '$' + totalAmount.toFixed(2);
+            }
+        }
+        
+        // Disable inputs if max tickets reached
+        quantityInputs.forEach(input => {
+            const currentValue = parseInt(input.value) || 0;
+            const remainingTickets = maxTickets - totalTickets + currentValue;
+            const maxAvailable = parseInt(input.dataset.max) || 0;
+            
+            input.max = Math.min(remainingTickets, maxAvailable);
+            
+            // Visual feedback for disabled state
+            if (remainingTickets <= 0 && currentValue === 0) {
+                input.style.backgroundColor = '#f8f9fa';
+                input.style.cursor = 'not-allowed';
+            } else {
+                input.style.backgroundColor = '';
+                input.style.cursor = '';
+            }
+        });
+    }
+    
+    function validateQuantity(input) {
+        const value = parseInt(input.value) || 0;
+        const max = parseInt(input.max) || 0;
+        const min = parseInt(input.min) || 0;
+        
+        if (value > max) {
+            input.value = max;
+        } else if (value < min) {
+            input.value = min;
+        }
+        
+        updateTotals();
+    }
+    
+    // Add event listeners to quantity inputs
+    quantityInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            validateQuantity(this);
+        });
+        
+        input.addEventListener('change', function() {
+            validateQuantity(this);
+        });
+        
+        // Prevent negative values
+        input.addEventListener('keydown', function(e) {
+            if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Initial calculation
+    updateTotals();
+    
+    // Form validation
+    const form = document.querySelector('.booking-form');
+    const hasCategories = {% if has_categories %}true{% else %}false{% endif %};
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // If event has no categories, skip all ticket validation
+            if (!hasCategories) {
+                return true; // Allow submission for legacy events
+            }
+            
+            let totalTickets = 0;
+            
+            // Check both visible quantity inputs and hidden inputs
+            const allQuantityInputs = form.querySelectorAll('input[name^="quantity_"]');
+            allQuantityInputs.forEach(input => {
+                totalTickets += parseInt(input.value) || 0;
+            });
+            
+            // For events with categories, check if tickets are selected
+            if (totalTickets === 0) {
+                e.preventDefault();
+                alert('Please select at least one ticket.');
+                return false;
+            }
+            
+            if (totalTickets > maxTickets) {
+                e.preventDefault();
+                alert(`You can only purchase a maximum of ${maxTickets} tickets.`);
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

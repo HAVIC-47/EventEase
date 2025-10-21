@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - EventEase{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    padding-right: 45px;
+    width: 100%;
+}
+
+.password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    color: #666;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+    z-index: 10;
+    user-select: none;
+}
+
+.password-toggle-icon:hover {
+    color: #40B5AD;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-bg">
+    <div class="auth-center">
+        <div class="auth-container">
+            <h2>Login to EventEase</h2>
+            <form method="post" class="auth-form" id="loginForm">
+                {% csrf_token %}
+                <label for="username">Username or Email:</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username or email" required>
+                
+                <label for="password">Password:</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <span class="password-toggle-icon" onclick="togglePassword('password')">
+                        <i class="fas fa-eye" id="password-eye"></i>
+                    </span>
+                </div>
+                
+                <button type="submit" class="auth-btn">Login</button>
+                
+                {% if form.errors %}
+                    <div class="auth-errors">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <p class="error-message">{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="auth-switch">
+                    Don't have an account? <a href="{% url 'users:signup' %}">Sign up here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const eyeIcon = document.getElementById(fieldId + '-eye');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    if (!validateForm('loginForm')) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Role Upgrade - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+.upgrade-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.upgrade-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+}
+
+.upgrade-card h2 {
+    color: #40B5AD;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 700;
+}
+
+.upgrade-card p {
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+.role-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.role-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+.role-option:hover {
+    border-color: #40B5AD;
+    background: #f0fdfa;
+}
+
+.role-option.selected {
+    border-color: #40B5AD;
+    background: #e0f7fa;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+}
+
+.role-option input[type="radio"] {
+    display: none;
+}
+
+.role-option h3 {
+    color: #40B5AD;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.role-option p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: #2e837e;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #40B5AD;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.3);
+}
+
+.cancel-btn {
+    background: #6b7280;
+    color: white;
+    text-decoration: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.cancel-btn:hover {
+    background: #4b5563;
+    text-decoration: none;
+    color: white;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .role-selection {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .upgrade-container {
+        padding: 0 1rem;
+    }
+}
+
+/* Dark mode styles */
+body.dark-mode .upgrade-card {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .role-option {
+    background: #232728;
+    border-color: #444;
+}
+
+body.dark-mode .role-option:hover {
+    background: #374151;
+}
+
+body.dark-mode .role-option.selected {
+    background: #374151;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea {
+    background: #232728;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group textarea:focus {
+    background: #2d3233;
+    border-color: #40B5AD;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upgrade-container">
+    <div class="upgrade-card">
+        <h2>🚀 Request Role Upgrade</h2>
+        <p>Apply to become an Event Manager or Venue Manager. Fill out the form below and our admin team will review your application.</p>
+        
+        <form method="post" class="upgrade-form">
+            {% csrf_token %}
+            
+            <!-- Role Selection -->
+            <div class="role-selection">
+                <div class="role-option" onclick="selectRole('event_manager')">
+                    <input type="radio" name="requested_role" value="event_manager" id="event_manager">
+                    <h3>🎉 Event Manager</h3>
+                    <p>Organize and manage events, bookings, and client relationships</p>
+                </div>
+                
+                <div class="role-option" onclick="selectRole('venue_manager')">
+                    <input type="radio" name="requested_role" value="venue_manager" id="venue_manager">
+                    <h3>🏢 Venue Manager</h3>
+                    <p>Manage venue listings, bookings, and facility operations</p>
+                </div>
+            </div>
+            
+            <!-- Auto-filled Basic Info -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" readonly>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}" readonly>
+            </div>
+            
+            <!-- Additional Info -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" name="phone" value="{{ user.profile.phone|default:'' }}" placeholder="+1 (555) 123-4567" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="company_name">Company/Organization Name</label>
+                    <input type="text" id="company_name" name="company_name" placeholder="Enter your company name">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="address">Address *</label>
+                <textarea id="address" name="address" placeholder="Enter your full address" required>{{ user.profile.address|default:'' }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="experience">Relevant Experience *</label>
+                <textarea id="experience" name="experience" placeholder="Describe your relevant experience in event/venue management" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="portfolio">Portfolio/Website URL</label>
+                <input type="url" id="portfolio" name="portfolio" placeholder="https://yourwebsite.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="reason">Why do you want this role? *</label>
+                <textarea id="reason" name="reason" placeholder="Explain why you want to become an Event/Venue Manager and how you plan to use this role" required></textarea>
+            </div>
+            
+            <button type="submit" class="submit-btn">📝 Submit Application</button>
+            <a href="{% url 'users:profile' %}" class="cancel-btn">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<script>
+function selectRole(role) {
+    // Remove selected class from all options
+    document.querySelectorAll('.role-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked option
+    event.currentTarget.classList.add('selected');
+    
+    // Check the corresponding radio button
+    document.getElementById(role).checked = true;
+}
+
+// Add form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.upgrade-form');
+    
+    form.addEventListener('submit', function(e) {
+        const selectedRole = document.querySelector('input[name="requested_role"]:checked');
+        
+        if (!selectedRole) {
+            e.preventDefault();
+            alert('Please select a role to apply for.');
+            return;
+        }
+        
+        // Check required fields
+        const requiredFields = ['phone', 'address', 'experience', 'reason'];
+        let hasError = false;
+        
+        requiredFields.forEach(fieldName => {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (!field.value.trim()) {
+                hasError = true;
+                field.style.borderColor = '#e74c3c';
+            } else {
+                field.style.borderColor = '#e5e7eb';
+            }
+        });
+        
+        if (hasError) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+});
+</script>
+{% endblock %}

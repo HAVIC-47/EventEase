@@ -1,0 +1,1487 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customer Reviews - EventEase{% endblock %}
+
+{% block content %}
+<!-- Enhanced Background -->
+<div class="reviews-page-bg">
+    <div class="container">
+        <!-- Animated Header Section -->
+        <div class="hero-header text-center">
+            <div class="floating-review-elements">
+                <div class="float-review star-float-1"><i class="fas fa-star"></i></div>
+                <div class="float-review heart-float-1"><i class="fas fa-heart"></i></div>
+                <div class="float-review star-float-2"><i class="fas fa-star"></i></div>
+                <div class="float-review thumbs-float"><i class="fas fa-thumbs-up"></i></div>
+                <div class="float-review star-float-3"><i class="fas fa-star"></i></div>
+            </div>
+            
+            <div class="hero-content">
+                <h1 class="hero-title-main">
+                    <span class="title-icon"><i class="fas fa-quote-left"></i></span>
+                    What Our Customers Say
+                    <span class="title-icon"><i class="fas fa-quote-right"></i></span>
+                </h1>
+                <p class="hero-subtitle-main">Real experiences from real people who chose EventEase</p>
+                
+                <!-- Enhanced Stats Cards -->
+                <div class="row justify-content-center mb-5">
+                    <div class="col-lg-8">
+                        <div class="stats-grid">
+                            <div class="stat-card rating-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-number">{{ avg_rating|floatformat:1 }}<span>/5.0</span></h3>
+                                    <p class="stat-label">Average Rating</p>
+                                    <div class="stat-stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= avg_rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card count-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-number">{{ total_reviews }}<span>+</span></h3>
+                                    <p class="stat-label">Happy Customers</p>
+                                    <div class="stat-growth">
+                                        <i class="fas fa-arrow-up"></i> Growing daily
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card satisfaction-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-number">98<span>%</span></h3>
+                                    <p class="stat-label">Satisfaction Rate</p>
+                                    <div class="stat-badge">
+                                        <i class="fas fa-award"></i> Excellence
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CTA Button -->
+                <div class="cta-section">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'reviews:submit_review' %}" class="btn btn-primary btn-cta">
+                        <span class="btn-icon"><i class="fas fa-pen-fancy"></i></span>
+                        <span class="btn-text">Share Your Experience</span>
+                        <span class="btn-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'users:login' %}" class="btn btn-primary btn-cta">
+                        <span class="btn-icon"><i class="fas fa-sign-in-alt"></i></span>
+                        <span class="btn-text">Login to Write a Review</span>
+                        <span class="btn-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Reviews Grid -->
+        {% if reviews %}
+        <div class="reviews-section">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">Customer Stories</h2>
+                <p class="section-subtitle">Discover what makes EventEase special through our customers' eyes</p>
+            </div>
+            
+            <div class="reviews-masonry">
+                {% for review in reviews %}
+                <div class="review-card-wrapper">
+                    <div class="modern-review-card">
+                        {% if review.is_featured %}
+                        <div class="featured-ribbon">
+                            <i class="fas fa-crown"></i>
+                            <span>Featured</span>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Card Header -->
+                        <div class="review-header">
+                            <div class="user-info">
+                                {% if review.user.profile.avatar %}
+                                <img src="{{ review.user.profile.avatar.url }}" 
+                                     alt="{{ review.user.get_full_name }}" 
+                                     class="user-avatar">
+                                {% else %}
+                                <div class="avatar-modern">
+                                    {{ review.user.first_name|first }}{{ review.user.last_name|first }}
+                                </div>
+                                {% endif %}
+                                <div class="user-details">
+                                    <h6 class="user-name">{{ review.user.get_full_name|default:review.user.username }}</h6>
+                                    <p class="review-date">{{ review.created_at|date:"F j, Y" }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Enhanced Rating Display -->
+                            <div class="rating-display">
+                                <div class="stars-container">
+                                    {% for i in review.filled_stars %}
+                                        <i class="fas fa-star star-filled"></i>
+                                    {% endfor %}
+                                    {% for i in review.empty_stars %}
+                                        <i class="far fa-star star-empty"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="rating-number">{{ review.rating }}.0</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Content -->
+                        <div class="review-content">
+                            <h5 class="review-title">{{ review.title }}</h5>
+                            <div class="review-text-container">
+                                <div class="review-text-preview">
+                                    <p>{{ review.content }}</p>
+                                </div>
+                                <div class="review-text-gradient"></div>
+                                {% if review.content|length > 150 %}
+                                <button class="read-more-btn" onclick="toggleExpandCard(this)">
+                                    <span class="read-more-text">Read more</span>
+                                    <i class="fas fa-chevron-down read-more-icon"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Card Footer -->
+                        <div class="review-footer">
+                            <div class="review-actions">
+                                <button class="action-btn helpful-btn">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span>Helpful</span>
+                                </button>
+                                <button class="action-btn share-btn">
+                                    <i class="fas fa-share"></i>
+                                    <span>Share</span>
+                                </button>
+                            </div>
+                            <div class="review-meta">
+                                <span class="review-id">#{{ review.id }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Enhanced Pagination -->
+        {% if reviews.has_other_pages %}
+        <div class="pagination-section">
+            <nav aria-label="Reviews pagination" class="pagination-nav">
+                <div class="pagination-info">
+                    <span class="pagination-text">
+                        Showing <strong>{{ reviews.start_index }}</strong> to <strong>{{ reviews.end_index }}</strong>
+                        of <strong>{{ reviews.paginator.count }}</strong> reviews
+                    </span>
+                </div>
+                
+                <ul class="pagination pagination-modern">
+                    {% if reviews.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link page-link-first" href="?page=1" title="First Page">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link page-link-prev" href="?page={{ reviews.previous_page_number }}" title="Previous Page">
+                                <i class="fas fa-angle-left"></i>
+                                <span class="d-none d-sm-inline">Previous</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <!-- Page Numbers -->
+                    {% for num in reviews.paginator.page_range %}
+                        {% if num == reviews.number %}
+                            <li class="page-item active">
+                                <span class="page-link page-link-current">{{ num }}</span>
+                            </li>
+                        {% elif num > reviews.number|add:'-3' and num < reviews.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if reviews.has_next %}
+                        <li class="page-item">
+                            <a class="page-link page-link-next" href="?page={{ reviews.next_page_number }}" title="Next Page">
+                                <span class="d-none d-sm-inline">Next</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link page-link-last" href="?page={{ reviews.paginator.num_pages }}" title="Last Page">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Enhanced Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-content">
+                <div class="empty-state-icon">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <h3 class="empty-state-title">No Reviews Yet</h3>
+                <p class="empty-state-text">Be the first to share your amazing experience with EventEase!</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'reviews:submit_review' %}" class="btn btn-primary btn-cta">
+                    <span class="btn-icon"><i class="fas fa-star"></i></span>
+                    <span class="btn-text">Write the First Review</span>
+                    <span class="btn-arrow"><i class="fas fa-arrow-right"></i></span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Enhanced Background and Layout */
+.reviews-page-bg {
+    background: #f5f6f7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    transition: all 0.3s ease;
+    border-top: 2px solid #40B5AD;
+}
+
+.reviews-page-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2340b5ad' fill-opacity='0.02'%3E%3Cpath d='M30 30c0-16.569 13.431-30 30-30v60C43.431 60 30 46.569 30 30zM0 30C0 13.431 13.431 0 30 0v60C13.431 60 0 46.569 0 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    z-index: 0;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+/* Hero Header */
+.hero-header {
+    position: relative;
+    padding: 4rem 0 3rem;
+    z-index: 1;
+}
+
+.floating-review-elements {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.float-review {
+    position: absolute;
+    color: rgba(64, 181, 173, 0.15);
+    font-size: 2.5rem;
+    animation: floatReview 8s ease-in-out infinite;
+}
+
+.star-float-1 { top: 10%; left: 10%; animation-delay: 0s; }
+.heart-float-1 { top: 15%; right: 20%; animation-delay: 1.5s; }
+.star-float-2 { top: 25%; left: 70%; animation-delay: 3s; }
+.thumbs-float { bottom: 40%; right: 10%; animation-delay: 4.5s; }
+.star-float-3 { bottom: 20%; left: 15%; animation-delay: 6s; }
+
+@keyframes floatReview {
+    0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); opacity: 0.15; }
+    25% { transform: translateY(-15px) rotate(90deg) scale(1.1); opacity: 0.25; }
+    50% { transform: translateY(-25px) rotate(180deg) scale(1.2); opacity: 0.3; }
+    75% { transform: translateY(-15px) rotate(270deg) scale(1.1); opacity: 0.25; }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title-main {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #40B5AD;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+    transition: color 0.3s ease;
+}
+
+.title-icon {
+    color: rgba(64, 181, 173, 0.4);
+    font-size: 2.2rem;
+    vertical-align: top;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.title-icon:hover {
+    color: rgba(64, 181, 173, 0.7);
+    transform: scale(1.1) rotate(10deg);
+}
+
+.hero-subtitle-main {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: 400;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    transition: color 0.3s ease;
+}
+
+/* Enhanced Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(64, 181, 173, 0.07);
+    border: none;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.stat-card:hover::before {
+    left: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 6px 24px rgba(64, 181, 173, 0.13);
+}
+
+.rating-card {
+    border-left: 4px solid #ffc107;
+}
+
+.count-card {
+    border-left: 4px solid #40B5AD;
+}
+
+.satisfaction-card {
+    border-left: 4px solid #e74c3c;
+}
+
+.stat-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: inline-block;
+    padding: 1rem;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.rating-card .stat-icon {
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: white;
+}
+
+.count-card .stat-icon {
+    background: linear-gradient(135deg, #40B5AD, #2c8a82);
+    color: white;
+}
+
+.satisfaction-card .stat-icon {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number span {
+    font-size: 1.5rem;
+    color: #666;
+    font-weight: 400;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.stat-stars {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
+.stat-growth, .stat-badge {
+    font-size: 0.9rem;
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+.stat-badge i {
+    margin-right: 0.25rem;
+}
+
+/* CTA Button */
+.cta-section {
+    margin-top: 2rem;
+}
+
+.btn-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #40B5AD, #2c8a82);
+    border: none;
+    border-radius: 50px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-cta:hover::before {
+    left: 100%;
+}
+
+.btn-cta:hover {
+    background: #2e837e;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.2);
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+.btn-arrow {
+    transition: transform 0.3s ease;
+}
+
+.btn-cta:hover .btn-arrow {
+    transform: translateX(5px);
+}
+
+/* Reviews Section */
+.reviews-section {
+    padding: 4rem 2rem 2rem 2rem;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.section-header {
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #40B5AD;
+    margin-bottom: 2rem;
+    transition: color 0.3s ease;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Enhanced Reviews Masonry */
+.reviews-masonry {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    align-items: start;
+}
+
+.review-card-wrapper {
+    position: relative;
+}
+
+.modern-review-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 2rem 1.5rem;
+    position: relative;
+    box-shadow: 0 2px 16px rgba(64, 181, 173, 0.07);
+    border: none;
+    height: 420px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modern-review-card.expanded {
+    height: auto;
+    min-height: 420px;
+}
+
+.modern-review-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #40B5AD, #2c8a82);
+}
+
+.modern-review-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* Featured Ribbon */
+.featured-ribbon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 0 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+    z-index: 2;
+}
+
+.featured-ribbon i {
+    margin-right: 0.25rem;
+}
+
+/* Review Header */
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(64, 181, 173, 0.2);
+}
+
+.avatar-modern {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #40B5AD, #2c8a82);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+    border: 3px solid rgba(64, 181, 173, 0.2);
+}
+
+.user-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.review-date {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+}
+
+/* Enhanced Rating Display */
+.rating-display {
+    text-align: right;
+}
+
+.stars-container {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    justify-content: flex-end;
+}
+
+.star-filled {
+    color: #ffc107;
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.3));
+}
+
+.star-empty {
+    color: #e0e0e0;
+    font-size: 1.2rem;
+}
+
+.rating-number {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #40B5AD;
+    background: rgba(64, 181, 173, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 15px;
+}
+
+/* Review Content */
+.review-content {
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.review-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.review-text-container {
+    position: relative;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.review-text-preview {
+    overflow: hidden;
+    position: relative;
+}
+
+.modern-review-card:not(.expanded) .review-text-preview {
+    max-height: 120px;
+    line-height: 1.6;
+}
+
+.modern-review-card.expanded .review-text-preview {
+    max-height: none;
+}
+
+.review-text-preview p {
+    color: #fff;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.review-text-gradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    
+    pointer-events: none;
+}
+
+.modern-review-card.expanded .review-text-gradient {
+    opacity: 0;
+}
+
+.read-more-btn {
+    background: transparent;
+    border: 2px solid #40B5AD;
+    color: #40B5AD;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0.6rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    margin-top: auto;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    margin: 1rem auto 0;
+    max-width: 160px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.read-more-btn:hover {
+    color: #2c8a82;
+    border-color: #2c8a82;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.25);
+}
+
+.read-more-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.2);
+}
+
+.read-more-text {
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.read-more-icon {
+    font-size: 0.75rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+.read-more-btn.expanded {
+    border-color: #e67e22;
+    color: #e67e22;
+}
+
+.read-more-btn.expanded:hover {
+    color: #d35400;
+    border-color: #d35400;
+    box-shadow: 0 8px 25px rgba(230, 126, 34, 0.25);
+}
+
+.read-more-btn.expanded .read-more-icon {
+    transform: rotate(180deg);
+}
+
+/* Review Footer */
+.review-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(64, 181, 173, 0.1);
+}
+
+.review-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    background: none;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    color: #666;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: rgba(64, 181, 173, 0.1);
+    border-color: #40B5AD;
+    color: #40B5AD;
+}
+
+.review-meta {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+/* Enhanced Pagination */
+.pagination-section {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    border-top: 1px solid rgba(64, 181, 173, 0.1);
+}
+
+.pagination-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.pagination-info {
+    text-align: center;
+}
+
+.pagination-text {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.pagination-modern {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-modern .page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border: 2px solid rgba(64, 181, 173, 0.2);
+    border-radius: 12px;
+    color: #40B5AD;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.pagination-modern .page-link:hover {
+    background: rgba(64, 181, 173, 0.1);
+    border-color: #40B5AD;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(64, 181, 173, 0.2);
+}
+
+.pagination-modern .page-item.active .page-link {
+    background: linear-gradient(135deg, #40B5AD, #2c8a82);
+    border-color: #40B5AD;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.3);
+}
+
+.page-link-first, .page-link-last {
+    width: 50px;
+}
+
+.page-link-prev, .page-link-next {
+    width: auto;
+    padding: 0 1rem;
+    gap: 0.5rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    position: relative;
+}
+
+.empty-state-content {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: rgba(64, 181, 173, 0.3);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.empty-state-icon i {
+    animation: starTwinkle 2s ease-in-out infinite;
+}
+
+.empty-state-icon i:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.empty-state-icon i:nth-child(3) {
+    animation-delay: 1s;
+}
+
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+.empty-state-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title-main {
+        font-size: 2.2rem;
+    }
+    
+    .hero-subtitle-main {
+        font-size: 1.1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .reviews-masonry {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .modern-review-card {
+        padding: 1.5rem;
+    }
+    
+    .review-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .rating-display {
+        text-align: left;
+        width: 100%;
+    }
+    
+    .stars-container {
+        justify-content: flex-start;
+    }
+    
+    .pagination-modern {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .page-link-prev, .page-link-next {
+        width: 45px;
+        padding: 0;
+    }
+    
+    .page-link-prev span, .page-link-next span {
+        display: none;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .reviews-page-bg {
+        background: linear-gradient(135deg, #1a2930 0%, #1e3a3e 50%, #1a2930 100%);
+    }
+    
+    .hero-title-main {
+        background: linear-gradient(135deg, #40B5AD, #5fd6cb);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .hero-subtitle-main, .section-subtitle {
+        color: #b0b0b0;
+    }
+    
+    .stat-card, .modern-review-card {
+        background: rgba(26, 41, 48, 0.95);
+        border-color: rgba(64, 181, 173, 0.2);
+    }
+    
+    .section-title, .user-name, .review-title {
+        color: #e0e0e0;
+    }
+    
+    .review-text p, .pagination-text {
+        color: #b0b0b0;
+    }
+    
+    .stat-number {
+        color: #e0e0e0;
+    }
+    
+    .stat-label, .review-date {
+        color: #888;
+    }
+    
+    .pagination-modern .page-link {
+        background: rgba(26, 41, 48, 0.8);
+        border-color: rgba(64, 181, 173, 0.3);
+        color: #40B5AD;
+    }
+    
+    .empty-state-title {
+        color: #e0e0e0;
+    }
+    
+    .empty-state-text {
+        color: #b0b0b0;
+    }
+}
+
+/* Stat Icon Styling */
+.stat-icon {
+    color: #40B5AD;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.featured-ribbon {
+    background: linear-gradient(135deg, #40B5AD, #2e837e);
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+}
+
+.user-avatar {
+    border: 3px solid rgba(64, 181, 173, 0.2);
+    transition: all 0.3s ease;
+}
+
+.modern-review-card:hover .user-avatar {
+    border-color: rgba(64, 181, 173, 0.4);
+    transform: scale(1.05);
+}
+
+body.dark-mode .user-avatar {
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .modern-review-card:hover .user-avatar {
+    border-color: rgba(64, 181, 173, 0.5);
+}
+
+/* Animation Classes for AOS */
+[data-aos] {
+    pointer-events: none;
+}
+
+[data-aos].aos-animate {
+    pointer-events: auto;
+}
+
+/* Dark Mode Support */
+body.dark-mode .reviews-page-bg {
+    background: #232728;
+    border-top: 2px solid #40B5AD;
+}
+
+body.dark-mode .reviews-page-bg::before {
+    opacity: 0.2;
+}
+
+body.dark-mode .hero-title-main {
+    color: #40B5AD;
+}
+
+body.dark-mode .hero-subtitle-main {
+    color: #b0b0b0;
+}
+
+body.dark-mode .title-icon {
+    color: rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .stat-card {
+    background: #2d3233;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .stat-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.15);
+}
+
+body.dark-mode .stat-number {
+    color: #40B5AD;
+}
+
+body.dark-mode .stat-label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .stat-icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .stat-stars i {
+    color: #ffc107;
+}
+
+body.dark-mode .stat-growth,
+body.dark-mode .stat-badge {
+    color: #b0b0b0;
+}
+
+body.dark-mode .btn-cta {
+    background: #40B5AD;
+    color: white;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .btn-cta:hover {
+    background: #2e837e;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .section-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .section-subtitle {
+    color: #b0b0b0;
+}
+
+body.dark-mode .modern-review-card {
+    background: #2d3233;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .modern-review-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.15);
+}
+
+body.dark-mode .user-name {
+    color: #e0e0e0;
+}
+
+body.dark-mode .review-date {
+    color: #888;
+}
+
+body.dark-mode .rating-number {
+    color: #40B5AD;
+}
+
+body.dark-mode .star-filled {
+    color: #ffc107;
+}
+
+body.dark-mode .star-empty {
+    color: #555;
+}
+
+body.dark-mode .review-title {
+    color: #40B5AD;
+}
+
+body.dark-mode .review-text p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .read-more-btn {
+    background: transparent;
+    border-color: #40B5AD;
+    color: #40B5AD;
+}
+
+body.dark-mode .read-more-btn:hover {
+    color: #2c8a82;
+    border-color: #2c8a82;
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .read-more-btn.expanded {
+    border-color: #e67e22;
+    color: #e67e22;
+}
+
+body.dark-mode .read-more-btn.expanded:hover {
+    color: #d35400;
+    border-color: #d35400;
+    box-shadow: 0 8px 25px rgba(230, 126, 34, 0.2);
+}
+
+body.dark-mode .action-btn {
+    color: #b0b0b0;
+    background: transparent;
+    border: 1px solid #555;
+}
+
+body.dark-mode .action-btn:hover {
+    color: #40B5AD;
+    border-color: #40B5AD;
+    background: rgba(64, 181, 173, 0.1);
+}
+
+body.dark-mode .review-id {
+    color: #888;
+}
+
+body.dark-mode .featured-ribbon {
+    background: linear-gradient(135deg, #40B5AD, #2e837e);
+}
+
+body.dark-mode .avatar-modern {
+    background: #40B5AD;
+    color: white;
+}
+
+body.dark-mode .empty-state-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .empty-state-text {
+    color: #b0b0b0;
+}
+
+body.dark-mode .empty-state-icon i {
+    color: #40B5AD;
+}
+
+body.dark-mode .pagination-modern .page-link {
+    background: #2d3233;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .pagination-modern .page-link:hover {
+    background: #40B5AD;
+    border-color: #40B5AD;
+    color: white;
+}
+
+body.dark-mode .pagination-modern .page-item.active .page-link {
+    background: #40B5AD;
+    border-color: #40B5AD;
+}
+
+body.dark-mode .pagination-text {
+    color: #b0b0b0;
+}
+
+body.dark-mode .filter-card {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .filter-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-select,
+body.dark-mode .form-control {
+    background: #232728;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-select:focus,
+body.dark-mode .form-control:focus {
+    background: #1e2324;
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.25);
+    color: #e0e0e0;
+}
+
+body.dark-mode .btn-outline-primary {
+    color: #40B5AD;
+    border-color: #40B5AD;
+    background: transparent;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+    background: #40B5AD;
+    color: white;
+}
+</style>
+
+<!-- Add AOS (Animate On Scroll) Library -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced Expand/Collapse Functionality
+    window.toggleExpandCard = function(btn) {
+        console.log('Toggle function called'); // Debug log
+        const reviewCard = btn.closest('.modern-review-card');
+        const readMoreText = btn.querySelector('.read-more-text');
+        const readMoreIcon = btn.querySelector('.read-more-icon');
+        
+        console.log('Review card found:', reviewCard); // Debug log
+        console.log('Current expanded state:', reviewCard.classList.contains('expanded')); // Debug log
+        
+        if (reviewCard.classList.contains('expanded')) {
+            // Collapse the card
+            reviewCard.classList.remove('expanded');
+            btn.classList.remove('expanded');
+            readMoreText.textContent = 'Read more';
+            console.log('Card collapsed'); // Debug log
+        } else {
+            // Expand the card
+            reviewCard.classList.add('expanded');
+            btn.classList.add('expanded');
+            readMoreText.textContent = 'Read less';
+            console.log('Card expanded'); // Debug log
+        }
+    };
+    
+    // Action Buttons Functionality
+    document.querySelectorAll('.helpful-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.classList.toggle('active');
+            if (this.classList.contains('active')) {
+                this.style.background = 'rgba(64, 181, 173, 0.1)';
+                this.style.borderColor = '#40B5AD';
+                this.style.color = '#40B5AD';
+                this.querySelector('span').textContent = 'Helpful ✓';
+            } else {
+                this.style.background = 'none';
+                this.style.borderColor = 'rgba(64, 181, 173, 0.2)';
+                this.style.color = '#666';
+                this.querySelector('span').textContent = 'Helpful';
+            }
+        });
+    });
+    
+    document.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Simple share functionality (can be enhanced with Web Share API)
+            if (navigator.share) {
+                navigator.share({
+                    title: 'EventEase Review',
+                    text: 'Check out this review for EventEase!',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback - copy to clipboard
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showNotification('success', 'Review link copied to clipboard!');
+                });
+            }
+        });
+    });
+    
+    // Enhanced Scroll Effects
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const floatingElements = document.querySelectorAll('.float-review');
+        
+        floatingElements.forEach((element, index) => {
+            const speed = (index + 1) * 0.5;
+            element.style.transform = `translateY(${scrollTop * speed}px)`;
+        });
+        
+        lastScrollTop = scrollTop;
+    });
+});
+
+// Notification System (reused from submit page)
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} notification-toast`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+    `;
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        animation: slideInRight 0.3s ease-out;
+        min-width: 300px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => {
+            if (notification.parentElement) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %}

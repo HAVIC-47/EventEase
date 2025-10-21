@@ -1,0 +1,164 @@
+<div style="padding: 0;">
+    <!-- Booking Header -->
+    <div style="background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%); color: white; padding: 1.5rem; margin: -2rem -2rem 2rem -2rem; border-radius: 16px 16px 0 0;">
+        <h3 style="margin: 0; font-size: 1.5rem;">{{ booking.event_title }}</h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Booking #{{ booking.id }}</p>
+    </div>
+
+    <!-- Status Badge -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <span style="
+            padding: 0.5rem 1rem; 
+            border-radius: 25px; 
+            font-weight: 600; 
+            text-transform: uppercase;
+            {% if booking.status == 'pending' %}
+                background: #fff3cd; color: #856404; border: 2px solid #ffeaa7;
+            {% elif booking.status == 'confirmed' %}
+                background: #d4edda; color: #155724; border: 2px solid #c3e6cb;
+            {% elif booking.status == 'completed' %}
+                background: #d1ecf1; color: #0c5460; border: 2px solid #bee5eb;
+            {% elif booking.status == 'cancelled' %}
+                background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb;
+            {% endif %}
+        ">
+            {{ booking.status|capfirst }}
+        </span>
+    </div>
+
+    <!-- Booking Details Grid -->
+    <div style="display: grid; gap: 2rem;">
+        
+        <!-- Event Information -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #40B5AD;">
+            <h4 style="margin: 0 0 1rem 0; color: #40B5AD; font-size: 1.2rem;">📅 Event Information</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Event Title</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.event_title }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Event Start</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.start_date|date:"F d, Y" }} at {{ booking.start_date|time:"g:i A" }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Event End</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.end_date|date:"F d, Y" }} at {{ booking.end_date|time:"g:i A" }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Duration</span>
+                    <span style="color: #333; font-size: 1rem;">{{ duration_hours }} hours</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Venue Capacity</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.venue.capacity }} guests</span>
+                </div>
+            </div>
+            {% if booking.event_description %}
+            <div style="margin-top: 1rem;">
+                <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Event Description</span>
+                <p style="color: #333; margin: 0; line-height: 1.5;">{{ booking.event_description }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Venue Information -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #17a2b8;">
+            <h4 style="margin: 0 0 1rem 0; color: #17a2b8; font-size: 1.2rem;">🏢 Venue Information</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Venue Name</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.venue.name }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Venue Type</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.venue.get_venue_type_display }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Capacity</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.venue.capacity }} guests</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Hourly Rate</span>
+                    <span style="color: #333; font-size: 1rem;">${{ booking.venue.price_per_hour }}/hour</span>
+                </div>
+            </div>
+            <div style="margin-top: 1rem;">
+                <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Address</span>
+                <p style="color: #333; margin: 0;">{{ booking.venue.address }}, {{ booking.venue.city }}, {{ booking.venue.state }} {{ booking.venue.zipcode }}</p>
+            </div>
+            <div style="margin-top: 1rem;">
+                <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Contact Information</span>
+                <p style="color: #333; margin: 0;">📧 {{ booking.venue.contact_email }} | 📞 {{ booking.venue.contact_phone }}</p>
+            </div>
+            <div style="margin-top: 1rem;">
+                <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Amenities</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    {% if booking.venue.has_parking %}<span style="background: #e8f5e8; color: #2e7d32; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">🅿️ Parking</span>{% endif %}
+                    {% if booking.venue.has_wifi %}<span style="background: #e3f2fd; color: #1976d2; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">📶 WiFi</span>{% endif %}
+                    {% if booking.venue.has_catering %}<span style="background: #fff3e0; color: #f57c00; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">🍽️ Catering</span>{% endif %}
+                    {% if booking.venue.has_av_equipment %}<span style="background: #f3e5f5; color: #7b1fa2; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">🎤 A/V Equipment</span>{% endif %}
+                    {% if booking.venue.has_air_conditioning %}<span style="background: #e0f2f1; color: #00695c; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">❄️ A/C</span>{% endif %}
+                    {% if booking.venue.has_accessibility %}<span style="background: #fce4ec; color: #c2185b; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.85rem;">♿ Accessible</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #28a745;">
+            <h4 style="margin: 0 0 1rem 0; color: #28a745; font-size: 1.2rem;">📞 Contact Information</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Contact Name</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.user.get_full_name }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Email</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.contact_email }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Phone</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.contact_phone }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Booking Date</span>
+                    <span style="color: #333; font-size: 1rem;">{{ booking.booking_date|date:"F d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Information -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #ffc107;">
+            <h4 style="margin: 0 0 1rem 0; color: #ffc107; font-size: 1.2rem;">💰 Payment Information</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Total Amount</span>
+                    <span style="color: #333; font-size: 1.2rem; font-weight: 700;">${{ booking.total_amount }}</span>
+                </div>
+                <div>
+                    <span style="font-weight: 600; color: #666; font-size: 0.9rem; display: block; margin-bottom: 0.25rem;">Payment Status</span>
+                    <span style="
+                        {% if booking.payment_status == 'paid' %}
+                            color: #28a745; font-weight: 600;
+                        {% elif booking.payment_status == 'pending' %}
+                            color: #ffc107; font-weight: 600;
+                        {% else %}
+                            color: #dc3545; font-weight: 600;
+                        {% endif %}
+                    ">
+                        {{ booking.get_payment_status_display|default:"Pending" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Special Requirements -->
+        {% if booking.special_requirements %}
+        <div style="background: #e3f2fd; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #2196f3;">
+            <h4 style="margin: 0 0 1rem 0; color: #2196f3; font-size: 1.2rem;">📝 Special Requirements</h4>
+            <p style="color: #333; margin: 0; line-height: 1.5;">{{ booking.special_requirements }}</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>

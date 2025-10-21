@@ -1,0 +1,927 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Venues - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Venues</h1>
+            <p>Discover and manage amazing venues for your events</p>
+        </div>
+        {% if user.is_authenticated %}
+            {% if user.profile.role == 'admin' or user.profile.role == 'venue_manager' or user.profile.role == 'event_manager' %}
+                <div class="header-actions">
+                    {% if user.profile.role == 'admin' or user.profile.role == 'venue_manager' %}
+                        <a href="{% url 'venues:venue_create' %}" class="btn btn-primary">
+                            <i class="icon">+</i> Add New Venue
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'venues:my_venues' %}" class="btn btn-secondary">
+                        <i class="icon">📋</i> My Venues
+                    </a>
+                    <a href="{% url 'events:event_list' %}" class="btn btn-outline">
+                        <i class="icon">🎉</i> Back to Events
+                    </a>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="filters-section">
+        <form method="get" class="filters-form">
+            <div class="search-row">
+                <div class="search-input">
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search venues..." class="form-control">
+                </div>
+                <div class="filter-select">
+                    <select name="type" class="form-control">
+                        <option value="">All Types</option>
+                        {% for value, label in venue_types %}
+                            <option value="{{ value }}" {% if value == venue_type %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-input">
+                    <input type="number" name="min_capacity" value="{{ min_capacity }}" placeholder="Min capacity" class="form-control">
+                </div>
+                <div class="filter-select">
+                    <select name="sort" class="form-control" onchange="this.form.submit()">
+                        {% for value, label in sort_choices %}
+                            <option value="{{ value }}" {% if value == sort_by %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary">Search</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Venues Grid -->
+    {% if page_obj %}
+        <div class="venues-grid">
+            {% for venue in page_obj %}
+                <div class="venue-card">
+                    <div class="venue-img">
+                        {% with venue.images.all|first as primary_image %}
+                            {% if primary_image %}
+                                <img src="{{ primary_image.image.url }}" alt="{{ venue.name }}">
+                            {% elif venue.main_image %}
+                                <img src="{{ venue.main_image.url }}" alt="{{ venue.name }}">
+                            {% else %}
+                                <img src="https://images.unsplash.com/photo-1540574163026-643ea20ade25?auto=format&fit=crop&w=400&q=80" alt="{{ venue.name }}">
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    
+                    <div class="venue-content">
+                        <div class="venue-header">
+                            <h3>{{ venue.name }}</h3>
+                            <div class="about-venue">
+                                <h4>About This Venue</h4>
+                                <p>{{ venue.description|truncatewords:20 }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Review Bar -->
+                        <div class="review-bar">
+                            {% if venue.review_count > 0 %}
+                                <div class="review-content">
+                                    <div class="review-stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= venue.average_rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter|add:"-1" < venue.average_rating %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <span class="review-score">{{ venue.average_rating|floatformat:1 }}</span>
+                                    <span class="review-count">({{ venue.review_count }} review{{ venue.review_count|pluralize }})</span>
+                                </div>
+                            {% else %}
+                                <div class="no-review-message">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>This venue has no reviews</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="venue-actions">
+                            <a href="{% url 'venues:venue_detail' venue.pk %}" class="btn btn-primary">View Details</a>
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'venues:venue_book' venue.pk %}" class="btn btn-success">Book Venue</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if venue_type %}&type={{ venue_type }}{% endif %}{% if min_capacity %}&min_capacity={{ min_capacity }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if venue_type %}&type={{ venue_type }}{% endif %}{% if min_capacity %}&min_capacity={{ min_capacity }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">Previous</a>
+                {% endif %}
+                
+                <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if venue_type %}&type={{ venue_type }}{% endif %}{% if min_capacity %}&min_capacity={{ min_capacity }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">Next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if venue_type %}&type={{ venue_type }}{% endif %}{% if min_capacity %}&min_capacity={{ min_capacity }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="page-link">Last</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-results">
+            {% if search_query %}
+                <h3>No venues found for "{{ search_query }}"</h3>
+                <p>Try adjusting your search terms or filters.</p>
+                <a href="{% url 'venues:venue_list' %}" class="btn btn-primary">View All Venues</a>
+            {% else %}
+                <h3>No venues available</h3>
+                <p>There are currently no venues listed.</p>
+                {% if user.is_authenticated and user.profile.role in 'admin,venue_manager' %}
+                    <a href="{% url 'venues:venue_create' %}" class="btn btn-primary">Add the First Venue</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e1e8ed;
+}
+
+.header-content h1 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 2.5rem;
+}
+
+.header-content p {
+    color: #666;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #369691;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #40B5AD;
+    border: 2px solid #40B5AD;
+}
+
+.btn-outline:hover {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.filters-form {
+    margin: 0;
+}
+
+.search-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-input {
+    flex: 2;
+}
+
+.filter-select, .filter-input {
+    flex: 1;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #40B5AD;
+}
+
+.venues-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    padding: 1rem 0;
+}
+
+.venue-card {
+    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid #f8fafc;
+    position: relative;
+    text-align: center;
+}
+
+.venue-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    border-color: #e2e8f0;
+}
+
+.venue-img {
+    position: relative;
+    height: 120px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f8fafc;
+    margin: 1rem 1rem 0 1rem;
+    border-radius: 16px;
+}
+
+.venue-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    border-radius: 16px;
+}
+
+.venue-card:hover .venue-img img {
+    transform: scale(1.02);
+}
+
+.capacity-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(30, 41, 59, 0.9);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    letter-spacing: 0.3px;
+}
+
+.venue-content {
+    padding: 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%;
+    text-align: center;
+    align-items: stretch;
+    justify-content: space-between;
+    min-height: 320px;
+}
+
+.venue-header {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    min-height: 200px;
+}
+
+.venue-header h3 {
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 100%;
+    min-height: 3.4rem;
+    width: 100%;
+}
+
+.about-venue {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    flex-grow: 1;
+}
+
+.about-venue h4 {
+    color: #40B5AD;
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.95;
+    width: 100%;
+}
+
+.about-venue p {
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+    font-size: 0.9rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: center;
+    width: 100%;
+    height: 6rem;
+    flex-grow: 1;
+}
+
+/* Venue Rating Display Styles */
+.venue-rating-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-radius: 50px;
+    border: none;
+    flex-shrink: 0;
+    min-width: 200px;
+}
+
+.venue-rating-display .rating-stars {
+    color: #fbbf24;
+    font-size: 0.9rem;
+}
+
+.venue-rating-display .rating-score {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+    margin: 0 0.25rem;
+}
+
+.venue-rating-display .rating-count {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.venue-rating-display .view-reviews-link {
+    color: #6b7280;
+    font-size: 0.8rem;
+    text-decoration: none;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    margin-left: 0.25rem;
+}
+
+.venue-rating-display .view-reviews-link:hover {
+    color: #374151;
+    transform: scale(1.1);
+}
+
+
+
+.venue-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+}
+
+.venue-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    align-items: center;
+    text-align: center;
+}
+
+.venue-meta-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 400;
+    gap: 0.5rem;
+    max-width: 90%;
+}
+
+.venue-meta-item .icon {
+    width: 1rem;
+    height: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.venue-meta-item span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.price-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.price-tag {
+    background: #1e293b;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.2rem;
+    letter-spacing: 0.5px;
+}
+
+.amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    min-height: 2.2rem;
+    align-content: center;
+    justify-content: center;
+    max-width: 100%;
+}
+
+.amenity {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 400;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.8rem;
+    border: none;
+    letter-spacing: 0.3px;
+}
+
+.venue-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    width: 100%;
+    min-height: 4rem;
+}
+
+.venue-actions .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    height: 2.5rem;
+    min-height: 2.5rem;
+    flex: 1;
+    text-align: center;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: none;
+    letter-spacing: 0.3px;
+    max-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.venue-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Review Bar Styles */
+.review-bar {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin: 0.75rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 3rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.review-bar:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border-color: #40B5AD;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.1);
+}
+
+.review-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.review-stars {
+    color: #fbbf24;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 0.1rem;
+}
+
+.review-score {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+    margin: 0 0.25rem;
+}
+
+.review-count {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.no-review-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.no-review-message i {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.page-link {
+    padding: 0.75rem 1rem;
+    background: white;
+    color: #40B5AD;
+    text-decoration: none;
+    border: 2px solid #40B5AD;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.page-link:hover {
+    background: #40B5AD;
+    color: white;
+}
+
+.page-info {
+    font-weight: 600;
+    color: #666;
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.no-results h3 {
+    color: #333;
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+}
+
+.no-results p {
+    color: #666;
+    margin: 0 0 2rem 0;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .search-row {
+        flex-direction: column;
+    }
+    
+    .venues-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+    }
+}
+
+/* Dark Mode Styles for Venues Page */
+body.dark-mode .container {
+    background: #232728;
+    color: #e0e0e0;
+}
+
+body.dark-mode .page-header {
+    background: #232728;
+    border-bottom-color: #40B5AD;
+}
+
+body.dark-mode .header-content h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .header-content p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .btn-primary {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .btn-primary:hover {
+    background: #369691;
+    color: #ffffff;
+}
+
+body.dark-mode .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+body.dark-mode .btn-outline {
+    background: transparent;
+    color: #40B5AD;
+    border-color: #40B5AD;
+}
+
+body.dark-mode .btn-outline:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .btn-success {
+    background: #28a745;
+    color: #232728;
+}
+
+body.dark-mode .btn-success:hover {
+    background: #218838;
+    color: #ffffff;
+}
+
+/* Dark Mode Filters */
+body.dark-mode .filters-section {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .form-control {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-control:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .form-control::placeholder {
+    color: #888;
+}
+
+/* Dark Mode Venues Grid */
+body.dark-mode .venues-grid {
+    background: #232728;
+}
+
+body.dark-mode .venue-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .venue-card:hover {
+    background: #1e3635; /* Slightly lighter dark teal on hover */
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .capacity-badge {
+    background: rgba(64, 181, 173, 0.9);
+    color: #232728;
+}
+
+body.dark-mode .venue-content {
+    background: #1a2f2e;
+}
+
+body.dark-mode .venue-content h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .venue-content p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .venue-meta-item {
+    color: #b0b0b0;
+}
+
+body.dark-mode .venue-meta-item .icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .price-section {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .price-tag {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .amenities {
+    background: #232728;
+}
+
+body.dark-mode .amenity {
+    background: rgba(64, 181, 173, 0.2);
+    color: #40B5AD;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .venue-actions {
+    background: #1a2f2e;
+}
+
+body.dark-mode .venue-actions .btn {
+    color: #232728;
+}
+
+body.dark-mode .venue-actions .btn:hover {
+    color: #ffffff;
+}
+
+/* Dark Mode Pagination */
+body.dark-mode .pagination {
+    background: #2d3233;
+}
+
+body.dark-mode .page-link {
+    background: #1a2f2e;
+    color: #40B5AD;
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .page-link:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .page-info {
+    color: #b0b0b0;
+}
+
+/* Dark Mode No Results */
+body.dark-mode .no-results {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .no-results h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .no-results p {
+    color: #b0b0b0;
+}
+</style>
+{% endblock %}

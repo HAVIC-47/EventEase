@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Events Created - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{% url 'events:my_events' %}" class="back-btn">← Back to Dashboard</a>
+            <h1>🎯 Events Created</h1>
+            <p>Detailed view of all events you have organized</p>
+        </div>
+        <div class="header-stats">
+            <div class="stat-summary">
+                <div class="stat-item">
+                    <span class="stat-number">{{ total_count }}</span>
+                    <span class="stat-label">Total Events</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ live_count }}</span>
+                    <span class="stat-label">Live</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ upcoming_count }}</span>
+                    <span class="stat-label">Upcoming</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ completed_count }}</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if total_count > 0 %}
+        <!-- Live Events -->
+        {% if live_events %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>🔴 Live/Running Events ({{ live_count }})</h2>
+                </div>
+                <div class="events-grid">
+                    {% for event in live_events %}
+                        {% include 'events/event_card.html' with status='live' %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Upcoming Events -->
+        {% if upcoming_events %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>⏰ Upcoming Events ({{ upcoming_count }})</h2>
+                </div>
+                <div class="events-grid">
+                    {% for event in upcoming_events %}
+                        {% include 'events/event_card.html' with status='upcoming' %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Completed Events -->
+        {% if completed_events %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>✅ Completed Events ({{ completed_count }})</h2>
+                </div>
+                <div class="events-grid">
+                    {% for event in completed_events %}
+                        {% include 'events/event_card.html' with status='completed' %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-content">
+            <div class="no-content-icon">🎯</div>
+            <h3>No Events Created Yet</h3>
+            <p>You haven't organized any events on the platform.</p>
+            <a href="{% url 'events:event_create' %}" class="btn btn-primary">Create Your First Event</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: #f5f6f7;
+    min-height: 100vh;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.3);
+    animation: slideInDown 0.6s ease-out;
+}
+
+.header-content {
+    margin-bottom: 2rem;
+}
+
+.back-btn {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    transition: all 0.2s;
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.back-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    color: white;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    margin: 0.5rem 0;
+    font-weight: 700;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.header-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.stat-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}
+
+.section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    color: #232323;
+    margin: 0;
+    font-weight: 600;
+}
+
+.events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    animation: fadeIn 0.8s ease-out 0.3s both;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.no-content {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    border: 2px dashed #40B5AD;
+}
+
+.no-content-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #40B5AD;
+    opacity: 0.6;
+}
+
+.no-content h3 {
+    font-size: 1.5rem;
+    color: #232323;
+    margin-bottom: 0.5rem;
+}
+
+.no-content p {
+    color: #2e837e;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #40B5AD;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2e837e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.3);
+    text-decoration: none;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .page-header {
+        padding: 1.5rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .stat-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .events-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

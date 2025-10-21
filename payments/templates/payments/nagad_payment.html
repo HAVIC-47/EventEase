@@ -1,0 +1,898 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nagad Payment - {{ event.title }} - EventEase{% endblock %}
+
+{% block content %}
+<div class="nagad-container">
+    <!-- Nagad Header -->
+    <div class="nagad-header">
+        <div class="nagad-logo">
+            <div class="nagad-icon">💰</div>
+            <span class="nagad-title">Nagad</span>
+            <span class="nagad-subtitle">Digital Bangladesh</span>
+        </div>
+        <div class="nagad-secure">
+            <span class="secure-icon">🔐</span>
+            <span>Secured by SSL</span>
+        </div>
+    </div>
+
+    <!-- Merchant Information -->
+    <div class="nagad-merchant-card">
+        <div class="merchant-header">
+            <div class="merchant-logo">🎫</div>
+            <div class="merchant-details">
+                <div class="merchant-name">EventEase</div>
+                <div class="merchant-type">Event Management Platform</div>
+            </div>
+        </div>
+        <div class="transaction-info">
+            <div class="transaction-item">
+                <span class="label">Order ID:</span>
+                <span class="value">{{ booking.id }}</span>
+            </div>
+            <div class="transaction-item">
+                <span class="label">Service:</span>
+                <span class="value">{{ event.title }}</span>
+            </div>
+            <div class="transaction-item">
+                <span class="label">Date:</span>
+                <span class="value">{{ event.start_date|date:"M d, Y" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Amount -->
+    <div class="nagad-amount-section">
+        <div class="amount-header">Payment Amount</div>
+        <div class="amount-display">
+            <span class="currency">৳</span>
+            <span class="amount">{{ booking.amount }}</span>
+        </div>
+        <div class="amount-words">
+            (Bangladeshi Taka {{ booking.amount }} only)
+        </div>
+    </div>
+
+    <!-- Payment Options -->
+    <div class="nagad-payment-options">
+        <div class="options-title">Select Payment Method</div>
+        
+        <div class="payment-card active" data-method="account">
+            <div class="card-header">
+                <div class="card-icon">📱</div>
+                <div class="card-title">Nagad Account</div>
+                <div class="card-radio">
+                    <input type="radio" name="nagad_method" value="account" checked>
+                </div>
+            </div>
+            <div class="card-description">
+                Pay using your Nagad mobile account balance
+            </div>
+            <div class="card-features">
+                <span class="feature">✓ Instant</span>
+                <span class="feature">✓ Secure</span>
+                <span class="feature">✓ No fees</span>
+            </div>
+        </div>
+
+        <div class="payment-card" data-method="card">
+            <div class="card-header">
+                <div class="card-icon">💳</div>
+                <div class="card-title">Card Payment</div>
+                <div class="card-radio">
+                    <input type="radio" name="nagad_method" value="card">
+                </div>
+            </div>
+            <div class="card-description">
+                Pay with Visa, MasterCard, or any debit card
+            </div>
+            <div class="card-features">
+                <span class="feature">✓ All Cards</span>
+                <span class="feature">✓ Secure</span>
+                <span class="feature">✓ Worldwide</span>
+            </div>
+        </div>
+
+        <div class="payment-card" data-method="bank">
+            <div class="card-header">
+                <div class="card-icon">🏛️</div>
+                <div class="card-title">Bank Transfer</div>
+                <div class="card-radio">
+                    <input type="radio" name="nagad_method" value="bank">
+                </div>
+            </div>
+            <div class="card-description">
+                Direct bank transfer from your account
+            </div>
+            <div class="card-features">
+                <span class="feature">✓ Direct</span>
+                <span class="feature">✓ Safe</span>
+                <span class="feature">✓ Reliable</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Form -->
+    <form id="nagadPaymentForm" method="post" action="{% url 'payments:nagad_process' booking.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="payment_method" value="nagad">
+        <input type="hidden" name="nagad_method" id="selectedNagadMethod" value="account">
+        
+        <div class="nagad-form-section">
+            <!-- Mobile Number Input -->
+            <div class="nagad-input-group">
+                <label for="nagad_mobile">Mobile Number</label>
+                <div class="mobile-input-container">
+                    <div class="country-prefix">🇧🇩 +880</div>
+                    <input type="tel" id="nagad_mobile" name="mobile" 
+                           placeholder="1XXXXXXXXX" pattern="1[0-9]{9}" 
+                           maxlength="10" required>
+                </div>
+                <div class="input-note">Enter your Nagad registered mobile number</div>
+            </div>
+
+            <!-- PIN Input for Account Method -->
+            <div class="nagad-input-group pin-section">
+                <label for="nagad_pin">Nagad PIN</label>
+                <div class="pin-input-container">
+                    <input type="password" id="nagad_pin" name="pin" 
+                           placeholder="••••••" maxlength="6" pattern="[0-9]{6}">
+                    <button type="button" class="pin-eye" onclick="toggleNagadPin()">
+                        <span id="pinEyeIcon">👁️</span>
+                    </button>
+                </div>
+                <div class="input-note">Enter your 6-digit Nagad PIN</div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="nagad-terms">
+                <label class="terms-checkbox">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <span class="checkmark"></span>
+                    <span class="terms-text">
+                        I agree to the <a href="#" class="terms-link">Terms & Conditions</a> 
+                        and <a href="#" class="terms-link">Privacy Policy</a>
+                    </span>
+                </label>
+            </div>
+
+            <!-- Payment Button -->
+            <button type="submit" class="nagad-pay-button">
+                <span class="pay-icon">💰</span>
+                <span class="pay-text">Pay ৳{{ booking.amount }}</span>
+                <span class="pay-arrow">→</span>
+            </button>
+        </div>
+    </form>
+
+    <!-- Security Features -->
+    <div class="nagad-security">
+        <div class="security-header">
+            <span class="security-shield">🛡️</span>
+            <span>Your Security is Our Priority</span>
+        </div>
+        <div class="security-features">
+            <div class="security-item">
+                <span class="security-check">✅</span>
+                <span>256-bit SSL Encryption</span>
+            </div>
+            <div class="security-item">
+                <span class="security-check">✅</span>
+                <span>PCI DSS Compliant</span>
+            </div>
+            <div class="security-item">
+                <span class="security-check">✅</span>
+                <span>Real-time Fraud Detection</span>
+            </div>
+            <div class="security-item">
+                <span class="security-check">✅</span>
+                <span>Government Approved</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Information -->
+    <div class="nagad-support">
+        <div class="support-title">Need Help?</div>
+        <div class="support-options">
+            <div class="support-item">
+                <span class="support-icon">📞</span>
+                <span>Call: 16167</span>
+            </div>
+            <div class="support-item">
+                <span class="support-icon">💬</span>
+                <span>Chat Support</span>
+            </div>
+            <div class="support-item">
+                <span class="support-icon">📧</span>
+                <span>Email Support</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="nagad-footer">
+        <div class="footer-brand">
+            <div class="footer-logo">💰 Nagad</div>
+            <div class="footer-tagline">A Product of Bangladesh Post Office</div>
+        </div>
+        <div class="footer-links">
+            <a href="#" class="footer-link">About</a>
+            <a href="#" class="footer-link">Privacy</a>
+            <a href="#" class="footer-link">Terms</a>
+            <a href="#" class="footer-link">Support</a>
+        </div>
+        <div class="footer-copyright">
+            © 2025 Nagad Limited. All Rights Reserved.
+        </div>
+    </div>
+</div>
+
+<style>
+/* Nagad Authentic Styling */
+.nagad-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f47920 0%, #e06e1b 50%, #c7611a 100%);
+    color: white;
+    font-family: 'Roboto', 'Arial', sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+.nagad-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nagad-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nagad-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.nagad-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.nagad-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    margin-left: 1rem;
+}
+
+.nagad-secure {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.7rem 1.2rem;
+    border-radius: 25px;
+    font-weight: 500;
+}
+
+.nagad-merchant-card {
+    background: white;
+    color: #333;
+    margin: 1.5rem 2rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.merchant-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.merchant-logo {
+    font-size: 2rem;
+    background: #f47920;
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.merchant-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f47920;
+}
+
+.merchant-type {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.transaction-info {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.transaction-item .label {
+    color: #666;
+    font-weight: 500;
+}
+
+.transaction-item .value {
+    font-weight: 600;
+    color: #333;
+}
+
+.nagad-amount-section {
+    background: rgba(255, 255, 255, 0.15);
+    margin: 1.5rem 2rem;
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.amount-header {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+.amount-display {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.currency {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.amount-words {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+.nagad-payment-options {
+    margin: 1.5rem 2rem;
+}
+
+.options-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.payment-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.payment-card:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.payment-card.active {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.card-icon {
+    font-size: 1.8rem;
+    width: 50px;
+    text-align: center;
+}
+
+.card-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.card-radio input {
+    width: 20px;
+    height: 20px;
+    accent-color: white;
+}
+
+.card-description {
+    margin-bottom: 1rem;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+.card-features {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.feature {
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-weight: 500;
+}
+
+.nagad-form-section {
+    margin: 1.5rem 2rem;
+}
+
+.nagad-input-group {
+    margin-bottom: 1.5rem;
+}
+
+.nagad-input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+.mobile-input-container {
+    display: flex;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.mobile-input-container:focus-within {
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.country-prefix {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1.2rem 1rem;
+    font-weight: 600;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
+}
+
+.mobile-input-container input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 1.2rem 1rem;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.mobile-input-container input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.pin-input-container {
+    display: flex;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.pin-input-container:focus-within {
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.pin-input-container input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 1.2rem 1rem;
+    color: white;
+    font-size: 1.1rem;
+    letter-spacing: 0.3rem;
+    font-weight: 600;
+}
+
+.pin-eye {
+    background: none;
+    border: none;
+    padding: 1rem;
+    color: white;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.pin-eye:hover {
+    opacity: 1;
+}
+
+.input-note {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}
+
+.pin-section {
+    display: block;
+}
+
+.pin-section.hidden {
+    display: none;
+}
+
+.nagad-terms {
+    margin: 2rem 0;
+}
+
+.terms-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.terms-checkbox input {
+    width: 18px;
+    height: 18px;
+    accent-color: white;
+}
+
+.terms-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: underline;
+}
+
+.terms-link:hover {
+    color: white;
+}
+
+.nagad-pay-button {
+    width: 100%;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    color: #f47920;
+    border: none;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+    margin-top: 2rem;
+}
+
+.nagad-pay-button:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+}
+
+.nagad-pay-button:active {
+    transform: translateY(0);
+}
+
+.pay-icon {
+    font-size: 1.4rem;
+}
+
+.pay-arrow {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.nagad-pay-button:hover .pay-arrow {
+    transform: translateX(5px);
+}
+
+.nagad-security {
+    background: rgba(255, 255, 255, 0.1);
+    margin: 2rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.security-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.security-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.security-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.9rem;
+}
+
+.nagad-support {
+    background: rgba(255, 255, 255, 0.1);
+    margin: 2rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.support-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.support-options {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.support-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.8rem 1.2rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.support-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.nagad-footer {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.footer-brand {
+    margin-bottom: 1.5rem;
+}
+
+.footer-logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.footer-tagline {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.footer-link {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: white;
+}
+
+.footer-copyright {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nagad-header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .nagad-merchant-card,
+    .nagad-amount-section,
+    .nagad-payment-options,
+    .nagad-form-section,
+    .nagad-security,
+    .nagad-support {
+        margin: 1rem;
+    }
+    
+    .amount {
+        font-size: 2.8rem;
+    }
+    
+    .security-features {
+        grid-template-columns: 1fr;
+    }
+    
+    .support-options {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+/* Dark Mode Support */
+body.dark-mode .nagad-container {
+    background: linear-gradient(135deg, #f47920 0%, #e06e1b 50%, #c7611a 100%);
+}
+</style>
+
+<script>
+// Payment method selection
+document.querySelectorAll('.payment-card').forEach(card => {
+    card.addEventListener('click', function() {
+        // Remove active class from all cards
+        document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked card
+        this.classList.add('active');
+        
+        // Update radio button
+        const radio = this.querySelector('input[type="radio"]');
+        radio.checked = true;
+        
+        // Update hidden input
+        document.getElementById('selectedNagadMethod').value = radio.value;
+        
+        // Show/hide PIN field based on method
+        const pinSection = document.querySelector('.pin-section');
+        if (radio.value === 'account') {
+            pinSection.style.display = 'block';
+            document.getElementById('nagad_pin').required = true;
+        } else {
+            pinSection.style.display = 'none';
+            document.getElementById('nagad_pin').required = false;
+        }
+    });
+});
+
+// PIN toggle functionality
+function toggleNagadPin() {
+    const pinInput = document.getElementById('nagad_pin');
+    const eyeIcon = document.getElementById('pinEyeIcon');
+    
+    if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        eyeIcon.textContent = '🙈';
+    } else {
+        pinInput.type = 'password';
+        eyeIcon.textContent = '👁️';
+    }
+}
+
+// Mobile number formatting
+document.getElementById('nagad_mobile').addEventListener('input', function() {
+    let value = this.value.replace(/[^0-9]/g, '');
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    this.value = value;
+});
+
+// PIN formatting
+document.getElementById('nagad_pin').addEventListener('input', function() {
+    let value = this.value.replace(/[^0-9]/g, '');
+    if (value.length > 6) {
+        value = value.slice(0, 6);
+    }
+    this.value = value;
+});
+
+// Form validation and submission
+document.getElementById('nagadPaymentForm').addEventListener('submit', function(e) {
+    const mobile = document.getElementById('nagad_mobile').value;
+    const method = document.getElementById('selectedNagadMethod').value;
+    const pin = document.getElementById('nagad_pin').value;
+    const terms = document.getElementById('terms').checked;
+    
+    // Validate mobile number
+    if (!mobile || mobile.length !== 10 || !mobile.startsWith('1')) {
+        e.preventDefault();
+        alert('Please enter a valid mobile number starting with 1');
+        return;
+    }
+    
+    // Validate PIN for account method
+    if (method === 'account' && (!pin || pin.length !== 6)) {
+        e.preventDefault();
+        alert('Please enter your 6-digit Nagad PIN');
+        return;
+    }
+    
+    // Validate terms acceptance
+    if (!terms) {
+        e.preventDefault();
+        alert('Please accept the Terms & Conditions to proceed');
+        return;
+    }
+    
+    // Show loading state
+    const btn = document.querySelector('.nagad-pay-button');
+    btn.disabled = true;
+    btn.innerHTML = '<span>Processing Payment...</span>';
+});
+</script>
+{% endblock %}

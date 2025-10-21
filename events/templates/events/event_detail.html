@@ -1,0 +1,4298 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load event_extras %}
+
+{% block title %}{{ event.title }} - EventEase{% endblock %}
+
+{% block content %}
+<div class="event-detail-container">
+    <!-- Hero Section -->
+    <div class="event-hero">
+        <div class="event-hero-image">
+            {% if event.image %}
+                <img src="{{ event.image.url }}" alt="{{ event.title }}">
+            {% else %}
+                <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80" alt="{{ event.title }}">
+            {% endif %}
+            <div class="hero-overlay"></div>
+        </div>
+        
+        <div class="event-hero-content">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="{% url 'events:event_list' %}">Events</a> > <span>{{ event.title }}</span>
+                </div>
+                
+                <h1 class="event-title">{{ event.title }}</h1>
+                <p class="event-subtitle">{{ event.get_event_type_display }} Event</p>
+                
+                <div class="event-meta">
+                    <div class="meta-item">
+                        <i class="icon">📅</i>
+                        <span>{{ event.start_date|date:"F j, Y" }} at {{ event.start_date|time:"g:i A" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="icon">📍</i>
+                        <span>{{ event.venue_name|default:"Venue TBA" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="icon">💰</i>
+                        <span>{% if event.is_free %}Free Event{% else %}${{ event.ticket_price }}{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="event-content">
+            <!-- Main Content Area -->
+            <div class="event-main">
+                <!-- Registration Countdown -->
+                {% if event.registration_deadline %}
+                <div class="countdown-section" id="countdown-container">
+                    <div class="countdown-header">
+                        <h3>⏰ Registration Deadline</h3>
+                        <p class="deadline-date">Closes on {{ event.registration_deadline|date:"F j, Y" }} at {{ event.registration_deadline|time:"g:i A" }}</p>
+                    </div>
+                    
+                    <div class="countdown-timer" id="countdown-timer">
+                        <div class="time-unit">
+                            <div class="time-value" id="days">00</div>
+                            <div class="time-label">Days</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="time-value" id="hours">00</div>
+                            <div class="time-label">Hours</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="time-value" id="minutes">00</div>
+                            <div class="time-label">Minutes</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="time-value" id="seconds">00</div>
+                            <div class="time-label">Seconds</div>
+                        </div>
+                    </div>
+                    
+                    <div class="countdown-status" id="countdown-status">
+                        <div class="countdown-loading">Loading countdown...</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="action-section">
+                    {% if user.is_authenticated %}
+                        {% if registration_closed %}
+                            <!-- Registration deadline has passed -->
+                            <div class="status-card expired">
+                                <div class="status-icon">⏰</div>
+                                <div class="status-content">
+                                    <h4>Registration Closed</h4>
+                                    <p>Registration deadline passed on {{ event.registration_deadline|date:"F j, Y" }} at {{ event.registration_deadline|time:"g:i A" }}</p>
+                                </div>
+                            </div>
+                        {% elif not is_booked and not is_full %}
+                            <!-- Show ticket categories if available -->
+                            {% if has_categories %}
+                                <div class="ticket-booking-section">
+                                    <h3>🎫 Select Your Tickets</h3>
+                                    <p class="booking-instructions">Choose the quantity of tickets you want (maximum 6 tickets total)</p>
+                                    <div class="ticket-categories-grid">
+                                        {% for category in active_categories %}
+                                            <div class="ticket-category-card {% if category.tickets_available <= 0 %}sold-out{% endif %}" data-category-id="{{ category.id }}">
+                                                <div class="category-header">
+                                                    <h4>{{ category.name }}</h4>
+                                                    <div class="category-price">
+                                                        {% if category.price == 0 %}
+                                                            <span class="price-free">FREE</span>
+                                                        {% else %}
+                                                            <span class="price-amount">৳{{ category.price }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if category.description %}
+                                                    <p class="category-description">{{ category.description }}</p>
+                                                {% endif %}
+                                                
+                                                <div class="category-availability">
+                                                    {% if category.tickets_available > 0 %}
+                                                        <span class="available-count">{{ category.tickets_available }} of {{ category.quantity_available }} available</span>
+                                                        {% if category.tickets_sold > 0 %}
+                                                            <span class="sold-count">{{ category.tickets_sold }} sold</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="sold-out-text">Sold Out ({{ category.tickets_sold }}/{{ category.quantity_available }})</span>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                {% if category.tickets_available > 0 %}
+                                                    <div class="quantity-selector">
+                                                        <label for="quantity_{{ category.id }}" class="quantity-label">Quantity:</label>
+                                                        <div class="quantity-controls">
+                                                            <button type="button" class="qty-btn qty-minus" data-category="{{ category.id }}">-</button>
+                                                            <input type="number" 
+                                                                   id="quantity_{{ category.id }}" 
+                                                                   class="quantity-input" 
+                                                                   data-category-id="{{ category.id }}"
+                                                                   data-price="{{ category.price }}"
+                                                                   data-max="{{ category.tickets_available }}"
+                                                                   min="0" 
+                                                                   max="{{ category.tickets_available }}" 
+                                                                   value="0">
+                                                            <button type="button" class="qty-btn qty-plus" data-category="{{ category.id }}">+</button>
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="sold-out-badge">
+                                                        <span class="sold-out-text">Sold Out</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <!-- Booking Summary -->
+                                    <div class="booking-summary" id="booking-summary" style="display: none;">
+                                        <div class="summary-content">
+                                            <div class="summary-details">
+                                                <div class="total-tickets">
+                                                    Total Tickets: <span id="total-tickets-count">0</span> / 6
+                                                </div>
+                                                <div class="total-amount">
+                                                    Total Amount: <span id="total-amount">$0.00</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" id="proceed-to-checkout" class="btn btn-primary btn-large" disabled>
+                                                <i class="btn-icon">🛒</i>
+                                                Proceed to Checkout
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- Standard single ticket booking -->
+                                <a href="{% url 'events:event_book' event.pk %}" class="btn btn-primary btn-large">
+                                    <i class="btn-icon">🎫</i>
+                                    {% if event.is_free %}Register for Free{% else %}Buy Ticket - ${{ event.ticket_price }}{% endif %}
+                                </a>
+                            {% endif %}
+                        {% elif is_booked %}
+                            {% if user_booking.payment_status == 'pending' %}
+                                <div class="status-card warning">
+                                    <div class="status-icon">⏰</div>
+                                    <div class="status-content">
+                                        <h4>Payment Pending</h4>
+                                        <p>Complete your payment to confirm booking</p>
+                                        <a href="{% url 'payments:payment_process' user_booking.id %}" class="btn btn-warning btn-small" style="margin-top: 0.5rem;">
+                                            Complete Payment (${{ user_booking.amount }})
+                                        </a>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="status-card success">
+                                    <div class="status-icon">✅</div>
+                                    <div class="status-content">
+                                        <h4>You're registered!</h4>
+                                        <p>Status: {{ user_booking.get_status_display }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% elif is_full %}
+                            <div class="status-card full">
+                                <div class="status-icon">🚫</div>
+                                <div class="status-content">
+                                    <h4>Event is fully booked</h4>
+                                    <p>No more spots available</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Management Actions -->
+                        {% if user.profile.role in 'admin,event_manager' %}
+                            {% if event.organizer == user or user.profile.role == 'admin' %}
+                                <div class="management-actions">
+                                    <a href="{% url 'events:event_edit' event.pk %}" class="btn btn-outline">
+                                        <i class="btn-icon">✏️</i> Edit Event
+                                    </a>
+                                    <a href="{% url 'events:event_delete' event.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure?')">
+                                        <i class="btn-icon">🗑️</i> Delete Event
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        {% if registration_closed %}
+                            <!-- Registration deadline has passed -->
+                            <div class="status-card expired">
+                                <div class="status-icon">⏰</div>
+                                <div class="status-content">
+                                    <h4>Registration Closed</h4>
+                                    <p>Registration deadline passed on {{ event.registration_deadline|date:"F j, Y" }} at {{ event.registration_deadline|time:"g:i A" }}</p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <a href="{% url 'users:login' %}?next={% url 'events:event_detail' event.pk %}" class="btn btn-primary btn-large">
+                                <i class="btn-icon">🔑</i> Login to Register
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Event Description -->
+                <div class="content-card">
+                    <h2>About This Event</h2>
+                    <div class="content-text">
+                        {{ event.description|linebreaks }}
+                    </div>
+                </div>
+
+                {% if event.requirements %}
+                <div class="content-card">
+                    <h2>Requirements & Notes</h2>
+                    <div class="content-text">
+                        {{ event.requirements|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Reviews Section -->
+                {% if event.can_be_reviewed or event.review_count > 0 %}
+                <div class="content-card reviews-preview">
+                    <div class="reviews-header">
+                        <h2>⭐ Event Reviews</h2>
+                        {% if event.review_count > 0 %}
+                            <div class="rating-summary">
+                                <div class="rating-value">{{ event.average_rating|floatformat:1 }}/5</div>
+                                <div class="rating-stars">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= event.average_rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="rating-count">({{ event.review_count }} review{{ event.review_count|pluralize }})</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if event.review_count > 0 %}
+                        <!-- Show recent reviews -->
+                        <div class="recent-reviews">
+                            {% for review in recent_reviews %}
+                                <div class="review-preview">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <div class="reviewer-avatar">
+                                                {{ review.user.get_full_name|default:review.user.username|first|upper }}
+                                            </div>
+                                            <div class="reviewer-details">
+                                                <h5>{{ review.user.get_full_name|default:review.user.username }}</h5>
+                                                <div class="review-date">{{ review.created_at|date:"M j, Y" }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="review-rating">
+                                            <span class="rating-score">{{ review.rating }}/5</span>
+                                            <div class="rating-stars-small">
+                                                {% for i in review.star_display.filled %}
+                                                    <i class="fas fa-star"></i>
+                                                {% endfor %}
+                                                {% for i in review.star_display.empty %}
+                                                    <i class="far fa-star"></i>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="review-content">
+                                        <h6>{{ review.title }}</h6>
+                                        {% if review.comment %}
+                                            <p>{{ review.comment|truncatewords:20 }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="no-reviews">
+                            <p>No reviews yet for this event.</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="reviews-actions">
+                        {% if user_can_review %}
+                            <a href="{% url 'reviews:submit_event_review' event.id %}" class="btn btn-primary">
+                                <i class="fas fa-star"></i> Write Review
+                            </a>
+                        {% endif %}
+                        {% if event.review_count > 0 %}
+                            <a href="{% url 'reviews:event_reviews' event.id %}" class="btn btn-outline-primary">
+                                View All Reviews ({{ event.review_count }})
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="event-sidebar">
+                <!-- Event Details Card -->
+                <div class="sidebar-card">
+                    <h3>📅 Event Details</h3>
+                    <div class="detail-list">
+                        <div class="detail-item">
+                            <span class="detail-label">Start Date</span>
+                            <span class="detail-value">{{ event.start_date|date:"M j, Y" }}<br>{{ event.start_date|time:"g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">End Date</span>
+                            <span class="detail-value">{{ event.end_date|date:"M j, Y" }}<br>{{ event.end_date|time:"g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Category</span>
+                            <span class="detail-value">{{ event.get_event_type_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location Card -->
+                <div class="sidebar-card">
+                    <h3>📍 Location</h3>
+                    <div class="location-info">
+                        <h4>{{ event.venue_name }}</h4>
+                        <p>{{ event.venue_address|linebreaks }}</p>
+                        {% if event.venue %}
+                            <a href="{% url 'venues:venue_detail' event.venue.pk %}" class="venue-link">View Venue Details</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Capacity & Pricing -->
+                <div class="sidebar-card">
+                    <h3>🎫 Capacity & Pricing</h3>
+                    <div class="capacity-section">
+                        <div class="capacity-bar">
+                            {% with percentage=current_bookings|floatformat:0|add:0 total=event.max_attendees|add:0 %}
+                                {% if total > 0 %}
+                                    {% widthratio percentage total 100 as capacity_percentage %}
+                                    <div class="capacity-fill" style="width: {{ capacity_percentage }}%"></div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="capacity-text">
+                            <span class="current-count">{{ current_bookings }}</span> / {{ event.max_attendees }} registered
+                        </div>
+                        
+                        <div class="price-section">
+                            {% if event.is_free %}
+                                <div class="price-free">
+                                    <span class="price-amount">FREE</span>
+                                    <span class="price-label">Event</span>
+                                </div>
+                            {% else %}
+                                {% if event.ticket_categories.exists %}
+                                    <div class="ticket-categories">
+                                        <h4>Available Tickets</h4>
+                                        {% for category in event.ticket_categories.all %}
+                                            <div class="ticket-category">
+                                                <div class="category-info">
+                                                    <span class="category-name">{{ category.name }}</span>
+                                                    <span class="category-price">${{ category.price }}</span>
+                                                </div>
+                                                <div class="category-availability">
+                                                    {% if category.tickets_available > 0 %}
+                                                        <span class="available">{{ category.tickets_available }}/{{ category.quantity_available }} available</span>
+                                                    {% else %}
+                                                        <span class="sold-out">Sold Out ({{ category.tickets_sold }}/{{ category.quantity_available }})</span>
+                                                    {% endif %}
+                                                </div>
+                                                {% if category.description %}
+                                                    <p class="category-description">{{ category.description }}</p>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="price-paid">
+                                        <span class="price-amount">${{ event.ticket_price }}</span>
+                                        <span class="price-label">per ticket</span>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Organizer Card -->
+                <div class="sidebar-card">
+                    <h3>👤 Organizer</h3>
+                    <div class="organizer-info">
+                        <div class="organizer-avatar">
+                            {% if event.organizer.profile.avatar %}
+                                <img src="{{ event.organizer.profile.avatar.url }}" alt="{{ event.organizer.get_full_name }}">
+                            {% else %}
+                                <div class="avatar-placeholder">{{ event.organizer.first_name|first }}{{ event.organizer.last_name|first }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="organizer-details">
+                            <h4>{{ event.organizer.get_full_name|default:event.organizer.username }}</h4>
+                            <span class="role-badge">{{ event.organizer.profile.get_role_display|default:"Organizer" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="sidebar-card">
+                    <h3>📞 Contact</h3>
+                    <div class="contact-list">
+                        {% if event.contact_email %}
+                            <div class="contact-item">
+                                <i class="contact-icon">📧</i>
+                                <a href="mailto:{{ event.contact_email }}">{{ event.contact_email }}</a>
+                            </div>
+                        {% endif %}
+                        {% if event.contact_phone %}
+                            <div class="contact-item">
+                                <i class="contact-icon">📱</i>
+                                <a href="tel:{{ event.contact_phone }}">{{ event.contact_phone }}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Comments Section -->
+    <div class="comments-section">
+        <h3>💬 Questions & Comments</h3>
+
+        {% if user.is_authenticated %}
+        <!-- Comment Form -->
+        <div class="comment-form-container">
+            <form method="post" enctype="multipart/form-data" class="comment-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ comment_form.comment }} {{ comment_form.parent_id }}
+                </div>
+                <div class="form-group image-upload-section">
+                    <label for="{{ comment_form.image.id_for_label }}" class="image-upload-label">
+                        <span class="upload-icon">📷</span>
+                        <span class="upload-text">Attach Image</span>
+                        <span class="upload-optional">(Optional)</span>
+                    </label>
+                    <div class="file-input-wrapper">
+                        {{ comment_form.image }}
+                        <div class="file-input-overlay">
+                            <span class="file-icon">📁</span>
+                            <span class="file-text">Choose file or drag & drop</span>
+                        </div>
+                    </div>
+                    <small class="image-help-text">
+                        <span class="help-icon">ℹ️</span>
+                        {{ comment_form.image.help_text }}
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="login-prompt">
+            <p><a href="{% url 'users:login' %}">Login</a> to ask questions or leave comments about this event.</p>
+        </div>
+        {% endif %}
+
+        <!-- Comments Display -->
+        <div class="comments-container">
+            {% for comment in comments %}
+            <div class="comment-item" data-comment-id="{{ comment.id }}">
+                <div class="comment-header">
+                    <div class="comment-user">
+                        {% if comment.user.profile.avatar %}
+                        <img src="{{ comment.user.profile.avatar.url }}" alt="{{ comment.user.get_full_name }}" class="comment-avatar" />
+                        {% else %}
+                        <div class="comment-avatar-placeholder">
+                            {{ comment.user.first_name|first }}{{ comment.user.last_name|first }}
+                        </div>
+                        {% endif %}
+                        <div class="comment-user-info">
+                            <strong>{{ comment.user.get_full_name }}</strong>
+                            {% if comment.user.profile.role %}
+                            <span class="user-role">({{ comment.user.profile.get_role_display }})</span>
+                            {% endif %}
+                            <small class="comment-date">{{ comment.created_at|date:"M d, Y g:i A" }}</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="comment-content">
+                    {{ comment.comment|linebreaks }}
+                    {% if comment.image %}
+                    <div class="comment-image">
+                        <img src="{{ comment.image.url }}" alt="Comment attachment" class="img-fluid comment-img" onclick="openImageModal('{{ comment.image.url }}')" />
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="comment-actions">
+                    {% if user.is_authenticated %}
+                    <button type="button" class="btn-reply" onclick="showReplyForm({{ comment.id }})">Reply</button>
+                    {% endif %}
+                    <button type="button" class="btn-like" id="like-btn-{{ comment.id }}" onclick="toggleEventLike({{ comment.id }})" data-liked="{% if comment|is_liked_by:user %}true{% else %}false{% endif %}">
+                        <span class="like-icon" id="like-icon-{{ comment.id }}">
+                            {% if comment|is_liked_by:user %}❤️{% else %}🤍{% endif %}
+                        </span>
+                        <span class="like-count" id="like-count-{{ comment.id }}">{{ comment.like_count }}</span>
+                    </button>
+                    {% if user.is_authenticated and comment.user == user or user.is_staff %}
+                    <button type="button" class="btn-delete" onclick="deleteComment({{ comment.id }}, 'event')" title="Delete comment">
+                        🗑️ Delete
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Reply Form (Hidden by default) -->
+                {% if user.is_authenticated %}
+                <div class="reply-form-container" id="reply-form-{{ comment.id }}" style="display: none">
+                    <form method="post" enctype="multipart/form-data" class="reply-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="parent_id" value="{{ comment.id }}" />
+                        <div class="form-group">
+                            <textarea name="comment" class="form-control" rows="2" placeholder="Write a reply..." required></textarea>
+                        </div>
+                        <div class="form-group image-upload-section">
+                            <label class="image-upload-label">
+                                <span class="upload-icon">📷</span>
+                                <span class="upload-text">Attach Image</span>
+                                <span class="upload-optional">(Optional)</span>
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input type="file" name="image" class="form-control file-input" accept="image/*" />
+                                <div class="file-input-overlay">
+                                    <span class="file-icon">📁</span>
+                                    <span class="file-text">Choose file</span>
+                                </div>
+                            </div>
+                            <small class="image-help-text">
+                                <span class="help-icon">ℹ️</span>
+                                Optional: Upload an image (Max 5MB, JPG/PNG/GIF)
+                            </small>
+                        </div>
+                        <div class="reply-actions">
+                            <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="hideReplyForm({{ comment.id }})">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+
+                <!-- Replies -->
+                {% if comment.replies.exists %}
+                <div class="replies-container">
+                    {% for reply in comment.replies.all %}
+                    <div class="reply-item">
+                        <div class="comment-header">
+                            <div class="comment-user">
+                                {% if reply.user.profile.avatar %}
+                                <img src="{{ reply.user.profile.avatar.url }}" alt="{{ reply.user.get_full_name }}" class="comment-avatar-small" />
+                                {% else %}
+                                <div class="comment-avatar-placeholder-small">
+                                    {{ reply.user.first_name|first }}{{ reply.user.last_name|first }}
+                                </div>
+                                {% endif %}
+                                <div class="comment-user-info">
+                                    <strong>{{ reply.user.get_full_name }}</strong>
+                                    {% if reply.user.profile.role %}
+                                    <span class="user-role">[{{ reply.user.profile|role_designation }}]</span>
+                                    {% endif %}
+                                    <small class="comment-date">{{ reply.created_at|date:"M d, Y g:i A" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="comment-content">
+                            {{ reply.comment|linebreaks }}
+                            {% if reply.image %}
+                            <div class="comment-image">
+                                <img src="{{ reply.image.url }}" alt="Reply attachment" class="img-fluid comment-img" onclick="openImageModal('{{ reply.image.url }}')" />
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Reply to Reply Actions -->
+                        <div class="comment-actions">
+                            {% if user.is_authenticated %}
+                            <button type="button" class="btn-reply" onclick="showReplyForm({{ reply.id }})">Reply</button>
+                            {% endif %}
+                            <button type="button" class="btn-like" id="like-btn-{{ reply.id }}" onclick="toggleEventLike({{ reply.id }})" data-liked="{% if reply|is_liked_by:user %}true{% else %}false{% endif %}">
+                                <span class="like-icon" id="like-icon-{{ reply.id }}">
+                                    {% if reply|is_liked_by:user %}❤️{% else %}🤍{% endif %}
+                                </span>
+                                <span class="like-count" id="like-count-{{ reply.id }}">{{ reply.like_count }}</span>
+                            </button>
+                            {% if user.is_authenticated and reply.user == user or user.is_staff %}
+                            <button type="button" class="btn-delete" onclick="deleteComment({{ reply.id }}, 'event')" title="Delete reply">
+                                🗑️ Delete
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <!-- Reply to Reply Form (Hidden by default) -->
+                        {% if user.is_authenticated %}
+                        <div class="reply-form-container nested-reply-form" id="reply-form-{{ reply.id }}" style="display: none">
+                            <form method="post" class="reply-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="parent_id" value="{{ reply.id }}" />
+                                <div class="form-group">
+                                    <textarea name="comment" class="form-control" rows="2" placeholder="Write a reply to {{ reply.user.get_full_name }}..." required></textarea>
+                                </div>
+                                <div class="reply-actions">
+                                    <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="hideReplyForm({{ reply.id }})">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endif %}
+
+                        <!-- Nested Replies (Replies to Replies) -->
+                        {% if reply.replies.exists %}
+                        <div class="nested-replies-container">
+                            {% for nested_reply in reply.replies.all %}
+                            <div class="nested-reply-item">
+                                <div class="comment-header">
+                                    <div class="comment-user">
+                                        {% if nested_reply.user.profile.avatar %}
+                                        <img src="{{ nested_reply.user.profile.avatar.url }}" alt="{{ nested_reply.user.get_full_name }}" class="comment-avatar-small" />
+                                        {% else %}
+                                        <div class="comment-avatar-placeholder-small">
+                                            {{ nested_reply.user.first_name|first }}{{ nested_reply.user.last_name|first }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="comment-user-info">
+                                            <strong>{{ nested_reply.user.get_full_name }}</strong>
+                                            {% if nested_reply.user.profile.role %}
+                                            <span class="user-role">[{{ nested_reply.user.profile|role_designation }}]</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="comment-content">
+                                    {{ nested_reply.comment|linebreaks }}
+                                    {% if nested_reply.image %}
+                                    <div class="comment-image">
+                                        <img src="{{ nested_reply.image.url }}" alt="Nested reply attachment" class="img-fluid comment-img" onclick="openImageModal('{{ nested_reply.image.url }}')" />
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Reply to Nested Reply Actions -->
+                                <div class="comment-actions">
+                                    {% if user.is_authenticated %}
+                                    <button type="button" class="btn-reply" onclick="showReplyForm({{ nested_reply.id }})">Reply</button>
+                                    {% endif %}
+                                    <button type="button" class="btn-like" id="like-btn-{{ nested_reply.id }}" onclick="toggleEventLike({{ nested_reply.id }})" data-liked="{% if nested_reply|is_liked_by:user %}true{% else %}false{% endif %}">
+                                        <span class="like-icon" id="like-icon-{{ nested_reply.id }}">
+                                            {% if nested_reply|is_liked_by:user %}❤️{% else %}🤍{% endif %}
+                                        </span>
+                                        <span class="like-count" id="like-count-{{ nested_reply.id }}">{{ nested_reply.like_count }}</span>
+                                    </button>
+                                    {% if user.is_authenticated and nested_reply.user == user or user.is_staff %}
+                                    <button type="button" class="btn-delete" onclick="deleteComment({{ nested_reply.id }}, 'event')" title="Delete reply">
+                                        🗑️ Delete
+                                    </button>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Reply to Nested Reply Form (Hidden by default) -->
+                                {% if user.is_authenticated %}
+                                <div class="reply-form-container nested-reply-form deep-nested" id="reply-form-{{ nested_reply.id }}" style="display: none">
+                                    <form method="post" class="reply-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="parent_id" value="{{ nested_reply.id }}" />
+                                        <div class="form-group">
+                                            <textarea name="comment" class="form-control" rows="2" placeholder="Write a reply to {{ nested_reply.user.get_full_name }}..." required></textarea>
+                                        </div>
+                                        <div class="reply-actions">
+                                            <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
+                                            <button type="button" class="btn btn-sm btn-secondary" onclick="hideReplyForm({{ nested_reply.id }})">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                {% endif %}
+
+                                <!-- Deep Nested Replies (Replies to Nested Replies) -->
+                                {% if nested_reply.replies.exists %}
+                                <div class="deep-nested-replies-container">
+                                    {% for deep_reply in nested_reply.replies.all %}
+                                    <div class="deep-nested-reply-item">
+                                        <div class="comment-header">
+                                            <div class="comment-user">
+                                                {% if deep_reply.user.profile.avatar %}
+                                                <img src="{{ deep_reply.user.profile.avatar.url }}" alt="{{ deep_reply.user.get_full_name }}" class="comment-avatar-small" />
+                                                {% else %}
+                                                <div class="comment-avatar-placeholder-small">
+                                                    {{ deep_reply.user.first_name|first }}{{ deep_reply.user.last_name|first }}
+                                                </div>
+                                                {% endif %}
+                                                <div class="comment-user-info">
+                                                    <strong>{{ deep_reply.user.get_full_name }}</strong>
+                                                    {% if deep_reply.user.profile.role %}
+                                                    <span class="user-role">[{{ deep_reply.user.profile|role_designation }}]</span>
+                                                    {% endif %}
+                                                    <small class="comment-date">{{ deep_reply.created_at|date:"M d, Y g:i A" }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="comment-content">
+                                            {{ deep_reply.comment|linebreaks }}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="no-comments">
+                <p>No questions or comments yet. Be the first to ask about this event!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal" onclick="closeImageModal()">
+    <span class="close-modal">&times;</span>
+    <img class="modal-content" id="modalImage" />
+    <div class="modal-caption" id="modalCaption"></div>
+</div>
+
+<!-- Countdown Timer JavaScript -->
+{% if event.registration_deadline %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const countdownTimer = document.getElementById('countdown-timer');
+    const countdownStatus = document.getElementById('countdown-status');
+    const daysElement = document.getElementById('days');
+    const hoursElement = document.getElementById('hours');
+    const minutesElement = document.getElementById('minutes');
+    const secondsElement = document.getElementById('seconds');
+    
+    if (!daysElement || !hoursElement || !minutesElement || !secondsElement) {
+        console.log('Countdown elements not found');
+        return;
+    }
+    
+    // Registration deadline from Django
+    const registrationDeadline = new Date('{{ event.registration_deadline|date:"c" }}');
+    console.log('Registration deadline:', registrationDeadline);
+    
+    function updateCountdown() {
+        const now = new Date();
+        const timeDiff = registrationDeadline - now;
+        
+        if (timeDiff <= 0) {
+            // Registration deadline has passed
+            if (countdownTimer) countdownTimer.style.display = 'none';
+            if (countdownStatus) {
+                countdownStatus.innerHTML = '<div class="countdown-expired">⚠️ Registration deadline has passed</div>';
+                countdownStatus.className = 'countdown-status expired';
+            }
+            return;
+        }
+        
+        // Calculate time units
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+        
+        // Update display
+        daysElement.textContent = days.toString().padStart(2, '0');
+        hoursElement.textContent = hours.toString().padStart(2, '0');
+        minutesElement.textContent = minutes.toString().padStart(2, '0');
+        secondsElement.textContent = seconds.toString().padStart(2, '0');
+        
+        // Update status message
+        if (countdownStatus) {
+            if (days === 0 && hours === 0 && minutes <= 30) {
+                countdownStatus.innerHTML = '<div class="countdown-urgent">⚡ Hurry! Registration closes soon!</div>';
+                countdownStatus.className = 'countdown-status urgent';
+            } else if (days === 0) {
+                countdownStatus.innerHTML = '<div class="countdown-today">📅 Registration closes today!</div>';
+                countdownStatus.className = 'countdown-status today';
+            } else {
+                countdownStatus.innerHTML = '<div class="countdown-normal">✅ Registration is open</div>';
+                countdownStatus.className = 'countdown-status normal';
+            }
+        }
+    }
+    
+    // Update countdown immediately and then every second
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+});
+</script>
+{% endif %}
+
+<!-- Ticket Quantity Selection JavaScript -->
+{% if event.ticket_categories.exists and user.is_authenticated and not registration_closed and not is_booked and not is_full %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    const qtyButtons = document.querySelectorAll('.qty-btn');
+    const totalTicketsElement = document.getElementById('total-tickets-count');
+    const totalAmountElement = document.getElementById('total-amount');
+    const bookingSummary = document.getElementById('booking-summary');
+    const proceedButton = document.getElementById('proceed-to-checkout');
+    const maxTickets = 6;
+    
+    function updateTotals() {
+        let totalTickets = 0;
+        let totalAmount = 0;
+        
+        quantityInputs.forEach(input => {
+            const quantity = parseInt(input.value) || 0;
+            const price = parseFloat(input.dataset.price) || 0;
+            
+            totalTickets += quantity;
+            totalAmount += quantity * price;
+        });
+        
+        // Update display
+        if (totalTicketsElement) {
+            totalTicketsElement.textContent = totalTickets;
+            // Change color if over limit
+            if (totalTickets > maxTickets) {
+                totalTicketsElement.style.color = '#dc3545';
+                totalTicketsElement.parentElement.style.color = '#dc3545';
+            } else {
+                totalTicketsElement.style.color = 'inherit';
+                totalTicketsElement.parentElement.style.color = 'inherit';
+            }
+        }
+        
+        if (totalAmountElement) {
+            totalAmountElement.textContent = '$' + totalAmount.toFixed(2);
+        }
+        
+        // Show/hide booking summary
+        if (bookingSummary) {
+            if (totalTickets > 0) {
+                bookingSummary.style.display = 'block';
+            } else {
+                bookingSummary.style.display = 'none';
+            }
+        }
+        
+        // Enable/disable proceed button
+        if (proceedButton) {
+            if (totalTickets > 0 && totalTickets <= maxTickets) {
+                proceedButton.disabled = false;
+            } else {
+                proceedButton.disabled = true;
+            }
+        }
+        
+        // Update quantity controls state
+        quantityInputs.forEach(input => {
+            const categoryId = input.dataset.categoryId;
+            const currentValue = parseInt(input.value) || 0;
+            const maxAvailable = parseInt(input.dataset.max) || 0;
+            const remainingTickets = maxTickets - totalTickets + currentValue;
+            
+            // Update max value
+            input.max = Math.min(remainingTickets, maxAvailable);
+            
+            // Update plus/minus buttons
+            const plusBtn = document.querySelector(`.qty-plus[data-category="${categoryId}"]`);
+            const minusBtn = document.querySelector(`.qty-minus[data-category="${categoryId}"]`);
+            
+            if (plusBtn) {
+                plusBtn.disabled = currentValue >= input.max;
+            }
+            if (minusBtn) {
+                minusBtn.disabled = currentValue <= 0;
+            }
+        });
+    }
+    
+    function validateQuantity(input) {
+        const value = parseInt(input.value) || 0;
+        const max = parseInt(input.max) || 0;
+        const min = parseInt(input.min) || 0;
+        
+        if (value > max) {
+            input.value = max;
+        } else if (value < min) {
+            input.value = min;
+        }
+        
+        updateTotals();
+    }
+    
+    // Add event listeners to quantity inputs
+    quantityInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            validateQuantity(this);
+        });
+        
+        input.addEventListener('change', function() {
+            validateQuantity(this);
+        });
+        
+        // Prevent negative values and decimal inputs
+        input.addEventListener('keydown', function(e) {
+            if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E' || e.key === '.') {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Add event listeners to plus/minus buttons
+    qtyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const categoryId = this.dataset.category;
+            const input = document.getElementById(`quantity_${categoryId}`);
+            const isPlus = this.classList.contains('qty-plus');
+            
+            if (input) {
+                let currentValue = parseInt(input.value) || 0;
+                
+                if (isPlus) {
+                    const max = parseInt(input.max) || 0;
+                    if (currentValue < max) {
+                        input.value = currentValue + 1;
+                    }
+                } else {
+                    if (currentValue > 0) {
+                        input.value = currentValue - 1;
+                    }
+                }
+                
+                validateQuantity(input);
+            }
+        });
+    });
+    
+    // Proceed to checkout button
+    if (proceedButton) {
+        proceedButton.addEventListener('click', function() {
+            // Build URL with selected quantities
+            const urlParams = new URLSearchParams();
+            
+            quantityInputs.forEach(input => {
+                const quantity = parseInt(input.value) || 0;
+                if (quantity > 0) {
+                    urlParams.append(`quantity_${input.dataset.categoryId}`, quantity);
+                }
+            });
+            
+            // Redirect to booking page with quantities
+            window.location.href = `{% url 'events:event_book' event.pk %}?${urlParams.toString()}`;
+        });
+    }
+    
+    // Initial calculation
+    updateTotals();
+});
+</script>
+{% endif %}
+
+<style>
+/* Main Container */
+.event-detail-container {
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+    min-height: 100vh;
+}
+
+body.dark-mode .event-detail-container {
+    background: linear-gradient(135deg, #0f1419, #1a2f2e);
+}
+
+/* Hero Section */
+.event-hero {
+    position: relative;
+    height: 60vh;
+    min-height: 400px;
+    overflow: hidden;
+    display: flex;
+    align-items: end;
+}
+
+.event-hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.event-hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(64,181,173,0.8), rgba(64,181,173,0.3));
+    z-index: 2;
+}
+
+.event-hero-content {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    padding: 2rem 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.3));
+}
+
+.event-hero-content .container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.breadcrumb {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: #b3e5fc;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.event-title {
+    color: white;
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.6);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+}
+
+.event-subtitle {
+    color: #b8f2ee;
+    font-size: 1.3rem;
+    margin: 0 0 1.5rem 0;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    letter-spacing: 0.5px;
+}
+
+.event-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    background: transparent;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    background: rgba(46, 139, 135, 0.9) !important;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(64, 181, 173, 0.5);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(46, 139, 135, 0.4);
+    transition: all 0.3s ease;
+}
+
+.meta-item:hover {
+    background: rgba(64, 181, 173, 0.95) !important;
+    border: 2px solid rgba(64, 181, 173, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.5);
+}
+
+.meta-item .icon {
+    font-size: 1.3rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    filter: brightness(1.2);
+}
+
+.meta-item span {
+    font-size: 1rem;
+    color: #f7fafc;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* Content Area */
+.event-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+    padding: 3rem 0;
+}
+
+.event-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Countdown Section */
+.countdown-section {
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(64,181,173,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+body.dark-mode .countdown-section {
+    background: linear-gradient(135deg, #40B5AD, #2d8a84);
+    box-shadow: 0 12px 35px rgba(64,181,173,0.4);
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.countdown-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    color: white;
+}
+
+.deadline-date {
+    margin: 0 0 1.5rem 0;
+    opacity: 0.95;
+    font-size: 1rem;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.countdown-timer {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.time-unit {
+    text-align: center;
+    background: rgba(255,255,255,0.15);
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.time-value {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.time-label {
+    display: block;
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    font-weight: 500;
+}
+
+.countdown-status {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.countdown-normal {
+    color: #e8f5e8;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.countdown-today {
+    color: #fff3cd;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.countdown-urgent {
+    color: #ffebee;
+    font-weight: 700;
+    animation: pulse 1s infinite;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.countdown-expired {
+    color: #ffebee;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.countdown-loading {
+    opacity: 0.9;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Action Section */
+.action-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-large {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.2rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    color: white;
+    box-shadow: 0 4px 15px rgba(64,181,173,0.3);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64,181,173,0.5);
+    color: white;
+    text-decoration: none;
+    background: linear-gradient(135deg, #369691, #2d7a73);
+}
+
+.btn-outline {
+    background: transparent;
+    color: #40B5AD;
+    border: 2px solid #40B5AD;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(64, 181, 173, 0.2);
+    letter-spacing: 0.3px;
+}
+
+.btn-outline:hover {
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.btn-danger {
+    background: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+.status-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.status-card.success {
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+    border: 2px solid #4caf50;
+}
+
+body.dark-mode .status-card.success {
+    background: linear-gradient(135deg, #1a2f1a, #0f2e0f);
+    border: 2px solid #4caf50;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+}
+
+.status-card.warning {
+    background: linear-gradient(135deg, #fff9e6, #ffe0b3);
+    border: 2px solid #ff9800;
+}
+
+body.dark-mode .status-card.warning {
+    background: linear-gradient(135deg, #2d2416, #332a0f);
+    border: 2px solid #ff9800;
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3);
+}
+
+.status-card.warning .status-icon {
+    color: #ff9800;
+}
+
+.status-card.warning .status-content h4 {
+    color: #e65100;
+}
+
+body.dark-mode .status-card.warning .status-content h4 {
+    color: #ffb74d;
+}
+
+.status-card.warning .status-content p {
+    color: #bf360c;
+}
+
+body.dark-mode .status-card.warning .status-content p {
+    color: #ffcc02;
+}
+
+.status-card.full {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border: 2px solid #f44336;
+}
+
+body.dark-mode .status-card.full {
+    background: linear-gradient(135deg, #2d1b1b, #331212);
+    border: 2px solid #f44336;
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.3);
+}
+
+.status-card.expired {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 2px solid #ff9800;
+    color: #e65100;
+}
+
+body.dark-mode .status-card.expired {
+    background: linear-gradient(135deg, #2d2416, #332a0f);
+    border: 2px solid #ff9800;
+    color: #ffb74d;
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3);
+}
+
+.status-card.expired .status-icon {
+    color: #ff9800;
+}
+
+.status-card.expired .status-content h4 {
+    color: #e65100;
+}
+
+body.dark-mode .status-card.expired .status-content h4 {
+    color: #ffb74d;
+}
+
+.status-card.expired .status-content p {
+    color: #bf360c;
+}
+
+body.dark-mode .status-card.expired .status-content p {
+    color: #ffcc02;
+}
+
+.status-icon {
+    font-size: 2rem;
+}
+
+.status-content h4 {
+    margin: 0 0 0.25rem 0;
+    color: #333;
+}
+
+body.dark-mode .status-content h4 {
+    color: #e2e8f0;
+}
+
+.status-content p {
+    margin: 0;
+    color: #666;
+}
+
+body.dark-mode .status-content p {
+    color: #a0a9b8;
+}
+
+.management-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Content Cards */
+.content-card {
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.15);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .content-card {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+.content-card h2 {
+    color: #40B5AD;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.85rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(64, 181, 173, 0.2);
+    letter-spacing: 0.3px;
+}
+
+body.dark-mode .content-card h2 {
+    color: #4fd1c7;
+}
+
+/* Reviews Preview Styles */
+.reviews-preview {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fdfc 100%);
+    border: 1px solid rgba(64, 181, 173, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.reviews-preview:hover {
+    border-color: rgba(64, 181, 173, 0.25);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.1);
+    transform: translateY(-2px);
+}
+
+.reviews-preview .reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 20px 20px 0 20px;
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    margin: 0 0 20px 0;
+}
+
+.reviews-preview .reviews-header h2 {
+    color: white;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.reviews-preview .rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 8px 12px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.reviews-preview .rating-value {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+}
+
+.reviews-preview .rating-stars {
+    color: #FFD700;
+}
+
+.reviews-preview .rating-count {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.recent-reviews {
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+
+.review-preview {
+    padding: 15px;
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #f8fdfc 0%, #f0faf9 100%);
+    transition: all 0.3s ease;
+}
+
+.review-preview:hover {
+    border-color: rgba(64, 181, 173, 0.2);
+    background: linear-gradient(135deg, #f0faf9 0%, #e8f7f6 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.1);
+}
+
+.review-preview:last-child {
+    margin-bottom: 0;
+}
+
+.review-preview .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.review-preview .reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.review-preview .reviewer-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #40B5AD, #5cc9c1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.review-preview .reviewer-details h5 {
+    margin: 0;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.review-preview .review-date {
+    color: #666;
+    font-size: 0.8em;
+}
+
+.review-preview .review-rating {
+    text-align: right;
+}
+
+.review-preview .rating-score {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #40B5AD;
+}
+
+.review-preview .rating-stars-small {
+    color: #FFD700;
+    font-size: 0.8em;
+}
+
+.review-preview .review-content h6 {
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.review-preview .review-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+.no-reviews {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-style: italic;
+    background: linear-gradient(135deg, #f8fdfc 0%, #f0faf9 100%);
+    border-radius: 8px;
+    margin: 0 20px 20px 20px;
+}
+
+.reviews-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 0 20px 20px 20px;
+    background: linear-gradient(135deg, #f8fdfc 0%, #f0faf9 100%);
+}
+
+.reviews-actions .btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.reviews-actions .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    border: none;
+    color: white;
+}
+
+.reviews-actions .btn-primary:hover {
+    background: linear-gradient(135deg, #369a93 0%, #256e6a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.3);
+}
+
+.reviews-actions .btn-outline-primary {
+    border: 2px solid #40B5AD;
+    color: #40B5AD;
+    background: transparent;
+}
+
+.reviews-actions .btn-outline-primary:hover {
+    background: #40B5AD;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.3);
+    font-size: 0.9em;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.reviews-actions .btn-primary {
+    background: linear-gradient(45deg, #E91E63, #F06292);
+    color: white;
+    border: none;
+}
+
+.reviews-actions .btn-primary:hover {
+    background: linear-gradient(45deg, #C2185B, #E91E63);
+    text-decoration: none;
+    color: white;
+}
+
+.reviews-actions .btn-outline-primary {
+    background: white;
+    color: #E91E63;
+    border: 1px solid #E91E63;
+}
+
+.reviews-actions .btn-outline-primary:hover {
+    background: #E91E63;
+    color: white;
+    text-decoration: none;
+}
+
+/* Dark mode reviews styles */
+body.dark-mode .review-preview {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+body.dark-mode .reviews-preview .rating-count,
+body.dark-mode .review-preview .review-date,
+body.dark-mode .review-preview .review-content p {
+    color: #a0aec0;
+}
+
+body.dark-mode .no-reviews {
+    color: #a0aec0;
+}
+
+.content-text {
+    color: #2d3748;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .content-text {
+    color: #e2e8f0;
+}
+
+/* Sidebar */
+.event-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sidebar-card {
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.15);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    overflow: hidden;
+}
+
+body.dark-mode .sidebar-card {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+.sidebar-card h3 {
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    color: white;
+    margin: 0;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    letter-spacing: 0.5px;
+}
+
+body.dark-mode .sidebar-card h3 {
+    background: linear-gradient(135deg, #40B5AD, #2d8a84);
+}
+
+.detail-list {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+}
+
+body.dark-mode .detail-list {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(64, 181, 173, 0.15);
+}
+
+body.dark-mode .detail-item {
+    border-bottom: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 700;
+    color: #40B5AD;
+    flex: 0 0 35%;
+    font-size: 1rem;
+    text-shadow: 0 1px 2px rgba(64, 181, 173, 0.3);
+    letter-spacing: 0.3px;
+}
+
+body.dark-mode .detail-label {
+    color: #4fd1c7;
+}
+
+.detail-value {
+    color: #1a202c;
+    flex: 1;
+    text-align: right;
+    line-height: 1.4;
+    font-weight: 600;
+    font-size: 1rem;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .detail-value {
+    color: #e2e8f0;
+}
+
+/* Location Info */
+.location-info {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+}
+
+body.dark-mode .location-info {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+}
+
+.location-info h4 {
+    color: #40B5AD;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(64, 181, 173, 0.3);
+    letter-spacing: 0.3px;
+}
+
+body.dark-mode .location-info h4 {
+    color: #4fd1c7;
+}
+
+.location-info p {
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+    line-height: 1.6;
+    font-size: 1rem;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .location-info p {
+    color: #e2e8f0;
+}
+
+.venue-link {
+    color: #40B5AD;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #40B5AD;
+    border-radius: 10px;
+    display: inline-block;
+    transition: all 0.3s ease;
+    text-shadow: 0 1px 2px rgba(64, 181, 173, 0.2);
+    letter-spacing: 0.3px;
+}
+
+body.dark-mode .venue-link {
+    color: #4fd1c7;
+    border-color: #4fd1c7;
+}
+
+.venue-link:hover {
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .venue-link:hover {
+    background: linear-gradient(135deg, #4fd1c7, #40B5AD);
+}
+
+/* Capacity Section */
+.capacity-section {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+}
+
+body.dark-mode .capacity-section {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+}
+
+.capacity-bar {
+    background: rgba(64, 181, 173, 0.1);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .capacity-bar {
+    background: rgba(64, 181, 173, 0.2);
+    border: 1px solid rgba(64, 181, 173, 0.4);
+}
+
+.capacity-fill {
+    background: linear-gradient(90deg, #40B5AD, #2e8b87);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.capacity-text {
+    text-align: center;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .capacity-text {
+    color: #e2e8f0;
+}
+
+.current-count {
+    color: #40B5AD;
+    font-size: 1.4rem;
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .current-count {
+    color: #4fd1c7;
+}
+
+.price-section {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.price-free {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+body.dark-mode .price-free {
+    background: linear-gradient(135deg, #1a2f1a, #0f2e0f);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.price-paid {
+    background: transparent;
+    border: none;
+}
+
+.price-amount {
+    display: block;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #40B5AD;
+    line-height: 1;
+    text-shadow: 0 2px 4px rgba(64, 181, 173, 0.3);
+    letter-spacing: 0.5px;
+}
+
+body.dark-mode .price-amount {
+    color: #4fd1c7;
+}
+
+.price-label {
+    display: block;
+    font-size: 1rem;
+    color: #4a5568;
+    margin-top: 0.25rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .price-label {
+    color: #a0a9b8;
+}
+
+.ticket-categories {
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .ticket-categories {
+    background: linear-gradient(135deg, #40B5AD, #2d8a84);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.3);
+}
+
+.ticket-categories h4 {
+    margin: 0 0 15px 0;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ticket-category {
+    background: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.dark-mode .ticket-category {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.ticket-category:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .ticket-category:hover {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.ticket-category:last-child {
+    margin-bottom: 0;
+}
+
+.category-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.category-name {
+    font-weight: 600;
+    color: #333;
+    text-transform: capitalize;
+}
+
+body.dark-mode .category-name {
+    color: #e2e8f0;
+}
+
+.category-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+body.dark-mode .category-price {
+    color: #4fd1c7;
+}
+
+.category-availability {
+    margin-bottom: 8px;
+}
+
+.available {
+    color: #28a745;
+    font-size: 14px;
+}
+
+.sold-out {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.category-description {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+}
+
+body.dark-mode .category-description {
+    color: #a0a9b8;
+}
+
+/* Ticket Booking Section */
+.ticket-booking-section {
+    margin: 2rem 0;
+}
+
+.ticket-booking-section h3 {
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    text-align: center;
+}
+
+body.dark-mode .ticket-booking-section h3 {
+    color: #e2e8f0;
+}
+
+.ticket-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.ticket-category-card {
+    background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+    border: 2px solid #e1e8ed;
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .ticket-category-card {
+    background: linear-gradient(135deg, #1a2f2e 0%, #232728 100%);
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.ticket-category-card:hover:not(.sold-out) {
+    border-color: #40B5AD;
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.15);
+    transform: translateY(-2px);
+}
+
+body.dark-mode .ticket-category-card:hover:not(.sold-out) {
+    box-shadow: 0 12px 35px rgba(64, 181, 173, 0.3);
+}
+
+.ticket-category-card.sold-out {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+body.dark-mode .ticket-category-card.sold-out {
+    background: linear-gradient(135deg, #2d3233 0%, #1a1f20 100%);
+}
+
+.ticket-category-card.sold-out::before {
+    content: "SOLD OUT";
+    position: absolute;
+    top: 15px;
+    right: -30px;
+    background: #dc3545;
+    color: white;
+    padding: 5px 40px;
+    font-size: 12px;
+    font-weight: bold;
+    transform: rotate(45deg);
+    z-index: 1;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.category-header h4 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+body.dark-mode .category-header h4 {
+    color: #e2e8f0;
+}
+
+.category-price .price-amount {
+    font-size: 1.8rem;
+    color: #40B5AD;
+    font-weight: bold;
+}
+
+body.dark-mode .category-price .price-amount {
+    color: #4fd1c7;
+}
+
+.category-price .price-free {
+    font-size: 1.4rem;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.category-description {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+}
+
+body.dark-mode .category-description {
+    color: #a0a9b8;
+}
+
+.category-availability {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.available-count {
+    color: #28a745;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.sold-count {
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 400;
+    font-style: italic;
+}
+
+.sold-out-text {
+    color: #dc3545;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.category-book-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: #40B5AD;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.category-book-btn:hover {
+    background: #2e837e;
+    color: white;
+    text-decoration: none;
+}
+
+/* Quantity Selector Styles */
+.booking-instructions {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+body.dark-mode .booking-instructions {
+    color: #a0a9b8;
+}
+
+.quantity-selector {
+    margin-top: 1rem;
+}
+
+.quantity-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+body.dark-mode .quantity-label {
+    color: #e2e8f0;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.qty-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #40B5AD;
+    background: white;
+    color: #40B5AD;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.dark-mode .qty-btn {
+    background: #2d3233;
+    color: #4fd1c7;
+    border-color: #4fd1c7;
+}
+
+.qty-btn:hover:not(:disabled) {
+    background: #40B5AD;
+    color: white;
+}
+
+body.dark-mode .qty-btn:hover:not(:disabled) {
+    background: #4fd1c7;
+}
+
+.qty-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.quantity-input {
+    width: 60px;
+    height: 40px;
+    text-align: center;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    background: white;
+}
+
+body.dark-mode .quantity-input {
+    background: #2d3233;
+    border-color: #4a5568;
+    color: #e2e8f0;
+}
+
+.quantity-input:focus {
+    outline: none;
+    border-color: #40B5AD;
+}
+
+body.dark-mode .quantity-input:focus {
+    border-color: #4fd1c7;
+}
+
+.sold-out-badge {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+body.dark-mode .sold-out-badge {
+    background: #2d3233;
+}
+
+/* Booking Summary Styles */
+.booking-summary {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .booking-summary {
+    background: linear-gradient(135deg, #40B5AD 0%, #2d8a84 100%);
+    box-shadow: 0 12px 35px rgba(64, 181, 173, 0.4);
+}
+
+.summary-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.summary-details {
+    flex: 1;
+}
+
+.total-tickets,
+.total-amount {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.total-tickets span,
+.total-amount span {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+#proceed-to-checkout {
+    background: white;
+    color: #40B5AD;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+#proceed-to-checkout:hover:not(:disabled) {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+}
+
+#proceed-to-checkout:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-disabled {
+    width: 100%;
+    padding: 0.75rem;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .ticket-categories-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Organizer Info */
+.organizer-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+}
+
+body.dark-mode .organizer-info {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+}
+
+.organizer-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 3px solid #40B5AD;
+}
+
+body.dark-mode .organizer-avatar {
+    border-color: #4fd1c7;
+}
+
+.organizer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.6rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px;
+}
+
+body.dark-mode .avatar-placeholder {
+    background: linear-gradient(135deg, #4fd1c7, #40B5AD);
+}
+
+.organizer-details h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1a202c;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .organizer-details h4 {
+    color: #e2e8f0;
+}
+
+.role-badge {
+    background: linear-gradient(135deg, #40B5AD, #2e8b87);
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.3px;
+    box-shadow: 0 3px 10px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .role-badge {
+    background: linear-gradient(135deg, #4fd1c7, #40B5AD);
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.4);
+}
+
+/* Contact List */
+.contact-list {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f0fdfc, #e6fffa);
+}
+
+body.dark-mode .contact-list {
+    background: linear-gradient(135deg, #1a2f2e, #232728);
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.contact-item:last-child {
+    margin-bottom: 0;
+}
+
+.contact-icon {
+    font-size: 1.2rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.contact-item a {
+    color: #40B5AD;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+body.dark-mode .contact-item a {
+    color: #4fd1c7;
+}
+
+.contact-item a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .event-hero {
+        height: 50vh;
+        min-height: 300px;
+    }
+    
+    .event-title {
+        font-size: 2rem;
+    }
+    
+    .event-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 0;
+    }
+    
+    .countdown-timer {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .time-unit {
+        padding: 1rem 0.5rem;
+    }
+    
+    .time-value {
+        font-size: 2rem;
+    }
+    
+    .meta-item {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .management-actions {
+        flex-direction: column;
+    }
+    
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .detail-value {
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+    
+    .countdown-section {
+        padding: 1.5rem;
+    }
+    
+    .countdown-timer {
+        gap: 0.5rem;
+    }
+    
+    .time-unit {
+        padding: 0.75rem 0.25rem;
+    }
+    
+    .time-value {
+        font-size: 1.5rem;
+    }
+    
+    .organizer-info {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* Dark Mode Styles for Event Detail */
+body.dark-mode .event-detail-container {
+    background: linear-gradient(135deg, #0f1419, #1a2f2e);
+}
+
+/* Additional dark mode styling for sold count */
+body.dark-mode .sold-count {
+    color: #a0a9b8;
+}
+
+/* Dark mode for availability counts */
+body.dark-mode .available-count {
+    color: #4caf50;
+}
+
+/* Dark mode for category book button */
+.category-book-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: #40B5AD;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.category-book-btn:hover {
+    background: #2e837e;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-disabled {
+    width: 100%;
+    padding: 0.75rem;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: not-allowed;
+}
+
+body.dark-mode .event-hero {
+    background: #1a2f2e;
+}
+
+body.dark-mode .hero-overlay {
+    background: linear-gradient(135deg, rgba(26, 47, 46, 0.85) 0%, rgba(30, 54, 53, 0.85) 100%);
+}
+
+body.dark-mode .breadcrumb {
+    color: #b0b0b0;
+}
+
+body.dark-mode .breadcrumb a {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-title {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-subtitle {
+    color: #b0b0b0;
+}
+
+body.dark-mode .meta-item {
+    color: #e0e0e0;
+}
+
+body.dark-mode .event-content {
+    background: #232728;
+}
+
+/* Enhanced Countdown Section Card */
+body.dark-mode .countdown-section {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .countdown-header h3 {
+    color: #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .countdown-header .deadline-date {
+    color: #b0b0b0;
+}
+
+body.dark-mode .time-unit {
+    background: rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .time-unit:hover {
+    background: rgba(64, 181, 173, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .time-value {
+    color: #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .time-label {
+    color: #b0b0b0;
+}
+
+/* Enhanced Action Section Card */
+body.dark-mode .action-section {
+    background: transparent;
+}
+
+body.dark-mode .status-card {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .status-card.success {
+    background: #1a2f2e;
+    border: 1px solid rgba(39, 174, 96, 0.3);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.2);
+}
+
+body.dark-mode .status-card.warning {
+    background: #1a2f2e;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.2);
+}
+
+body.dark-mode .status-card.full {
+    background: #1a2f2e;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.2);
+}
+
+body.dark-mode .status-card.expired {
+    background: #1a2f2e;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.2);
+}
+
+body.dark-mode .status-card h4 {
+    color: #40B5AD;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .status-card p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .status-card .status-icon {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Enhanced Ticket Booking Section Card */
+body.dark-mode .ticket-booking-section {
+    background: #1a2f2e;
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    margin: 2rem 0;
+}
+
+body.dark-mode .ticket-booking-section h3 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    margin: -2rem -2rem 1.5rem -2rem;
+    padding: 1.5rem 2rem;
+    border-radius: 16px 16px 0 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+body.dark-mode .booking-instructions {
+    color: #b0b0b0;
+    background: rgba(64, 181, 173, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 3px solid #40B5AD;
+    margin-bottom: 1.5rem;
+}
+
+/* Enhanced Ticket Category Cards */
+body.dark-mode .ticket-category-card {
+    background: #232728;
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .ticket-category-card:hover:not(.sold-out) {
+    background: rgba(64, 181, 173, 0.1);
+    border-color: #40B5AD;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .ticket-category-card.sold-out {
+    background: #2d3233;
+    border-color: rgba(108, 117, 125, 0.3);
+    opacity: 0.6;
+}
+
+body.dark-mode .category-header h4 {
+    color: #40B5AD;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .category-price .price-amount {
+    color: #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .category-price .price-free {
+    color: #27ae60;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .category-description {
+    color: #b0b0b0;
+    background: rgba(64, 181, 173, 0.1);
+    padding: 0.8rem;
+    border-radius: 6px;
+    border-left: 3px solid #40B5AD;
+}
+
+body.dark-mode .category-availability {
+    background: rgba(64, 181, 173, 0.1);
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+}
+
+body.dark-mode .available-count {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+body.dark-mode .sold-count {
+    color: #b0b0b0;
+}
+
+body.dark-mode .sold-out-text {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+body.dark-mode .quantity-selector {
+    background: rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+body.dark-mode .quantity-label {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+body.dark-mode .quantity-btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .quantity-btn:hover {
+    background: linear-gradient(135deg, #369691 0%, #2e837e 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .quantity-input {
+    background: #2d3233;
+    color: #e0e0e0;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .quantity-input:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+/* Enhanced Booking Summary Card */
+body.dark-mode .booking-summary {
+    background: #1a2f2e;
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+body.dark-mode .summary-content {
+    background: #232728;
+    padding: 1.5rem;
+}
+
+body.dark-mode .summary-details {
+    background: rgba(64, 181, 173, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 3px solid #40B5AD;
+}
+
+body.dark-mode .total-tickets {
+    color: #40B5AD;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+body.dark-mode .total-amount {
+    color: #40B5AD;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Management Actions */
+body.dark-mode .management-actions {
+    background: #1a2f2e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Content Cards */
+body.dark-mode .content-card {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .content-card h2 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    margin: -2rem -2rem 2rem -2rem;
+    padding: 1.5rem 2rem;
+    border-radius: 16px 16px 0 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+body.dark-mode .content-text {
+    color: #e0e0e0;
+    background: #232728;
+    padding: 1.5rem;
+    border-radius: 8px;
+    line-height: 1.8;
+}
+
+/* Enhanced Sidebar Cards */
+body.dark-mode .event-sidebar {
+    background: transparent;
+}
+
+body.dark-mode .sidebar-card {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .sidebar-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .sidebar-card h3 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+}
+
+/* Enhanced Detail List */
+body.dark-mode .detail-list {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+body.dark-mode .detail-item {
+    background: rgba(64, 181, 173, 0.1);
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+    border-left: 3px solid #40B5AD;
+    border-bottom: none;
+}
+
+body.dark-mode .detail-item:last-child {
+    margin-bottom: 0;
+}
+
+body.dark-mode .detail-label {
+    color: #40B5AD;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .detail-value {
+    color: #e0e0e0;
+    font-weight: 600;
+}
+
+/* Enhanced Location Info */
+body.dark-mode .location-info {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+body.dark-mode .location-info h4 {
+    color: #40B5AD;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    margin-bottom: 1rem;
+}
+
+body.dark-mode .location-info p {
+    color: #e0e0e0;
+    background: rgba(64, 181, 173, 0.1);
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 3px solid #40B5AD;
+}
+
+body.dark-mode .venue-link {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .venue-link:hover {
+    background: linear-gradient(135deg, #369691 0%, #2e837e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+}
+
+/* Enhanced Capacity Section */
+body.dark-mode .capacity-section {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+body.dark-mode .capacity-bar {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .capacity-fill {
+    background: linear-gradient(90deg, #40B5AD 0%, #369691 100%);
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .capacity-text {
+    color: #e0e0e0;
+    background: rgba(64, 181, 173, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .current-count {
+    color: #40B5AD;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Price Section */
+body.dark-mode .price-section {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+body.dark-mode .price-free {
+    background: rgba(39, 174, 96, 0.2);
+    border: 1px solid rgba(39, 174, 96, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+body.dark-mode .price-paid {
+    background: rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+body.dark-mode .price-amount {
+    color: #40B5AD;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .price-label {
+    color: #b0b0b0;
+}
+
+/* Enhanced Ticket Categories */
+body.dark-mode .ticket-categories {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .ticket-categories h4 {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    margin: -15px -15px 15px -15px;
+    padding: 1rem 1.5rem;
+    border-radius: 8px 8px 0 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .ticket-category {
+    background: rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .ticket-category:hover {
+    background: rgba(64, 181, 173, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .category-name {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+body.dark-mode .category-price {
+    color: #40B5AD;
+    font-weight: 700;
+}
+
+body.dark-mode .available {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+body.dark-mode .sold-out {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+/* Enhanced Organizer Info */
+body.dark-mode .organizer-info {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+body.dark-mode .organizer-avatar {
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    border: 2px solid #40B5AD;
+}
+
+body.dark-mode .organizer-details h4 {
+    color: #40B5AD;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .role-badge {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .avatar-placeholder {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Contact Section */
+body.dark-mode .contact-list {
+    background: #232728;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+body.dark-mode .contact-item {
+    background: rgba(64, 181, 173, 0.1);
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+    border-left: 3px solid #40B5AD;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .contact-item:hover {
+    background: rgba(64, 181, 173, 0.2);
+    transform: translateX(3px);
+}
+
+body.dark-mode .contact-item:last-child {
+    margin-bottom: 0;
+}
+
+body.dark-mode .contact-item a {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+body.dark-mode .contact-item a:hover {
+    color: #52c4ba;
+}
+
+body.dark-mode .contact-icon {
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+/* Enhanced Button Styles */
+body.dark-mode .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .btn-primary:hover {
+    background: linear-gradient(135deg, #369691 0%, #2e837e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .btn-outline {
+    background: transparent;
+    color: #40B5AD;
+    border: 2px solid #40B5AD;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .btn-outline:hover {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .btn-success {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+body.dark-mode .btn-success:hover {
+    background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+body.dark-mode .btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #212529;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+body.dark-mode .btn-warning:hover {
+    background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
+
+body.dark-mode .btn-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+body.dark-mode .btn-danger:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+/* Comments Section Styles */
+.comments-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.comments-section h3 {
+    color: #40b5ad;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.comment-form-container {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comment-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #40b5ad;
+}
+
+.comment-header {
+    margin-bottom: 1rem;
+}
+
+.comment-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #40b5ad;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.comment-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-avatar-placeholder-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #6c757d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.comment-user-info strong {
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.user-role {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
+.comment-date {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.comment-content {
+    margin: 1rem 0;
+    line-height: 1.7;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+.comment-image {
+    margin-top: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.comment-img {
+    max-width: 320px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.comment-img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.comment-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-reply {
+    background: none;
+    border: none;
+    color: #40b5ad;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-reply:hover {
+    background-color: rgba(64, 181, 173, 0.1);
+}
+
+.btn-like {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-like:hover {
+    background-color: rgba(255, 105, 135, 0.1);
+    color: #ff6987;
+}
+
+.btn-like.liked {
+    color: #ff6987;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-like[data-liked="true"] {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.like-icon {
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.btn-like:hover .like-icon {
+    transform: scale(1.2);
+}
+
+.like-count {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.btn-delete {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.btn-delete:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.replies-container {
+    margin-top: 1rem;
+    padding-left: 2rem;
+    border-left: 3px solid #e9ecef;
+}
+
+.reply-item {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid #6c757d;
+}
+
+.nested-replies-container {
+    margin-top: 1rem;
+    padding-left: 1.5rem;
+    border-left: 2px solid #dee2e6;
+}
+
+.nested-reply-item {
+    background: #f1f3f4;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    border-left: 2px solid #40b5ad;
+}
+
+.deep-nested-replies-container {
+    margin-top: 0.8rem;
+    padding-left: 1rem;
+    border-left: 2px solid #ced4da;
+}
+
+.deep-nested-reply-item {
+    background: #e9ecef;
+    border-radius: 4px;
+    padding: 0.7rem;
+    margin-bottom: 0.7rem;
+    border-left: 2px solid #6c757d;
+}
+
+.reply-form-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.reply-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.image-upload-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.image-upload-section:hover {
+    border-color: #40b5ad;
+    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.15);
+}
+
+.image-upload-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+}
+
+.upload-icon {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.upload-text {
+    font-size: 0.95rem;
+    margin-right: 0.5rem;
+}
+
+.upload-optional {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 400;
+    font-style: italic;
+}
+
+.file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+}
+
+.file-input-wrapper .form-control,
+.file-input {
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 1rem;
+    font-size: 0.9rem;
+}
+
+.file-input-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.file-input-wrapper:hover .file-input-overlay {
+    border-color: #40b5ad;
+    background: #f8fdfc;
+}
+
+.file-icon {
+    font-size: 1.1rem;
+    opacity: 0.7;
+}
+
+.file-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.image-help-text {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #6c757d;
+    font-size: 0.8rem;
+    margin: 0;
+    padding: 0.5rem 0.8rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 6px;
+    border-left: 3px solid #40b5ad;
+}
+
+.help-icon {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.comment-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.comment-form textarea {
+    width: 100%;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.comment-form textarea:focus {
+    outline: none;
+    border-color: #40b5ad;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+}
+
+.login-prompt {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.login-prompt a {
+    color: #40b5ad;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.comments-container {
+    margin-bottom: 1.5rem;
+}
+
+.comment-date {
+    color: #6c757d;
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.comment-content {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.reply-form .form-group {
+    margin-bottom: 0.75rem;
+}
+
+.reply-form textarea {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 0.9rem;
+}
+
+/* Comment Image Styles */
+.comment-image {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.comment-img {
+    max-width: 300px;
+    max-height: 200px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comment-img:hover {
+    transform: scale(1.02);
+}
+
+.no-comments {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #6c757d;
+    background: white;
+    border-radius: 8px;
+}
+
+/* Dark Mode Support for Comments */
+body.dark-mode .comments-section {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .comments-section h3 {
+    color: #f1f5f9;
+}
+
+body.dark-mode .comment-form-container {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .comment-item {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .comment-item:hover {
+    border-color: rgba(64, 181, 173, 0.4);
+    box-shadow: 0 4px 16px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .comment-header {
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .comment-user-info strong {
+    color: #f1f5f9;
+}
+
+body.dark-mode .comment-content {
+    color: #cbd5e1;
+}
+
+body.dark-mode .comment-actions {
+    border-top-color: #334155;
+}
+
+body.dark-mode .btn-reply, 
+body.dark-mode .btn-like {
+    color: #94a3b8;
+}
+
+body.dark-mode .reply-item {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .nested-reply-item {
+    background: #334155;
+    border-color: #475569;
+}
+
+body.dark-mode .deep-nested-reply-item {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(64, 181, 173, 0.1);
+}
+
+body.dark-mode .reply-form-container {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .file-input-overlay {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #cbd5e1;
+}
+
+body.dark-mode .file-input-overlay:hover {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
+
+body.dark-mode .login-prompt {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #cbd5e1;
+}
+
+body.dark-mode .no-comments {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(64, 181, 173, 0.2);
+    color: #94a3b8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .comments-section {
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .comments-section h3 {
+        font-size: 1.5rem;
+    }
+    
+    .comment-form-container {
+        padding: 1.5rem;
+    }
+    
+    .comment-item {
+        padding: 1.25rem;
+    }
+    
+    .comment-avatar, .comment-avatar-placeholder {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .comment-avatar-small, .comment-avatar-placeholder-small {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+    
+    .replies-container {
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+    }
+    
+    .nested-replies-container {
+        margin-left: 1rem;
+    }
+    
+    .deep-nested-replies-container {
+        margin-left: 0.75rem;
+    }
+    
+    .comment-actions {
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-reply, .btn-like {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .comments-section {
+        padding: 1rem;
+    }
+    
+    .comment-item {
+        padding: 1rem;
+    }
+    
+    .replies-container {
+        margin-left: 1rem;
+        padding-left: 0.75rem;
+    }
+    
+    .comment-avatar, .comment-avatar-placeholder {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .comment-user-info strong {
+        font-size: 0.95rem;
+    }
+    
+    .user-role {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+    }
+}
+
+/* Image Modal */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+    max-height: 80%;
+    object-fit: contain;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #bbb;
+}
+</style>
+
+<script>
+// Comment functionality
+function showReplyForm(commentId) {
+    const replyForm = document.getElementById('reply-form-' + commentId);
+    if (replyForm) {
+        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+function hideReplyForm(commentId) {
+    const replyForm = document.getElementById('reply-form-' + commentId);
+    if (replyForm) {
+        replyForm.style.display = 'none';
+    }
+}
+
+function toggleEventLike(commentId) {
+    if (!{{ user.is_authenticated|yesno:"true,false" }}) {
+        alert('Please login to like comments');
+        return;
+    }
+
+    const likeBtn = document.getElementById('like-btn-' + commentId);
+    const likeIcon = document.getElementById('like-icon-' + commentId);
+    const likeCount = document.getElementById('like-count-' + commentId);
+    
+    // Add loading state
+    likeBtn.style.opacity = '0.6';
+    likeBtn.style.pointerEvents = 'none';
+
+    fetch(`/events/comment/${commentId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Animate the like action
+            if (data.is_liked) {
+                likeIcon.textContent = '❤️';
+                likeBtn.setAttribute('data-liked', 'true');
+                
+                // Heart animation
+                likeIcon.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    likeIcon.style.transform = 'scale(1)';
+                }, 200);
+            } else {
+                likeIcon.textContent = '🤍';
+                likeBtn.setAttribute('data-liked', 'false');
+            }
+            
+            // Update count with animation
+            likeCount.style.transform = 'scale(1.2)';
+            likeCount.textContent = data.like_count;
+            setTimeout(() => {
+                likeCount.style.transform = 'scale(1)';
+            }, 200);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update like status');
+    })
+    .finally(() => {
+        // Remove loading state
+        likeBtn.style.opacity = '1';
+        likeBtn.style.pointerEvents = 'auto';
+    });
+}
+
+function openImageModal(imageSrc) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = 'block';
+    modalImg.src = imageSrc;
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'none';
+}
+
+// Function to auto-resize textarea
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+// Function to preview uploaded image
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            let preview = input.closest('form').querySelector('.image-preview');
+            if (!preview) {
+                preview = document.createElement('div');
+                preview.className = 'image-preview';
+                preview.innerHTML = `
+                    <img src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <button type="button" onclick="removeImagePreview(this)" style="margin-left: 10px; padding: 5px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Remove</button>
+                `;
+                input.closest('form').appendChild(preview);
+            }
+            preview.querySelector('img').src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Function to remove image preview
+function removeImagePreview(button) {
+    const preview = button.closest('.image-preview');
+    const form = preview.closest('form');
+    const fileInput = form.querySelector('input[type="file"]');
+    
+    fileInput.value = '';
+    preview.style.display = 'none';
+}
+
+// Close modal when clicking outside the image
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeImageModal();
+            }
+        });
+    }
+    
+    // Initialize auto-resize for all textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            autoResizeTextarea(this);
+        });
+        
+        // Set initial height
+        autoResizeTextarea(textarea);
+    });
+    
+    // Add image preview event listeners
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            previewImage(this);
+        });
+    });
+    
+    // Add smooth scroll to comments section
+    const commentsSection = document.querySelector('.comments-section');
+    if (commentsSection && window.location.hash === '#comments') {
+        setTimeout(() => {
+            commentsSection.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 100);
+    }
+    
+    // Add transitions to all buttons and interactive elements
+    const buttons = document.querySelectorAll('.btn-reply, .btn-like, .btn-delete, .btn-teal, .btn-outline');
+    buttons.forEach(button => {
+        button.style.transition = 'all 0.3s ease';
+    });
+});
+
+// Delete comment function
+function deleteComment(commentId, type) {
+    if (!confirm('Are you sure you want to delete this comment? This action cannot be undone and will also delete all replies to this comment.')) {
+        return;
+    }
+    
+    const deleteUrl = type === 'venue' ? `/venues/comment/${commentId}/delete/` : `/events/comment/${commentId}/delete/`;
+    
+    fetch(deleteUrl, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the comment element from the DOM
+            const commentElement = document.querySelector(`#like-btn-${commentId}`)?.closest('.comment-item, .reply-item, .nested-reply-item, .deep-nested-reply-item');
+            if (commentElement) {
+                commentElement.style.opacity = '0.5';
+                commentElement.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    commentElement.remove();
+                }, 300);
+            }
+            
+            // Show success message
+            const message = document.createElement('div');
+            message.className = 'alert alert-success';
+            message.style.position = 'fixed';
+            message.style.top = '20px';
+            message.style.right = '20px';
+            message.style.zIndex = '9999';
+            message.style.padding = '10px 20px';
+            message.style.backgroundColor = '#d4edda';
+            message.style.color = '#155724';
+            message.style.border = '1px solid #c3e6cb';
+            message.style.borderRadius = '4px';
+            message.textContent = data.message;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        } else {
+            alert(data.error || 'Failed to delete comment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to delete comment. Please try again.');
+    });
+}
+</script>
+
+{% endblock %}

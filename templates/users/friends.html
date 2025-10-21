@@ -1,0 +1,2064 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Friends - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Friends Page Specific Styling */
+.nav-right .notification-group {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.nav-right .notification-group > a {
+    display: inline-flex !important;
+    align-items: center;
+}
+
+.friends-container {
+    max-width: 1200px;
+    margin: 2rem auto; /* Standard margin without fixed header compensation */
+    padding: 0 2rem;
+}
+
+.friends-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.friends-header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.friends-nav {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.nav-tab {
+    padding: 0.8rem 1.5rem;
+    background: rgba(226, 221, 221, 0.1);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    border: 2px solid transparent;
+}
+
+.nav-tab:hover, .nav-tab.active {
+    background: rgba(211, 197, 197, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.friends-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    color: #40B5AD;
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+}
+
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+}
+
+/* Special styling for Find New Friends section */
+.find-friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+}
+
+.requests-section .friends-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.friend-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border: 2px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.friend-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #40B5AD, #2e837e, #40B5AD);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.friend-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(64, 181, 173, 0.15);
+    border-color: #40B5AD;
+}
+
+.friend-card:hover::after {
+    transform: scaleX(1);
+}
+
+.friend-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: white;
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.friend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.friend-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.friend-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2e837e;
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friend-username {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Enhanced Find New Friends card styling */
+.find-friends-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 2px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px #14b8a6;
+}
+
+.find-friends-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #40B5AD, #2e837e, #34d399, #40B5AD);
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease-in-out infinite;
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.find-friends-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(64, 181, 173, 0.2);
+    border-color: #40B5AD;
+}
+
+.find-friends-card:hover::before {
+    transform: scaleX(1);
+}
+
+.find-friends-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.find-friends-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.8rem;
+    color: white;
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.3);
+}
+
+.find-friends-avatar::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #40B5AD, #34d399, #2e837e);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.find-friends-card:hover .find-friends-avatar::after {
+    opacity: 1;
+}
+
+.find-friends-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.find-friends-info {
+    flex: 1;
+}
+
+.find-friends-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.find-friends-username {
+    color: #40B5AD;
+    font-size: 1rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+}
+
+.find-friends-role {
+    display: inline-block;
+    background: linear-gradient(135deg, #40B5AD, #34d399);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.find-friends-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.find-friends-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.find-friends-btn-primary {
+    background: linear-gradient(135deg, #40B5AD, #34d399);
+    color: white;
+    border-color: #40B5AD;
+}
+
+.find-friends-btn-primary:hover {
+    background: linear-gradient(135deg, #2e837e, #10b981);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.3);
+    color: white;
+}
+
+.find-friends-btn-secondary {
+    background: #f8fafc;
+    color: #40B5AD;
+    border-color: #e5e7eb;
+}
+
+.find-friends-btn-secondary:hover {
+    background: #40B5AD;
+    color: white;
+    border-color: #40B5AD;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.2);
+}
+
+.find-friends-btn-success {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    border-color: #10b981;
+}
+
+.find-friends-status {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+    cursor: default;
+}
+
+.find-friends-status:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.user-role {
+    color: #40B5AD;
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0 0;
+    font-weight: 500;
+    background: rgba(64, 181, 173, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.search-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+/* Ultra Modern Friend Cards with Glass Morphism */
+.enhanced-friend-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    padding: 1rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
+    box-shadow: 
+        0 4px 16px rgba(64, 181, 173, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+.enhanced-friend-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(64, 181, 173, 0.6), transparent);
+    transform: scaleX(0);
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.enhanced-friend-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(64, 181, 173, 0.05) 0%, 
+        rgba(64, 181, 173, 0.02) 50%, 
+        rgba(64, 181, 173, 0.08) 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.enhanced-friend-card:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 
+        0 16px 40px rgba(64, 181, 173, 0.18),
+        0 8px 16px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+.enhanced-friend-card:hover::before {
+    transform: scaleX(1);
+}
+
+.enhanced-friend-card:hover::after {
+    opacity: 1;
+}
+
+.enhanced-friend-card .friend-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 0.75rem auto;
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    box-shadow: 
+        0 4px 12px rgba(64, 181, 173, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.enhanced-friend-card:hover .friend-avatar {
+    border-color: #40B5AD;
+    transform: scale(1.05);
+    box-shadow: 
+        0 8px 20px rgba(64, 181, 173, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.enhanced-friend-card .friend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.enhanced-friend-card:hover .friend-avatar img {
+    transform: scale(1.1);
+}
+
+.enhanced-friend-card .friend-info {
+    text-align: center;
+    margin-bottom: auto;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.enhanced-friend-card .friend-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.2rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.enhanced-friend-card .friend-username {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.enhanced-friend-card:hover .friend-username {
+    opacity: 1;
+}
+
+.enhanced-friend-card .user-role {
+    color: #40B5AD;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    background: rgba(64, 181, 173, 0.1);
+    border-radius: 8px;
+    display: inline-block;
+    backdrop-filter: blur(10px);
+}
+
+.friend-status-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 
+        0 2px 6px rgba(16, 185, 129, 0.4),
+        0 0 0 1px rgba(16, 185, 129, 0.1);
+    z-index: 10;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+    50% { 
+        transform: scale(1.1); 
+        opacity: 0.8; 
+    }
+}
+
+.friendship-details {
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.friendship-badge {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-size: 0.6rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 16px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 
+        0 2px 8px rgba(16, 185, 129, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.enhanced-friend-card:hover .friendship-badge {
+    transform: scale(1.05);
+    box-shadow: 
+        0 6px 20px rgba(16, 185, 129, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.friend-bio {
+    color: #64748b;
+    font-size: 0.7rem;
+    margin: 0.4rem 0;
+    line-height: 1.3;
+    font-style: italic;
+    background: rgba(64, 181, 173, 0.06);
+    padding: 0.4rem;
+    border-radius: 6px;
+    border-left: 2px solid rgba(64, 181, 173, 0.3);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.enhanced-friend-card:hover .friend-bio {
+    background: rgba(64, 181, 173, 0.1);
+    border-left-color: #40B5AD;
+}
+
+.enhanced-friend-card .friend-actions {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+.enhanced-friend-card .btn {
+    flex: 1;
+    min-width: auto;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    border: 1px solid transparent;
+    backdrop-filter: blur(10px);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+}
+
+.enhanced-friend-card .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
+}
+
+.enhanced-friend-card .btn:hover::before {
+    left: 100%;
+}
+
+.enhanced-friend-card .btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc5be 50%, #40B5AD 100%);
+    color: white;
+    border-color: rgba(64, 181, 173, 0.3);
+    box-shadow: 
+        0 4px 15px rgba(64, 181, 173, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.enhanced-friend-card .btn-primary:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #40B5AD 50%, #5cc5be 100%);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 
+        0 6px 18px rgba(64, 181, 173, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.enhanced-friend-card .btn-secondary {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+    color: #374151;
+    border-color: rgba(148, 163, 184, 0.3);
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.enhanced-friend-card .btn-secondary:hover {
+    background: linear-gradient(135deg, rgba(241, 245, 249, 0.95) 0%, rgba(226, 232, 240, 0.95) 100%);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 
+        0 6px 18px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.enhanced-friend-card .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 50%, #ef4444 100%);
+    color: white;
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 
+        0 4px 15px rgba(239, 68, 68, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.enhanced-friend-card .btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 
+        0 6px 18px rgba(239, 68, 68, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.6rem 1rem;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-icon {
+    font-size: 1rem;
+}
+
+.btn-text {
+    font-size: 0.85rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-remove:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Responsive Design */
+/* Modern Responsive Design */
+@media (max-width: 1024px) {
+    .friends-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .friends-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+    }
+    
+    .enhanced-friend-card {
+        padding: 0.85rem;
+        min-height: 180px;
+        backdrop-filter: blur(15px);
+    }
+    
+    .enhanced-friend-card .friend-avatar {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 0.6rem;
+    }
+    
+    .enhanced-friend-card .friend-info {
+        margin-bottom: 0.6rem;
+    }
+    
+    .enhanced-friend-card .friend-actions {
+        flex-direction: row;
+        gap: 0.3rem;
+    }
+    
+    .enhanced-friend-card .btn {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.65rem;
+        min-width: 0;
+        flex: 1;
+    }
+    
+    .search-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-input {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .enhanced-friend-card .friend-actions {
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+    
+    .enhanced-friend-card .btn {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .enhanced-friend-card {
+        min-height: 170px;
+        padding: 0.75rem;
+    }
+    
+    .enhanced-friend-card .friend-avatar {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Dark mode support */
+body.dark-mode .enhanced-friend-card {
+    background: linear-gradient(135deg, #374151 0%, #4b5563 50%, #065f46 100%);
+    border-color: rgba(64, 181, 173, 0.3);
+    color: white;
+}
+
+body.dark-mode .friend-name {
+    color: #f3f4f6;
+}
+
+body.dark-mode .friend-username,
+body.dark-mode .friend-bio {
+    color: #d1d5db;
+}
+
+/* Enhanced Friend Cards */
+.enhanced-friend-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e6fffa 100%);
+    border: 2px solid rgba(64, 181, 173, 0.2);
+    border-radius: 20px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.1);
+}
+
+.enhanced-friend-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #40B5AD, #2e837e, #40B5AD);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.enhanced-friend-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(64, 181, 173, 0.2);
+    border-color: #40B5AD;
+}
+
+.enhanced-friend-card:hover::before {
+    transform: scaleX(1);
+}
+
+.friend-status-indicator {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 12px;
+    height: 12px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+.friendship-details {
+    margin-top: 0.5rem;
+}
+
+.friendship-badge {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.friend-bio {
+    color: #6b7280;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin: 0.25rem 0 0 0;
+    line-height: 1.3;
+}
+
+.btn-icon {
+    display: inline-block;
+    margin-right: 0.3rem;
+}
+
+.btn-text {
+    display: inline-block;
+}
+
+@media (max-width: 640px) {
+    .btn-text {
+        display: none;
+    }
+    
+    .btn-icon {
+        margin-right: 0;
+    }
+    
+    .btn {
+        min-width: 40px;
+        padding: 0.6rem;
+    }
+}
+
+.btn {
+    padding: 0.6rem 1.2rem;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.4);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    color: #475569;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    color: #334155;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.no-items {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 3rem 1rem;
+}
+
+.requests-section {
+    background: linear-gradient(135deg, #e6fffa 0%, #4fd1c7 5%, #b2f5ea 50%, #81e6d9 95%, #e6fffa 100%);
+    border: 3px solid #2dd4bf;
+    position: relative;
+    overflow: hidden;
+    animation: requestsGlow 3s ease-in-out infinite alternate;
+    box-shadow: 0 8px 32px rgba(45, 212, 191, 0.2);
+}
+
+.requests-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: requestsShimmer 2.5s infinite;
+}
+
+.requests-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 80%, rgba(45, 212, 191, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(64, 181, 173, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.requests-section .section-title {
+    color: #0d9488;
+    text-shadow: 1px 1px 3px rgba(13, 148, 136, 0.2);
+    position: relative;
+    z-index: 2;
+    font-weight: 700;
+}
+
+.requests-section .friend-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(230, 255, 250, 0.95) 100%);
+    border: 3px solid rgba(45, 212, 191, 0.5);
+    backdrop-filter: blur(20px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
+    box-shadow: 0 10px 30px rgba(45, 212, 191, 0.2);
+    padding: 2rem;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    min-height: 340px;
+    justify-content: space-between;
+}
+
+.requests-section .friend-card .new-indicator {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    animation: newBadgePulse 2s ease-in-out infinite;
+    border: 2px solid white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@keyframes newBadgePulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.6);
+    }
+}
+
+.requests-section .friend-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #2dd4bf, #40B5AD, #14b8a6, #2dd4bf);
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    border-radius: 0 0 12px 12px;
+}
+
+.requests-section .friend-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #2dd4bf, transparent);
+    border-radius: 4px 4px 0 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.requests-section .friend-card:hover {
+    transform: translateY(-12px) scale(1.05);
+    box-shadow: 0 25px 50px rgba(45, 212, 191, 0.4);
+    border-color: #14b8a6;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(204, 251, 241, 0.98) 100%);
+}
+
+.requests-section .friend-card:hover::before {
+    transform: scaleX(1);
+}
+
+.requests-section .friend-card:hover::after {
+    opacity: 1;
+}
+
+.requests-section .friend-avatar {
+    border: 4px solid #2dd4bf;
+    box-shadow: 0 8px 25px rgba(45, 212, 191, 0.4);
+    animation: avatarPulse 2.5s ease-in-out infinite;
+    background: linear-gradient(135deg, #40B5AD 0%, #2dd4bf 100%);
+    width: 80px;
+    height: 80px;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+.requests-section .friend-avatar::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #2dd4bf, #14b8a6, #0d9488, #2dd4bf) border-box;
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: avatarRing 3s linear infinite;
+}
+
+@keyframes avatarRing {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.requests-section .friend-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.requests-section .friend-name {
+    color: #0d9488;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(13, 148, 136, 0.1);
+    font-size: 1.3rem;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.requests-section .friend-username {
+    color: #14b8a6;
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.requests-section .request-time {
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 400;
+    margin: 0.5rem 0 0 0;
+    opacity: 0.7;
+    font-style: italic;
+    padding: 0.3rem 0.8rem;
+    background: rgba(45, 212, 191, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(45, 212, 191, 0.2);
+}
+
+.requests-section .friend-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    align-items: center;
+}
+
+.requests-section .friend-actions .btn {
+    width: 100%;
+    max-width: 200px;
+    justify-content: center;
+    padding: 0.8rem 1.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.requests-section .friend-actions .btn:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.requests-section .friend-actions .btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.requests-section .friend-actions form {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.requests-section .btn-success {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    border: 2px solid rgba(20, 184, 166, 0.3);
+    position: relative;
+    overflow: hidden;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+}
+
+.requests-section .btn-success::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.requests-section .btn-success:hover::before {
+    left: 100%;
+}
+
+.requests-section .btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(20, 184, 166, 0.5);
+    border-color: #14b8a6;
+    background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+}
+
+.requests-section .btn-danger {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    border: 2px solid rgba(249, 115, 22, 0.3);
+    position: relative;
+    overflow: hidden;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+}
+
+.requests-section .btn-danger::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.requests-section .btn-danger:hover::before {
+    left: 100%;
+}
+
+.requests-section .btn-danger:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(249, 115, 22, 0.5);
+    border-color: #f97316;
+    background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+}
+
+.requests-section .btn-secondary {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(230, 255, 250, 0.8) 100%);
+    border: 2px solid rgba(45, 212, 191, 0.4);
+    backdrop-filter: blur(10px);
+    color: #0d9488;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(45, 212, 191, 0.2);
+}
+
+.requests-section .btn-secondary:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(204, 251, 241, 0.9) 100%);
+    border-color: #2dd4bf;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(45, 212, 191, 0.3);
+    color: #134e4a;
+}
+
+.badge {
+    background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    margin-left: 0.5rem;
+    box-shadow: 0 4px 15px rgba(45, 212, 191, 0.4);
+    animation: badgePulse 2s ease-in-out infinite;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes requestsGlow {
+    0% {
+        box-shadow: 0 8px 32px rgba(45, 212, 191, 0.2);
+        border-color: #2dd4bf;
+    }
+    100% {
+        box-shadow: 0 12px 40px rgba(45, 212, 191, 0.4);
+        border-color: #14b8a6;
+    }
+}
+
+@keyframes requestsShimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes avatarPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 6px 20px rgba(45, 212, 191, 0.3);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 8px 25px rgba(45, 212, 191, 0.5);
+    }
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(45, 212, 191, 0.4);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 6px 25px rgba(45, 212, 191, 0.6);
+    }
+}
+
+/* Dark mode styles */
+body.dark-mode .friends-section {
+    background: #1f2937;
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .section-title {
+    color: #40B5AD;
+}
+
+body.dark-mode .search-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+body.dark-mode .search-input:focus {
+    border-color: #40B5AD;
+}
+
+body.dark-mode .friend-card {
+    background: #374151;
+    border-color: #4b5563;
+}
+
+body.dark-mode .friend-name {
+    color: #40B5AD;
+}
+
+body.dark-mode .friend-username {
+    color: #9ca3af;
+}
+
+body.dark-mode .btn-secondary {
+    background: #4b5563;
+    color: #f9fafb;
+    border-color: #6b7280;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #6b7280;
+}
+
+body.dark-mode .requests-section {
+    background: #374151;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+body.dark-mode .requests-section .section-title {
+    color: #f59e0b;
+}
+
+@media (max-width: 768px) {
+    .friends-container {
+        padding: 0 1rem;
+    }
+    
+    .friends-grid, .find-friends-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .friend-actions {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    /* Find New Friends mobile responsiveness */
+    .find-friends-card {
+        padding: 1.5rem;
+    }
+    
+    .find-friends-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .find-friends-avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 1.5rem;
+        align-self: center;
+    }
+    
+    .find-friends-name {
+        font-size: 1.2rem;
+    }
+    
+    .find-friends-actions {
+        gap: 0.75rem;
+    }
+    
+    .find-friends-btn {
+        min-width: 100px;
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .friends-container {
+        padding: 0 1rem;
+    }
+    
+    .friends-header {
+        padding: 1.5rem;
+    }
+    
+    .friends-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .friends-section {
+        padding: 1.5rem;
+    }
+    
+    .friends-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .friend-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .friend-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .requests-section .friend-card {
+        min-height: 280px;
+        padding: 1.5rem;
+    }
+    
+    .requests-section .friend-card:hover {
+        transform: translateY(-2px) scale(1.01);
+    }
+    
+    .requests-section .friend-avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 1.3rem;
+    }
+    
+    .requests-section .friend-name {
+        font-size: 1.1rem;
+    }
+    
+    .requests-section .friends-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .friends-section {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    
+    .friend-card {
+        background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+        border-color: #6b7280;
+    }
+    
+    .friend-name {
+        color: #e5e7eb;
+    }
+    
+    .friend-username {
+        color: #9ca3af;
+    }
+    
+    .requests-section {
+        background: linear-gradient(135deg, #134e4a 0%, #0f766e 5%, #115e59 50%, #0d9488 95%, #134e4a 100%);
+        border-color: #14b8a6;
+    }
+    
+    .requests-section .friend-card {
+        background: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(19, 78, 74, 0.9) 100%);
+        border-color: rgba(45, 212, 191, 0.4);
+    }
+    
+    .requests-section .friend-name {
+        color: #5eead4;
+    }
+    
+    .requests-section .section-title {
+        color: #5eead4;
+    }
+}
+
+/* Enhanced hover effects for better interactivity */
+.friend-card:active {
+    transform: scale(0.98);
+}
+
+.btn:active {
+    transform: translateY(0) scale(0.95);
+}
+
+/* Focus states for accessibility */
+.btn:focus {
+    outline: 3px solid rgba(64, 181, 173, 0.3);
+    outline-offset: 2px;
+}
+
+.requests-section .btn-success:focus {
+    outline-color: rgba(16, 185, 129, 0.3);
+}
+
+.requests-section .btn-danger:focus {
+    outline-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Loading animation for form submissions */
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn:disabled::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 0.5rem;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="friends-container">
+    <div class="friends-header">
+        <h1>👥 My Friends</h1>
+        <p>Manage your friendships and connect with others</p>
+    </div>
+    
+    <!-- User Search Section -->
+    <div class="friends-section">
+        <h2 class="section-title">
+            🔍 Find New Friends
+        </h2>
+        <form method="get" class="search-bar">
+            <input type="text" 
+                   name="user_search" 
+                   class="search-input" 
+                   placeholder="Search for users by name or username..." 
+                   value="{{ user_search_query }}"
+                   autocomplete="off">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if user_search_query %}
+                <a href="?" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </form>
+        
+        {% if user_search_query %}
+            {% if search_results %}
+                <div class="find-friends-grid">
+                    {% for user in search_results %}
+                    <div class="find-friends-card">
+                        <div class="find-friends-header">
+                            <div class="find-friends-avatar">
+                                {% if user.profile.avatar %}
+                                    <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name|default:user.username }}">
+                                {% else %}
+                                    {{ user.first_name.0|default:user.username.0|upper }}{{ user.last_name.0|upper }}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="find-friends-info">
+                                <h3 class="find-friends-name">{{ user.get_full_name|default:user.username }}</h3>
+                                <p class="find-friends-username">@{{ user.username }}</p>
+                                {% if user.profile.role %}
+                                    <span class="find-friends-role">{{ user.profile.get_role_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="find-friends-actions">
+                            <!-- View Profile Button - Always visible -->
+                            <a href="{% url 'users:view_user_profile' user.id %}" class="find-friends-btn find-friends-btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                </svg>
+                                View Profile
+                            </a>
+                            
+                            <!-- Friendship Status Button -->
+                            {% if user.friendship_status == 'not_friends' %}
+                                <form method="post" action="{% url 'users:send_friend_request' user.id %}" style="display: contents;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="find-friends-btn find-friends-btn-primary">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                        </svg>
+                                        Add Friend
+                                    </button>
+                                </form>
+                            {% elif user.friendship_status == 'request_sent' %}
+                                <button class="find-friends-btn find-friends-status">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                    Request Sent
+                                </button>
+                            {% elif user.friendship_status == 'request_received' %}
+                                <form method="post" action="{% url 'users:accept_friend_request' user.pending_request_id %}" style="display: contents;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="find-friends-btn find-friends-btn-success">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                        </svg>
+                                        Accept Request
+                                    </button>
+                                </form>
+                            {% elif user.friendship_status == 'friends' %}
+                                <button class="find-friends-btn find-friends-btn-success">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                    Friends
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-items">
+                    <p>🔍 No users found matching "{{ user_search_query }}"</p>
+                    <p>Try searching with a different name or username.</p>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="no-items">
+                <p>🔍 Use the search bar above to find new friends!</p>
+                <p>Search by name or username to discover other users.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Friend Requests Section -->
+    {% if pending_requests %}
+    <div class="friends-section requests-section">
+        <h2 class="section-title">
+            📩 Friend Requests
+            <span class="badge">{{ pending_requests.count }}</span>
+        </h2>
+        
+        <div class="friends-grid">
+            {% for request in pending_requests %}
+            <div class="friend-card">
+                <div class="new-indicator">NEW</div>
+                <div class="friend-avatar">
+                    {% if request.from_user.profile.avatar %}
+                        <img src="{{ request.from_user.profile.avatar.url }}" alt="{{ request.from_user.get_full_name|default:request.from_user.username }}">
+                    {% else %}
+                        {{ request.from_user.first_name.0|default:request.from_user.username.0|upper }}{{ request.from_user.last_name.0|upper }}
+                    {% endif %}
+                </div>
+                
+                <div class="friend-info">
+                    <h3 class="friend-name">{{ request.from_user.get_full_name|default:request.from_user.username }}</h3>
+                    <p class="friend-username">@{{ request.from_user.username }}</p>
+                    <p class="request-time">📅 {{ request.created_at|timesince }} ago</p>
+                </div>
+                
+                <div class="friend-actions">
+                    <form method="post" action="{% url 'users:accept_friend_request' request.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">✅ Accept</button>
+                    </form>
+                    <form method="post" action="{% url 'users:reject_friend_request' request.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">❌ Reject</button>
+                    </form>
+                    <a href="{% url 'users:view_user_profile' request.from_user.id %}" class="btn btn-secondary">👁️ View</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- My Friends Section -->
+    <div class="friends-section">
+        <h2 class="section-title">
+            🤝 My Friends
+            {% if friends %}
+                <span style="font-size: 1rem; color: #6b7280; font-weight: normal;">({{ friends|length }})</span>
+            {% endif %}
+        </h2>
+        
+        {% if friends %}
+        <div class="search-bar">
+            <input type="text" placeholder="Search friends..." class="search-input" id="friendSearch">
+        </div>
+        
+        <div class="friends-grid" id="friendsGrid">
+            {% for friend in friends %}
+            <div class="friend-card enhanced-friend-card" data-name="{{ friend.get_full_name|default:friend.username|lower }}" data-username="{{ friend.username|lower }}">
+                <div class="friend-status-indicator"></div>
+                <div class="friend-avatar">
+                    {% if friend.profile.avatar %}
+                        <img src="{{ friend.profile.avatar.url }}" alt="{{ friend.get_full_name|default:friend.username }}">
+                    {% else %}
+                        {{ friend.first_name.0|default:friend.username.0|upper }}{{ friend.last_name.0|upper }}
+                    {% endif %}
+                </div>
+                
+                <div class="friend-info">
+                    <h3 class="friend-name">{{ friend.get_full_name|default:friend.username }}</h3>
+                    <p class="friend-username">@{{ friend.username }}</p>
+                    {% if friend.profile.role %}
+                        <p class="user-role">{{ friend.profile.get_role_display }}</p>
+                    {% endif %}
+                    <div class="friendship-details">
+                        <span class="friendship-badge">✅ Friends</span>
+                        {% if friend.profile.bio %}
+                            <p class="friend-bio">{{ friend.profile.bio|truncatechars:50 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="friend-actions">
+                    <a href="{% url 'users:conversation' friend.id %}" class="btn btn-primary" title="Send Message">
+                        <span class="btn-icon">💬</span>
+                        <span class="btn-text">Message</span>
+                    </a>
+                    <a href="{% url 'users:view_user_profile' friend.id %}" class="btn btn-secondary" title="View Profile">
+                        <span class="btn-icon">👁️</span>
+                        <span class="btn-text">View</span>
+                    </a>
+                    <form method="post" action="{% url 'users:unfriend_user' friend.id %}" style="display: inline;" 
+                          onsubmit="return confirm('Are you sure you want to unfriend {{ friend.get_full_name|default:friend.username }}?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-remove" title="Remove Friend">
+                            <span class="btn-icon">❌</span>
+                            <span class="btn-text">Remove</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-items">
+            <p>You don't have any friends yet.</p>
+            <p>Start by <a href="{% url 'users:search_users' %}" style="color: #40B5AD;">searching for users</a> to connect with!</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sent Requests Section -->
+    {% if sent_requests %}
+    <div class="friends-section">
+        <h2 class="section-title">⏳ Sent Requests</h2>
+        
+        <div class="friends-grid">
+            {% for request in sent_requests %}
+            <div class="friend-card">
+                <div class="friend-avatar">
+                    {% if request.to_user.profile.avatar %}
+                        <img src="{{ request.to_user.profile.avatar.url }}" alt="{{ request.to_user.get_full_name|default:request.to_user.username }}">
+                    {% else %}
+                        {{ request.to_user.first_name.0|default:request.to_user.username.0|upper }}{{ request.to_user.last_name.0|upper }}
+                    {% endif %}
+                </div>
+                
+                <div class="friend-info">
+                    <h3 class="friend-name">{{ request.to_user.get_full_name|default:request.to_user.username }}</h3>
+                    <p class="friend-username">@{{ request.to_user.username }}</p>
+                </div>
+                
+                <div class="friend-actions">
+                    <span class="btn btn-secondary" style="cursor: default;">⏳ Pending</span>
+                    <a href="{% url 'users:view_user_profile' request.to_user.id %}" class="btn btn-secondary">👁️ View</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('friendSearch');
+    const friendsGrid = document.getElementById('friendsGrid');
+    
+    if (searchInput && friendsGrid) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const friendCards = friendsGrid.querySelectorAll('.friend-card');
+            
+            friendCards.forEach(card => {
+                const name = card.dataset.name || '';
+                const username = card.dataset.username || '';
+                
+                if (name.includes(query) || username.includes(query)) {
+                    card.style.display = 'flex';
+                    card.style.animation = 'fadeIn 0.3s ease';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Enhanced button interactions for friend requests
+    const requestForms = document.querySelectorAll('.requests-section form');
+    requestForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            
+            if (button.classList.contains('btn-success')) {
+                button.innerHTML = '⏳ Accepting...';
+                button.style.background = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+            } else if (button.classList.contains('btn-danger')) {
+                button.innerHTML = '⏳ Rejecting...';
+                button.style.background = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+            }
+            
+            // Add a slight delay to show the loading state
+            setTimeout(() => {
+                // The form will submit normally after this delay
+            }, 300);
+        });
+    });
+    
+    // Add success animation to friend request cards
+    const requestCards = document.querySelectorAll('.requests-section .friend-card');
+    requestCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.style.animation = 'slideInUp 0.6s ease forwards';
+    });
+    
+    // Add ripple effect to buttons
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                left: ${x}px;
+                top: ${y}px;
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                pointer-events: none;
+            `;
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+});
+
+// Additional CSS animations via JavaScript
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideInUp {
+        from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+    
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

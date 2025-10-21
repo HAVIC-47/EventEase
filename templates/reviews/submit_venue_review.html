@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ existing_review|yesno:"Update,Submit" }} Venue Review - {{ venue.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .review-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #40B5AD 0%, #34a39a 100%);
+        color: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    }
+
+    .review-header h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+
+    .venue-info {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #40B5AD;
+    }
+
+    .venue-info h3 {
+        color: #40B5AD;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+    }
+
+    .review-form {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .star-rating {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .star-rating select {
+        padding: 0.5rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        color: #333;
+        transition: all 0.3s ease;
+        min-width: 80px;
+    }
+
+    .star-rating select:focus {
+        outline: none;
+        border-color: #40B5AD;
+        box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+    }
+
+    .star-rating select:hover {
+        border-color: #40B5AD;
+    }
+
+    .rating-description {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+        outline: none;
+        border-color: #40B5AD;
+        box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .btn {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 120px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #40B5AD 0%, #34a39a 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background: #f8f9fa;
+        color: #666;
+        border: 2px solid #e0e0e0;
+    }
+
+    .btn-secondary:hover {
+        background: #e9ecef;
+        color: #333;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .rating-categories {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .rating-categories h4 {
+        color: #40B5AD;
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        text-align: center;
+    }
+
+    .category-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .category-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .category-item label {
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+        color: #555;
+    }
+
+    @media (max-width: 768px) {
+        .category-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .review-form-container {
+            padding: 0 0.5rem;
+        }
+        
+        .review-form {
+            padding: 1.5rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+
+    .update-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-form-container">
+    <div class="review-header">
+        <h1>{{ existing_review|yesno:"Update,Submit" }} Venue Review</h1>
+        <p>Share your experience at this venue</p>
+    </div>
+
+    <div class="venue-info">
+        <h3>{{ venue.name }}</h3>
+        <p><i class="fas fa-map-marker-alt"></i> {{ venue.address }}</p>
+        {% if venue.description %}
+            <p>{{ venue.description|truncatewords:20 }}</p>
+        {% endif %}
+    </div>
+
+    {% if existing_review %}
+        <div class="update-notice">
+            <i class="fas fa-edit"></i> You are updating your existing review for this venue.
+        </div>
+    {% endif %}
+
+    <div class="review-form">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_rating">Overall Rating *</label>
+                <div class="star-rating">
+                    {{ form.rating }}
+                </div>
+                <div class="rating-description">Rate your overall experience at this venue</div>
+            </div>
+
+            <div class="rating-categories">
+                <h4>Category Ratings</h4>
+                <div class="category-row">
+                    <div class="category-item">
+                        <label for="id_ambience_rating">Ambience</label>
+                        {{ form.ambience_rating }}
+                    </div>
+                    <div class="category-item">
+                        <label for="id_service_rating">Service</label>
+                        {{ form.service_rating }}
+                    </div>
+                </div>
+                <div class="category-row">
+                    <div class="category-item">
+                        <label for="id_cleanliness_rating">Cleanliness</label>
+                        {{ form.cleanliness_rating }}
+                    </div>
+                    <div class="category-item">
+                        <label for="id_value_rating">Value for Money</label>
+                        {{ form.value_rating }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_title">Review Title</label>
+                {{ form.title }}
+                <div class="rating-description">Brief title for your venue review</div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_comment">Your Review</label>
+                {{ form.comment }}
+                <div class="rating-description">Share details about your experience at this venue</div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-star"></i> {{ existing_review|yesno:"Update,Submit" }} Review
+                </button>
+                <a href="{% url 'venues:venue_detail' venue.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

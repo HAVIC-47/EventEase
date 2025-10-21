@@ -1,0 +1,677 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - EventEase{% endblock %}
+
+{% block content %}
+<div class="notifications-page">
+    <div class="notifications-container">
+        <!-- Page Header -->
+        <div class="notifications-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="fas fa-bell header-icon"></i>
+                    <h1>Notifications</h1>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ total_count }}</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                    <div class="stat-item unread">
+                        <span class="stat-number">{{ unread_count }}</span>
+                        <span class="stat-label">Unread</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if unread_count > 0 %}
+            <div class="header-actions">
+                <form method="post" action="{% url 'notifications:mark_all_read' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="mark-all-read-btn">
+                        <i class="fas fa-check-double"></i>
+                        Mark All as Read
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Notifications List -->
+        <div class="notifications-content">
+            {% if notifications %}
+                <div class="notifications-list">
+                    {% for notification in notifications %}
+                    <div class="notification-card {% if not notification.is_read %}unread{% endif %}" 
+                         data-type="{{ notification.notification_type }}">
+                        <div class="notification-icon">
+                            {% if notification.notification_type == 'event_booking_confirm' %}
+                                <i class="fas fa-calendar-check"></i>
+                            {% elif notification.notification_type == 'venue_booking_status' %}
+                                <i class="fas fa-building"></i>
+                            {% elif notification.notification_type == 'upcoming_event' %}
+                                <i class="fas fa-clock"></i>
+                            {% elif notification.notification_type == 'venue_booking_request' %}
+                                <i class="fas fa-handshake"></i>
+                            {% elif notification.notification_type == 'event_registration' %}
+                                <i class="fas fa-user-plus"></i>
+                            {% elif notification.notification_type == 'system' %}
+                                <i class="fas fa-cog"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <h3 class="notification-title">{{ notification.title }}</h3>
+                                <span class="notification-time">{{ notification.created_at|date:"M d, Y g:i A" }}</span>
+                            </div>
+                            <p class="notification-message">{{ notification.message }}</p>
+                            
+                            {% if not notification.is_read %}
+                            <div class="notification-actions">
+                                <form method="post" action="{% url 'notifications:mark_read' notification.id %}" class="mark-read-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="mark-read-btn">
+                                        <i class="fas fa-eye"></i>
+                                        Mark as Read
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if not notification.is_read %}
+                        <div class="unread-indicator"></div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if notifications.has_other_pages %}
+                <div class="pagination-container">
+                    <div class="pagination">
+                        {% if notifications.has_previous %}
+                            <a href="?page=1" class="page-link first">&laquo; First</a>
+                            <a href="?page={{ notifications.previous_page_number }}" class="page-link prev">&lsaquo; Previous</a>
+                        {% endif %}
+                        
+                        <span class="page-info">
+                            Page {{ notifications.number }} of {{ notifications.paginator.num_pages }}
+                        </span>
+                        
+                        {% if notifications.has_next %}
+                            <a href="?page={{ notifications.next_page_number }}" class="page-link next">Next &rsaquo;</a>
+                            <a href="?page={{ notifications.paginator.num_pages }}" class="page-link last">Last &raquo;</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-notifications">
+                    <div class="empty-icon">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <h3>No Notifications Yet</h3>
+                    <p>You'll see your latest notifications here when you receive them.</p>
+                    <a href="{% url 'home' %}" class="back-home-btn">
+                        <i class="fas fa-home"></i>
+                        Back to Home
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Notifications Page Styles */
+.notifications-page {
+    min-height: 80vh;
+    background: linear-gradient(135deg, #f8fbff 0%, #f0f7f7 100%);
+    padding: 2rem 0;
+}
+
+.notifications-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Header Styles */
+.notifications-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    margin-bottom: 3rem;
+    color: white;
+    box-shadow: 0 15px 35px rgba(64, 181, 173, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.notifications-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item.unread {
+    background: rgba(255, 75, 75, 0.2);
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.header-actions .mark-all-read-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-actions .mark-all-read-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Notifications List */
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.notification-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    gap: 1.5rem;
+    border-left: 4px solid transparent;
+}
+
+.notification-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.notification-card.unread {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.05) 0%, rgba(64, 181, 173, 0.1) 100%);
+    border-left-color: #40B5AD;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.2);
+}
+
+.notification-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.notification-card[data-type="event_booking_confirm"] .notification-icon {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+}
+
+.notification-card[data-type="venue_booking_status"] .notification-icon {
+    background: linear-gradient(135deg, #ff8c42 0%, #ffa366 100%);
+}
+
+.notification-card[data-type="upcoming_event"] .notification-icon {
+    background: linear-gradient(135deg, #f39c12 0%, #f7b733 100%);
+}
+
+.notification-card[data-type="venue_booking_request"] .notification-icon {
+    background: linear-gradient(135deg, #3498db 0%, #5dade2 100%);
+}
+
+.notification-card[data-type="event_registration"] .notification-icon {
+    background: linear-gradient(135deg, #27ae60 0%, #58d68d 100%);
+}
+
+.notification-card[data-type="system"] .notification-icon {
+    background: linear-gradient(135deg, #8e44ad 0%, #bb8fce 100%);
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.notification-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.notification-time {
+    color: #718096;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.notification-message {
+    color: #4a5568;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+}
+
+.notification-actions {
+    margin-top: 1rem;
+}
+
+.mark-read-btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mark-read-btn:hover {
+    background: linear-gradient(135deg, #369a94 0%, #4db5af 100%);
+    transform: translateY(-1px);
+}
+
+.unread-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 12px;
+    height: 12px;
+    background: #40B5AD;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(64, 181, 173, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(64, 181, 173, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(64, 181, 173, 0);
+    }
+}
+
+/* Empty State */
+.empty-notifications {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: #e2e8f0;
+    margin-bottom: 2rem;
+}
+
+.empty-notifications h3 {
+    font-size: 1.8rem;
+    color: #1a202c;
+    margin-bottom: 1rem;
+}
+
+.empty-notifications p {
+    color: #718096;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.back-home-btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.back-home-btn:hover {
+    background: linear-gradient(135deg, #369a94 0%, #4db5af 100%);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: white;
+}
+
+/* Pagination */
+.pagination-container {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.page-link {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #40B5AD;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background: rgba(64, 181, 173, 0.1);
+    text-decoration: none;
+    color: #369a94;
+}
+
+.page-info {
+    color: #718096;
+    font-weight: 500;
+    margin: 0 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .notifications-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .header-stats {
+        justify-content: center;
+    }
+    
+    .notifications-header h1 {
+        font-size: 2rem;
+    }
+    
+    .notification-card {
+        padding: 1.5rem;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .notification-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .notification-icon {
+        align-self: center;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
+
+/* Dark Mode Styles for Notifications Page */
+body.dark-mode .notifications-page {
+    background: linear-gradient(135deg, #232728 0%, #1a2f2e 100%);
+}
+
+body.dark-mode .notifications-container {
+    color: #e0e0e0;
+}
+
+/* Dark Mode Header */
+body.dark-mode .notifications-header {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .header-icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .notifications-header h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .stat-item {
+    background: rgba(64, 181, 173, 0.2);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .stat-item.unread {
+    background: rgba(255, 75, 75, 0.3);
+    border: 1px solid rgba(255, 75, 75, 0.4);
+}
+
+body.dark-mode .stat-number {
+    color: #e0e0e0;
+}
+
+body.dark-mode .stat-label {
+    color: #b0b0b0;
+}
+
+body.dark-mode .header-actions .mark-all-read-btn {
+    background: rgba(64, 181, 173, 0.2);
+    border: 2px solid rgba(64, 181, 173, 0.4);
+    color: #40B5AD;
+}
+
+body.dark-mode .header-actions .mark-all-read-btn:hover {
+    background: rgba(64, 181, 173, 0.3);
+    color: #40B5AD;
+    box-shadow: 0 8px 20px rgba(64, 181, 173, 0.3);
+}
+
+/* Dark Mode Notification Cards */
+body.dark-mode .notification-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .notification-card:hover {
+    background: #1e3635; /* Slightly lighter dark teal on hover */
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .notification-card.unread {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.15) 0%, rgba(64, 181, 173, 0.2) 100%);
+    border-left-color: #40B5AD;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.3);
+}
+
+/* Dark Mode Notification Content */
+body.dark-mode .notification-title {
+    color: #40B5AD;
+}
+
+body.dark-mode .notification-time {
+    color: #b0b0b0;
+}
+
+body.dark-mode .notification-message {
+    color: #e0e0e0;
+}
+
+body.dark-mode .mark-read-btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    color: #232728;
+}
+
+body.dark-mode .mark-read-btn:hover {
+    background: linear-gradient(135deg, #369a94 0%, #4db5af 100%);
+    color: #232728;
+}
+
+body.dark-mode .unread-indicator {
+    background: #40B5AD;
+}
+
+/* Dark Mode Icon Colors - Keep original gradients but adjust for dark mode */
+body.dark-mode .notification-card[data-type="event_booking_confirm"] .notification-icon {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+}
+
+body.dark-mode .notification-card[data-type="venue_booking_status"] .notification-icon {
+    background: linear-gradient(135deg, #ff8c42 0%, #ffa366 100%);
+}
+
+body.dark-mode .notification-card[data-type="upcoming_event"] .notification-icon {
+    background: linear-gradient(135deg, #f39c12 0%, #f7b733 100%);
+}
+
+body.dark-mode .notification-card[data-type="venue_booking_request"] .notification-icon {
+    background: linear-gradient(135deg, #3498db 0%, #5dade2 100%);
+}
+
+body.dark-mode .notification-card[data-type="event_registration"] .notification-icon {
+    background: linear-gradient(135deg, #27ae60 0%, #58d68d 100%);
+}
+
+body.dark-mode .notification-card[data-type="system"] .notification-icon {
+    background: linear-gradient(135deg, #8e44ad 0%, #bb8fce 100%);
+}
+
+/* Dark Mode Empty State */
+body.dark-mode .empty-notifications {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .empty-icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .empty-notifications h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .empty-notifications p {
+    color: #b0b0b0;
+}
+
+/* Dark Mode Pagination */
+body.dark-mode .pagination-container {
+    background: #232728;
+}
+
+body.dark-mode .pagination {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .page-link {
+    color: #40B5AD;
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .page-link:hover {
+    background: rgba(64, 181, 173, 0.2);
+    color: #40B5AD;
+}
+
+body.dark-mode .page-info {
+    color: #b0b0b0;
+}
+</style>
+{% endblock %}
+

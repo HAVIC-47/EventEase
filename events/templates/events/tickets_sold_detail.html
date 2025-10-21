@@ -1,0 +1,711 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tickets Sold Analytics - EventEase{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <a href="{% url 'events:my_events' %}" class="back-btn">← Back to Dashboard</a>
+            <h1>🎟️ Tickets Sold Analytics</h1>
+            <p>Detailed breakdown of ticket sales across all your events</p>
+        </div>
+        <div class="header-stats">
+            <div class="stat-summary">
+                <div class="stat-item">
+                    <span class="stat-number">{{ total_tickets }}</span>
+                    <span class="stat-label">Total Tickets</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${{ total_revenue|floatformat:2 }}</span>
+                    <span class="stat-label">Total Revenue</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${{ avg_ticket_price|floatformat:2 }}</span>
+                    <span class="stat-label">Avg Ticket Price</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ avg_tickets_per_event|floatformat:1 }}</span>
+                    <span class="stat-label">Avg per Event</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if total_tickets > 0 %}
+        <div class="section">
+            <div class="section-header">
+                <h2>📊 Ticket Sales by Event</h2>
+                <p class="section-subtitle">Performance breakdown for each event</p>
+            </div>
+            
+            <div class="tickets-chart">
+                {% for data in tickets_data %}
+                    <div class="ticket-item">
+                        <div class="event-info">
+                            <h3 class="event-title">{{ data.event.title }}</h3>
+                            <div class="event-meta">
+                                <span class="event-date">📅 {{ data.event.start_date|date:"M j, Y" }}</span>
+                                <span class="event-status">
+                                    {% if data.event.start_date > today %}
+                                        � Upcoming
+                                    {% elif data.event.end_date < today %}
+                                        ✅ Completed
+                                    {% else %}
+                                        🔴 Live
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="ticket-stats">
+                            <div class="stat-group">
+                                <div class="stat">
+                                    <span class="stat-value">{{ data.tickets_sold }}</span>
+                                    <span class="stat-label">Tickets</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value">${{ data.revenue|floatformat:2 }}</span>
+                                    <span class="stat-label">Revenue</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value">${{ data.avg_ticket_price|floatformat:2 }}</span>
+                                    <span class="stat-label">Avg Price</span>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-bar">
+                                <div class="progress-label">
+                                    <span>Capacity: {{ data.event.current_attendees }}/{{ data.event.max_attendees }}</span>
+                                    <span>{% widthratio data.event.current_attendees data.event.max_attendees 100 %}%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width: {% widthratio data.event.current_attendees data.event.max_attendees 100 %}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="ticket-actions">
+                            <a href="{% url 'events:event_detail' data.event.pk %}" class="btn btn-sm btn-outline">View Event</a>
+                            <a href="{% url 'events:event_edit' data.event.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="section">
+            <div class="section-header">
+                <h2>💡 Performance Insights</h2>
+                <p class="section-subtitle">Key metrics and recommendations</p>
+            </div>
+            
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon">🏆</div>
+                    <div class="insight-content">
+                        <h4>Best Performing Event</h4>
+                        {% if tickets_data %}
+                            <p><strong>{{ tickets_data.0.event.title }}</strong></p>
+                            <span class="insight-value">{{ tickets_data.0.tickets_sold }} tickets sold</span>
+                        {% else %}
+                            <p>No data available yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-icon">💰</div>
+                    <div class="insight-content">
+                        <h4>Revenue Potential</h4>
+                        {% if total_events > 0 %}
+                            <p>Selling {{ avg_tickets_per_event|floatformat:0 }} tickets per event on average</p>
+                            <span class="insight-value">${{ avg_ticket_price|floatformat:2 }} avg ticket price</span>
+                        {% else %}
+                            <p>No events created yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <div class="insight-icon">📈</div>
+                    <div class="insight-content">
+                        <h4>Growth Opportunity</h4>
+                        {% if total_events > 0 %}
+                            <p>{{ total_events }} events created</p>
+                            <span class="insight-value">{{ total_tickets }} total tickets sold</span>
+                        {% else %}
+                            <p>Create your first event to start selling tickets</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="no-content">
+            <div class="no-content-icon">🎟️</div>
+            <h3>No Tickets Sold Yet</h3>
+            <p>You haven't sold any tickets yet. Create events and start promoting them to sell tickets!</p>
+            <a href="{% url 'events:event_create' %}" class="btn btn-primary">Create Your First Event</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: #f5f6f7;
+    min-height: 100vh;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.3);
+    animation: slideInDown 0.6s ease-out;
+}
+
+.header-content {
+    margin-bottom: 2rem;
+}
+
+.back-btn {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    color: white;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    margin: 0.5rem 0;
+    font-weight: 700;
+    color: white;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.header-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.stat-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: white;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.5rem;
+}
+
+.section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    color: #232323;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.section-subtitle {
+    color: #2e837e;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.tickets-chart {
+    display: grid;
+    gap: 2rem;
+    animation: fadeIn 0.8s ease-out 0.3s both;
+}
+
+.ticket-item {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 32px rgba(64, 181, 173, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.ticket-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
+    border-radius: 20px 20px 0 0;
+}
+
+.ticket-item:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(64, 181, 173, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.event-info {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.event-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.3;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.event-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: white;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 0.5rem;
+}
+
+.event-meta span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 16px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.event-meta .event-date {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    font-weight: 700;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    font-size: 1rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    min-width: 140px;
+    justify-content: center;
+}
+
+.event-meta .event-date:hover {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+    color: white;
+}
+
+.event-meta .event-status {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    font-weight: 600;
+}
+
+.ticket-stats {
+    margin-bottom: 2rem;
+}
+
+.stat-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.progress-bar {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.progress-track {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7));
+    border-radius: 8px;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.ticket-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.ticket-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-outline {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: rgba(255, 255, 255, 0.95);
+    color: #40B5AD;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+    text-decoration: none;
+    color: white;
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.insight-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e0f7fa;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.insight-icon {
+    font-size: 2rem;
+    background: #e0f7fa;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.insight-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #232323;
+    margin: 0 0 0.5rem 0;
+}
+
+.insight-content p {
+    color: #2e837e;
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+}
+
+.insight-value {
+    color: #40B5AD;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.no-content {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    border: 2px dashed #40B5AD;
+}
+
+.no-content-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #40B5AD;
+    opacity: 0.6;
+}
+
+.no-content h3 {
+    font-size: 1.5rem;
+    color: #232323;
+    margin-bottom: 0.5rem;
+}
+
+.no-content p {
+    color: #2e837e;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .page-header {
+        padding: 1.5rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .stat-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-group {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .ticket-item {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+    
+    .event-title {
+        font-size: 1.25rem;
+    }
+    
+    .event-meta {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .ticket-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .btn {
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Enhanced Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.stat-item:nth-child(1) { animation: fadeInUp 0.6s ease-out 0.1s both; }
+.stat-item:nth-child(2) { animation: fadeInUp 0.6s ease-out 0.2s both; }
+.stat-item:nth-child(3) { animation: fadeInUp 0.6s ease-out 0.3s both; }
+.stat-item:nth-child(4) { animation: fadeInUp 0.6s ease-out 0.4s both; }
+
+.insight-card { animation: slideInLeft 0.8s ease-out; }
+.ticket-item { animation: fadeInUp 0.6s ease-out; }
+
+.progress-fill {
+    animation: pulse 2s infinite;
+}
+</style>
+{% endblock %}

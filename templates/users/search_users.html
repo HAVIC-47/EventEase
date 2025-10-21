@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Users - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.search-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.search-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.search-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.search-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.results-section {
+    margin-bottom: 3rem;
+}
+
+.results-header {
+    color: #40B5AD;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.user-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(64, 181, 173, 0.15);
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    border: 3px solid #40B5AD;
+    overflow: hidden;
+    background: #e0f7fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #40B5AD;
+    position: relative;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.user-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.user-username {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.user-role {
+    background: #e0f7fa;
+    color: #40B5AD;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.admin-role {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.event-manager-role {
+    background: #e0e7ff;
+    color: #6366f1;
+}
+
+.venue-manager-role {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.view-profile-btn {
+    background: #40B5AD;
+    color: white;
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.view-profile-btn:hover {
+    background: #2e837e;
+    text-decoration: none;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.back-btn {
+    background: #6b7280;
+    color: white;
+    text-decoration: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin-bottom: 2rem;
+}
+
+.back-btn:hover {
+    background: #4b5563;
+    text-decoration: none;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.empty-state {
+    text-align: center;
+    color: #6b7280;
+    padding: 3rem;
+    background: #f9fafb;
+    border-radius: 15px;
+    border: 2px dashed #d1d5db;
+}
+
+.empty-state h3 {
+    margin-bottom: 0.5rem;
+    color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+    .search-container {
+        padding: 0 1rem;
+    }
+    
+    .user-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .search-form {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+/* Dark mode styles */
+body.dark-mode .user-card {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .user-name {
+    color: #e0e0e0;
+}
+
+body.dark-mode .empty-state {
+    background: #374151;
+    border-color: #4b5563;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <!-- Back to Profile -->
+    <a href="{% url 'users:profile' %}" class="back-btn">← Back to Profile</a>
+    
+    <!-- Search Header -->
+    <div class="search-header">
+        <h1>🔍 Search Users</h1>
+        <p>Find and connect with other EventEase users</p>
+        
+        <form method="get" class="search-form">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by name, username, or email..." 
+                   class="search-input" required>
+            <button type="submit" class="search-btn">🔍 Search</button>
+        </form>
+    </div>
+    
+    <!-- Search Results -->
+    {% if query %}
+        <div class="results-section">
+            <h2 class="results-header">
+                {% if users %}
+                    Found {{ users|length }} user{{ users|length|pluralize }} for "{{ query }}"
+                {% else %}
+                    No users found for "{{ query }}"
+                {% endif %}
+            </h2>
+            
+            {% if users %}
+                <div class="user-grid">
+                    {% for user in users %}
+                    <div class="user-card">
+                        <div class="user-avatar">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" alt="Profile Picture">
+                            {% else %}
+                                {{ user.first_name.0|default:user.username.0|upper }}{{ user.last_name.0|upper }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+                        <div class="user-username">@{{ user.username }}</div>
+                        
+                        <div class="user-role {% if user.is_superuser %}admin-role{% elif user.profile.role == 'event_manager' %}event-manager-role{% elif user.profile.role == 'venue_manager' %}venue-manager-role{% endif %}">
+                            {% if user.is_superuser %}
+                                🛡️ Admin
+                            {% else %}
+                                {{ user.profile.get_role_display }}
+                            {% endif %}
+                        </div>
+                        
+                        <a href="{% url 'users:view_user_profile' user.id %}" class="view-profile-btn">
+                            👁️ View Profile
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h3>🔍 No Users Found</h3>
+                    <p>Try searching with different keywords or check your spelling.</p>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>👋 Start Searching</h3>
+            <p>Enter a name, username, or email to find other EventEase users.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

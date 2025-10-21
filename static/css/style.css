@@ -1,0 +1,3378 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* CLEAN NOTIFICATION GROUP LAYOUT */
+.notification-group {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex-wrap: nowrap !important;
+}
+
+.notification-group > a,
+.notification-group a {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    float: none !important;
+    clear: none !important;
+    position: relative !important;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f5f6f7;
+    color: #232323;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Messages */
+.messages {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.message {
+    background: #40B5AD;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.3);
+    animation: slideIn 0.3s ease-out;
+}
+
+.message.error {
+    background: #e74c3c;
+}
+
+.message.success {
+    background: #40B5AD;
+}
+
+.message.warning {
+    background: #f39c12;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Profile Icon Styles */
+.profile-icon-link {
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.profile-icon-link:hover {
+    transform: scale(1.05);
+}
+
+.profile-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #40B5AD;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0f7fa;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.profile-icon:hover {
+    border-color: #2e837e;
+}
+
+.profile-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-icon-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #40B5AD;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Dark mode styles for profile icon */
+body.dark-mode .profile-icon {
+    border-color: #40B5AD;
+    background: #2d3233;
+}
+
+body.dark-mode .profile-icon:hover {
+    border-color: #40B5AD;
+}
+
+/* Notification Bell Styles */
+/* Notification Group - Closer spacing for friends, messages, notifications */
+.notification-group {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.3rem;
+    margin-right: 0;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+}
+
+/* Force each notification bell to display inline */
+.notification-group > a {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+}
+
+/* Ensure the notification buttons stay inline and close together */
+.notification-group .notification-bell {
+    flex-shrink: 0;
+    display: inline-flex !important;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .notification-group {
+        gap: 0.15rem;
+        margin-right: 0;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    .nav-right .notification-group {
+        width: 170px !important;
+    }
+    
+    .nav-right .notification-group > a:nth-child(1) {
+        left: 0px !important;
+    }
+
+    .nav-right .notification-group > a:nth-child(2) {
+        left: 40px !important;
+    }
+
+    .nav-right .notification-group > a:nth-child(3) {
+        left: 80px !important;
+    }
+
+    .nav-right .notification-group > a:nth-child(4) {
+        left: 120px !important;
+    }
+    
+    .notification-bell {
+        width: 36px;
+        height: 36px;
+        display: inline-flex !important;
+    }
+    
+    .notification-bell svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Enhanced Circular Notification Buttons - All 4 Icons - OVERRIDE ALL */
+.notification-bell,
+.notification-bell.dashboard-notification,
+.notification-bell.friends-notification,
+.notification-bell.messages-notification,
+.notification-bell.notifications-notification {
+    position: relative !important;
+    text-decoration: none !important;
+    color: white !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    /* Theme color circular background */
+    background: linear-gradient(135deg, #40B5AD 0%, #36A39C 100%) !important;
+    border: 2px solid rgba(64, 181, 173, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin-right: 0 !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    /* Ensure perfect circle shape */
+    min-width: 48px !important;
+    min-height: 48px !important;
+    box-sizing: border-box !important;
+    /* Default soft glow effect */
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3) !important;
+    /* Red glow animation for all buttons */
+    animation: soft-glow 3s ease-in-out infinite alternate !important;
+}
+
+.notification-bell::before,
+.notification-bell.dashboard-notification::before,
+.notification-bell.friends-notification::before,
+.notification-bell.messages-notification::before,
+.notification-bell.notifications-notification::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(0) !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: radial-gradient(circle, rgba(231, 76, 60, 0.4) 0%, transparent 70%) !important;
+    border-radius: 50% !important;
+    transition: transform 0.3s ease !important;
+    z-index: -1 !important;
+}
+
+.notification-bell:hover::before,
+.notification-bell.dashboard-notification:hover::before,
+.notification-bell.friends-notification:hover::before,
+.notification-bell.messages-notification:hover::before,
+.notification-bell.notifications-notification:hover::before {
+    transform: translate(-50%, -50%) scale(1.2) !important;
+}
+
+.notification-bell:hover,
+.notification-bell.dashboard-notification:hover,
+.notification-bell.friends-notification:hover,
+.notification-bell.messages-notification:hover,
+.notification-bell.notifications-notification:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    border-color: #e74c3c !important;
+    color: white !important;
+    transform: scale(1.12) !important;
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5), 0 0 30px rgba(231, 76, 60, 0.4) !important;
+    animation: intense-red-glow 1.5s ease-in-out infinite alternate !important;
+}
+
+.notification-bell svg,
+.notification-bell.dashboard-notification svg,
+.notification-bell.friends-notification svg,
+.notification-bell.messages-notification svg,
+.notification-bell.notifications-notification svg {
+    width: 24px !important;
+    height: 24px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 1 !important;
+    color: white !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+}
+
+.notification-bell:hover svg,
+.notification-bell.dashboard-notification:hover svg,
+.notification-bell.friends-notification:hover svg,
+.notification-bell.messages-notification:hover svg,
+.notification-bell.notifications-notification:hover svg {
+    transform: rotate(12deg) scale(1.15) !important;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) !important;
+    color: white !important;
+}
+
+/* Soft glow animation for normal state */
+@keyframes soft-glow {
+    0% {
+        box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3), 0 0 20px rgba(231, 76, 60, 0.2);
+    }
+    100% {
+        box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4), 0 0 25px rgba(231, 76, 60, 0.3);
+    }
+}
+
+/* Intense red glow animation for hover */
+@keyframes intense-red-glow {
+    0% {
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5), 0 0 30px rgba(231, 76, 60, 0.4);
+    }
+    100% {
+        box-shadow: 0 12px 35px rgba(231, 76, 60, 0.7), 0 0 40px rgba(231, 76, 60, 0.6);
+    }
+}
+
+/* Enhanced Notification Count Badge - ALL BUTTONS */
+.notification-count,
+.notification-bell .notification-count,
+.notification-bell.dashboard-notification .notification-count,
+.notification-bell.friends-notification .notification-count,
+.notification-bell.friends-notification .friends-count,
+.notification-bell.messages-notification .notification-count,
+.notification-bell.messages-notification .messages-count,
+.notification-bell.notifications-notification .notification-count {
+    position: absolute !important;
+    top: -6px !important;
+    right: -6px !important;
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    width: 22px !important;
+    height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    border: 2px solid white !important;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4) !important;
+    z-index: 10 !important;
+    animation: badge-pulse 2s ease-in-out infinite !important;
+}
+
+/* Badge pulse animation */
+@keyframes badge-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.6);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(231, 76, 60, 0.5);
+    }
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.7);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 3px 10px rgba(231, 76, 60, 0.5);
+    }
+}
+
+/* Enhanced Red Notification Bell (when unseen notifications exist) - SUPER INTENSE - ALL BUTTONS */
+.notification-bell.has-unread,
+.notification-bell.dashboard-notification.has-unread,
+.notification-bell.friends-notification.has-unread,
+.notification-bell.friends-notification.has-requests,
+.notification-bell.messages-notification.has-unread,
+.notification-bell.notifications-notification.has-unread {
+    color: white !important;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    border: 3px solid #e74c3c !important;
+    animation: super-intense-red-glow 1.8s infinite alternate !important;
+    /* Super intense red glow */
+    box-shadow: 0 0 20px rgba(231, 76, 60, 0.8), 0 0 35px rgba(231, 76, 60, 0.6), 0 0 50px rgba(231, 76, 60, 0.4) !important;
+    transform: scale(1.05) !important;
+}
+
+.notification-bell.has-unread::before,
+.notification-bell.dashboard-notification.has-unread::before,
+.notification-bell.friends-notification.has-unread::before,
+.notification-bell.friends-notification.has-requests::before,
+.notification-bell.messages-notification.has-unread::before,
+.notification-bell.notifications-notification.has-unread::before {
+    background: radial-gradient(circle, rgba(231, 76, 60, 0.7) 0%, transparent 70%) !important;
+}
+
+.notification-bell.has-unread:hover,
+.notification-bell.dashboard-notification.has-unread:hover,
+.notification-bell.friends-notification.has-unread:hover,
+.notification-bell.friends-notification.has-requests:hover,
+.notification-bell.messages-notification.has-unread:hover,
+.notification-bell.notifications-notification.has-unread:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
+    border-color: #c0392b !important;
+    color: white !important;
+    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.8), 0 0 40px rgba(231, 76, 60, 0.7), 0 0 60px rgba(231, 76, 60, 0.5) !important;
+    transform: scale(1.15) !important;
+    animation: ultra-red-glow 1s ease-in-out infinite alternate !important;
+}
+
+.notification-bell.has-unread svg,
+.notification-bell.dashboard-notification.has-unread svg,
+.notification-bell.friends-notification.has-unread svg,
+.notification-bell.friends-notification.has-requests svg,
+.notification-bell.messages-notification.has-unread svg,
+.notification-bell.notifications-notification.has-unread svg {
+    color: white !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)) !important;
+}
+
+.notification-bell.has-unread:hover svg,
+.notification-bell.dashboard-notification.has-unread:hover svg,
+.notification-bell.friends-notification.has-unread:hover svg,
+.notification-bell.friends-notification.has-requests:hover svg,
+.notification-bell.messages-notification.has-unread:hover svg,
+.notification-bell.notifications-notification.has-unread:hover svg {
+    color: white !important;
+    transform: rotate(15deg) scale(1.2) !important;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8)) !important;
+}
+
+/* Super intense red glow animation for unread notifications */
+@keyframes super-intense-red-glow {
+    0% {
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.7), 0 0 30px rgba(231, 76, 60, 0.5), 0 0 45px rgba(231, 76, 60, 0.3);
+    }
+    100% {
+        box-shadow: 0 0 25px rgba(231, 76, 60, 0.9), 0 0 40px rgba(231, 76, 60, 0.7), 0 0 60px rgba(231, 76, 60, 0.5);
+    }
+}
+
+/* Ultra red glow animation for hover on unread */
+@keyframes ultra-red-glow {
+    0% {
+        box-shadow: 0 10px 30px rgba(231, 76, 60, 0.8), 0 0 40px rgba(231, 76, 60, 0.7), 0 0 60px rgba(231, 76, 60, 0.5);
+    }
+    100% {
+        box-shadow: 0 15px 40px rgba(231, 76, 60, 1), 0 0 50px rgba(231, 76, 60, 0.9), 0 0 80px rgba(231, 76, 60, 0.7);
+    }
+}
+
+/* Dark mode styles for notification bell */
+body.dark-mode .notification-bell {
+    color: #40B5AD;
+    background: rgba(64, 181, 173, 0.15);
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .notification-bell:hover {
+    background: rgba(64, 181, 173, 0.25);
+    border-color: #40B5AD;
+    color: #40B5AD;
+    box-shadow: 0 4px 12px rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .notification-count {
+    border-color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.5);
+}
+
+/* Dark mode red notification bell (when unseen notifications exist) */
+/* Enhanced Dark Mode Circular Notification Buttons - ALL BUTTONS */
+body.dark-mode .notification-bell,
+body.dark-mode .notification-bell.dashboard-notification,
+body.dark-mode .notification-bell.friends-notification,
+body.dark-mode .notification-bell.messages-notification,
+body.dark-mode .notification-bell.notifications-notification {
+    color: white !important;
+    background: linear-gradient(135deg, #40B5AD 0%, #36A39C 100%) !important;
+    border: 2px solid rgba(64, 181, 173, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.4) !important;
+}
+
+body.dark-mode .notification-bell:hover,
+body.dark-mode .notification-bell.dashboard-notification:hover,
+body.dark-mode .notification-bell.friends-notification:hover,
+body.dark-mode .notification-bell.messages-notification:hover,
+body.dark-mode .notification-bell.notifications-notification:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    border-color: #e74c3c !important;
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.6), 0 0 30px rgba(231, 76, 60, 0.5) !important;
+}
+
+/* Enhanced Dark mode red notification bell - ALL BUTTONS */
+body.dark-mode .notification-bell.has-unread,
+body.dark-mode .notification-bell.dashboard-notification.has-unread,
+body.dark-mode .notification-bell.friends-notification.has-unread,
+body.dark-mode .notification-bell.friends-notification.has-requests,
+body.dark-mode .notification-bell.messages-notification.has-unread,
+body.dark-mode .notification-bell.notifications-notification.has-unread {
+    color: white !important;
+    background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%) !important;
+    border: 3px solid #ff6b6b !important;
+    /* Enhanced dark mode red glow */
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.8), 0 0 35px rgba(255, 107, 107, 0.6), 0 0 50px rgba(255, 107, 107, 0.4) !important;
+    animation: super-intense-red-glow 1.8s infinite alternate !important;
+    transform: scale(1.05) !important;
+}
+
+body.dark-mode .notification-bell.has-unread::before,
+body.dark-mode .notification-bell.dashboard-notification.has-unread::before,
+body.dark-mode .notification-bell.friends-notification.has-unread::before,
+body.dark-mode .notification-bell.friends-notification.has-requests::before,
+body.dark-mode .notification-bell.messages-notification.has-unread::before,
+body.dark-mode .notification-bell.notifications-notification.has-unread::before {
+    background: radial-gradient(circle, rgba(255, 107, 107, 0.7) 0%, transparent 70%) !important;
+}
+
+body.dark-mode .notification-bell.has-unread:hover,
+body.dark-mode .notification-bell.dashboard-notification.has-unread:hover,
+body.dark-mode .notification-bell.friends-notification.has-unread:hover,
+body.dark-mode .notification-bell.friends-notification.has-requests:hover,
+body.dark-mode .notification-bell.messages-notification.has-unread:hover,
+body.dark-mode .notification-bell.notifications-notification.has-unread:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    border-color: #ff6b6b !important;
+    color: white !important;
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.8), 0 0 40px rgba(255, 107, 107, 0.7), 0 0 60px rgba(255, 107, 107, 0.5) !important;
+    transform: scale(1.15) !important;
+    animation: ultra-red-glow 1s ease-in-out infinite alternate !important;
+}
+
+body.dark-mode .notification-bell.has-unread svg,
+body.dark-mode .notification-bell.dashboard-notification.has-unread svg,
+body.dark-mode .notification-bell.friends-notification.has-unread svg,
+body.dark-mode .notification-bell.friends-notification.has-requests svg,
+body.dark-mode .notification-bell.messages-notification.has-unread svg,
+body.dark-mode .notification-bell.notifications-notification.has-unread svg {
+    color: white !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)) !important;
+}
+
+body.dark-mode .notification-bell.has-unread:hover svg,
+body.dark-mode .notification-bell.dashboard-notification.has-unread:hover svg,
+body.dark-mode .notification-bell.friends-notification.has-unread:hover svg,
+body.dark-mode .notification-bell.friends-notification.has-requests:hover svg,
+body.dark-mode .notification-bell.messages-notification.has-unread:hover svg,
+body.dark-mode .notification-bell.notifications-notification.has-unread:hover svg {
+    color: white !important;
+    transform: rotate(15deg) scale(1.2) !important;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.9)) !important;
+}
+
+/* Friends and Messages notification styles - same as notification bell */
+.friends-notification {
+    color: #40B5AD !important;
+}
+
+.messages-notification {
+    color: #40B5AD !important;
+}
+
+.friends-notification.has-requests,
+.messages-notification.has-unread {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.1)) !important;
+    border-color: rgba(231, 76, 60, 0.4) !important;
+    color: #e74c3c !important;
+    animation: bellBreathing 2s ease-in-out infinite;
+}
+
+.friends-notification.has-requests::before,
+.messages-notification.has-unread::before {
+    background: radial-gradient(circle, rgba(231, 76, 60, 0.4) 0%, transparent 70%) !important;
+}
+
+.friends-notification.has-requests:hover,
+.messages-notification.has-unread:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.25), rgba(231, 76, 60, 0.2)) !important;
+    border-color: #e74c3c !important;
+    color: #c0392b !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4) !important;
+}
+
+.friends-notification.has-requests svg,
+.messages-notification.has-unread svg {
+    color: #e74c3c !important;
+    filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.6));
+}
+
+.friends-notification.has-requests:hover svg,
+.messages-notification.has-unread:hover svg {
+    color: #c0392b !important;
+    filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.8));
+}
+
+/* Dark mode support for friends and messages */
+body.dark-mode .friends-notification,
+body.dark-mode .messages-notification {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.15), rgba(64, 181, 173, 0.08)) !important;
+    border-color: rgba(64, 181, 173, 0.3) !important;
+    color: #5fd4cc !important;
+}
+
+body.dark-mode .friends-notification:hover,
+body.dark-mode .messages-notification:hover {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.25), rgba(64, 181, 173, 0.18)) !important;
+    border-color: #5fd4cc !important;
+    color: #7ee0d9 !important;
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4) !important;
+}
+
+body.dark-mode .friends-notification.has-requests,
+body.dark-mode .messages-notification.has-unread {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(231, 76, 60, 0.15)) !important;
+    border-color: rgba(231, 76, 60, 0.5) !important;
+    color: #ff6b6b !important;
+}
+
+body.dark-mode .friends-notification.has-requests:hover,
+body.dark-mode .messages-notification.has-unread:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.25)) !important;
+    border-color: #ff6b6b !important;
+    color: #ff8a80 !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5) !important;
+}
+
+body.dark-mode .friends-notification.has-requests svg,
+body.dark-mode .messages-notification.has-unread svg {
+    color: #ff6b6b !important;
+    filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.7));
+}
+
+body.dark-mode .friends-notification.has-requests:hover svg,
+body.dark-mode .messages-notification.has-unread:hover svg {
+    color: #ff8a80 !important;
+    filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.9));
+}
+
+/* Friends and Messages notification styles - same as notification bell */
+.friends-notification {
+    color: #40B5AD !important;
+}
+
+.messages-notification {
+    color: #40B5AD !important;
+}
+
+.friends-notification.has-requests,
+.messages-notification.has-unread {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.1)) !important;
+    border-color: rgba(231, 76, 60, 0.4) !important;
+    color: #e74c3c !important;
+    animation: bellBreathing 2s ease-in-out infinite;
+}
+
+.friends-notification.has-requests::before,
+.messages-notification.has-unread::before {
+    background: radial-gradient(circle, rgba(231, 76, 60, 0.4) 0%, transparent 70%) !important;
+}
+
+.friends-notification.has-requests:hover,
+.messages-notification.has-unread:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.25), rgba(231, 76, 60, 0.2)) !important;
+    border-color: #e74c3c !important;
+    color: #c0392b !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4) !important;
+}
+
+.friends-notification.has-requests svg,
+.messages-notification.has-unread svg {
+    color: #e74c3c !important;
+    filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.6));
+}
+
+.friends-notification.has-requests:hover svg,
+.messages-notification.has-unread:hover svg {
+    color: #c0392b !important;
+    filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.8));
+}
+
+/* Dark mode support for friends and messages */
+body.dark-mode .friends-notification,
+body.dark-mode .messages-notification {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.15), rgba(64, 181, 173, 0.08)) !important;
+    border-color: rgba(64, 181, 173, 0.3) !important;
+    color: #5fd4cc !important;
+}
+
+body.dark-mode .friends-notification:hover,
+body.dark-mode .messages-notification:hover {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.25), rgba(64, 181, 173, 0.18)) !important;
+    border-color: #5fd4cc !important;
+    color: #7ee0d9 !important;
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4) !important;
+}
+
+body.dark-mode .friends-notification.has-requests,
+body.dark-mode .messages-notification.has-unread {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(231, 76, 60, 0.15)) !important;
+    border-color: rgba(231, 76, 60, 0.5) !important;
+    color: #ff6b6b !important;
+}
+
+body.dark-mode .friends-notification.has-requests:hover,
+body.dark-mode .messages-notification.has-unread:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.25)) !important;
+    border-color: #ff6b6b !important;
+    color: #ff8a80 !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5) !important;
+}
+
+body.dark-mode .friends-notification.has-requests svg,
+body.dark-mode .messages-notification.has-unread svg {
+    color: #ff6b6b !important;
+    filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.7));
+}
+
+body.dark-mode .friends-notification.has-requests:hover svg,
+body.dark-mode .messages-notification.has-unread:hover svg {
+    color: #ff8a80 !important;
+    filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.9));
+}
+
+/* Icon container for floating effect */
+.friends-bell .bell-icon, .messages-bell .bell-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 100%);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--theme) 18%, rgba(0,0,0,0));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    transition: box-shadow 220ms cubic-bezier(.22,.61,.36,1), transform 180ms cubic-bezier(.22,.61,.36,1);
+}
+.friends-bell:hover .bell-icon, .messages-bell:hover .bell-icon {
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--theme) 28%, rgba(0,0,0,0));
+    transform: translateY(-2px) scale(1.08);
+}
+.friends-bell:active .bell-icon, .messages-bell:active .bell-icon {
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--theme) 18%, rgba(0,0,0,0));
+    transform: scale(0.98);
+}
+
+/* Modern badge style */
+.friends-bell .icon-badge, .messages-bell .icon-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    min-width: 22px;
+    height: 22px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(120deg, var(--theme) 60%, var(--theme-dark) 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--theme) 22%, rgba(0,0,0,0));
+    border: 1.5px solid #fff2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    transition: transform 180ms cubic-bezier(.22,.61,.36,1), box-shadow 180ms cubic-bezier(.22,.61,.36,1);
+}
+.friends-bell.has-requests .icon-badge, .messages-bell.has-unread .icon-badge {
+    transform: scale(1.15);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--theme) 32%, rgba(0,0,0,0));
+}
+
+/* Glassmorphism shine sweep */
+.friends-bell .shine, .messages-bell .shine {
+    position: absolute; inset: -2px; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(110deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.18) 22%, rgba(255,255,255,0) 40%);
+    transform: translateX(-120%) rotate(8deg); opacity: 0.6; mix-blend-mode: screen;
+    transition: transform 640ms cubic-bezier(.22,.61,.36,1), opacity 200ms cubic-bezier(.22,.61,.36,1);
+    z-index: 2;
+}
+.friends-bell:hover .shine, .messages-bell:hover .shine { transform: translateX(120%) rotate(8deg); }
+.friends-bell:active .shine, .messages-bell:active .shine { opacity: 0.7; }
+
+/* Theme variables per icon */
+.friends-bell { --theme: #f59e0b; --theme-dark: #d97706; }
+.messages-bell { --theme: #22c55e; --theme-dark: #16a34a; }
+
+/* Layered glass + soft-neumorphic shadow */
+.friends-bell, .messages-bell {
+    background:
+        radial-gradient(120% 120% at 30% 0%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.08) 35%, rgba(255,255,255,0) 60%),
+        linear-gradient(135deg, color-mix(in srgb, var(--theme) 18%, transparent) 0%, color-mix(in srgb, var(--theme) 12%, transparent) 50%, color-mix(in srgb, var(--theme) 8%, transparent) 100%);
+    border: 2px solid color-mix(in srgb, var(--theme) 40%, transparent);
+    box-shadow:
+        0 14px 28px color-mix(in srgb, var(--theme) 28%, rgba(0,0,0,0)),
+        0 8px 16px color-mix(in srgb, var(--theme) 22%, rgba(0,0,0,0)),
+        inset 0 2px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -2px 8px color-mix(in srgb, var(--theme) 16%, rgba(0,0,0,0));
+    backdrop-filter: blur(10px) saturate(170%);
+}
+
+/* Hover/active – elevated & crisp */
+.friends-bell:hover, .messages-bell:hover {
+    transform: translateY(-2px) scale(1.08);
+    box-shadow:
+        0 18px 38px color-mix(in srgb, var(--theme) 34%, rgba(0,0,0,0)),
+        0 10px 22px color-mix(in srgb, var(--theme) 26%, rgba(0,0,0,0)),
+        inset 0 2px 0 rgba(255,255,255,0.22),
+        inset 0 -2px 10px color-mix(in srgb, var(--theme) 18%, rgba(0,0,0,0));
+}
+
+.friends-bell:active, .messages-bell:active {
+    transform: translateY(0) scale(1.03);
+}
+
+/* Boost existing glow layer motion on interaction */
+.friends-bell::before, .messages-bell::before { transition: transform 240ms ease, opacity 220ms ease; }
+.friends-bell:hover::before, .messages-bell:hover::before { transform: scale(1.03); opacity: 0.9; }
+.friends-bell:active::before, .messages-bell:active::before { transform: scale(1.1); opacity: 1; }
+
+/* Bigger, sharper icons */
+.friends-bell .bell-icon, .messages-bell .bell-icon { width: 28px; height: 28px; filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--theme) 22%, rgba(0,0,0,0))); }
+.friends-bell:hover .bell-icon, .messages-bell:hover .bell-icon { filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--theme) 32%, rgba(0,0,0,0))); }
+
+/* Themed ripple ping for attention when has-* */
+.ping { display: none; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--theme); z-index: 0; }
+.friends-bell.has-requests .ping, .messages-bell.has-unread .ping { display: block; animation: ping 2.4s ease-out infinite; }
+
+@keyframes ping {
+    0% { transform: scale(0.85); opacity: 0.45; }
+    60% { transform: scale(1.35); opacity: 0; }
+    100% { opacity: 0; }
+}
+
+/* Dark mode nuances */
+body.dark-mode .friends-bell, body.dark-mode .messages-bell {
+    border-color: color-mix(in srgb, var(--theme) 32%, rgba(0,0,0,0));
+    box-shadow:
+        0 12px 24px color-mix(in srgb, var(--theme) 22%, rgba(0,0,0,0)),
+        0 8px 14px color-mix(in srgb, var(--theme) 18%, rgba(0,0,0,0)),
+        inset 0 2px 0 rgba(255,255,255,0.14),
+        inset 0 -2px 8px color-mix(in srgb, var(--theme) 14%, rgba(0,0,0,0));
+}
+
+/* Badge sizing and layering */
+.friends-bell .icon-badge, .messages-bell .icon-badge { z-index: 2; min-width: 20px; height: 20px; font-size: 12px; }
+.friends-bell .shine, .messages-bell .shine { z-index: 1; }
+
+/* Focus ring accessibility */
+.friends-bell:focus-visible, .messages-bell:focus-visible { outline: 3px solid color-mix(in srgb, var(--theme) 60%, white); outline-offset: 2px; }
+
+/* Shine sweep effect */
+.friends-bell .shine, .messages-bell .shine {
+    position: absolute; inset: -2px; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(110deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.18) 22%, rgba(255,255,255,0) 40%);
+    transform: translateX(-120%) rotate(8deg); opacity: 0.6; mix-blend-mode: screen;
+    transition: transform 640ms ease, opacity 200ms ease;
+}
+.friends-bell:hover .shine, .messages-bell:hover .shine { transform: translateX(120%) rotate(8deg); }
+.friends-bell:active .shine, .messages-bell:active .shine { opacity: 0.7; }
+
+/* Badge bounce when attention state toggles */
+@keyframes badgePop { 0% { transform: scale(0.6) translateY(-2px); } 60% { transform: scale(1.15) translateY(0); } 100% { transform: scale(1); } }
+.friends-bell.has-requests .icon-badge, .messages-bell.has-unread .icon-badge { animation: badgePop 340ms cubic-bezier(.2,.9,.3,1.2); }
+
+/* Attention aura when has pending/unread */
+.friends-bell.has-requests, .messages-bell.has-unread {
+        box-shadow:
+                0 22px 44px color-mix(in srgb, var(--theme) 36%, rgba(0,0,0,0)),
+                0 12px 26px color-mix(in srgb, var(--theme) 28%, rgba(0,0,0,0)),
+                0 0 0 3px color-mix(in srgb, var(--theme) 22%, transparent),
+                inset 0 2px 0 rgba(255,255,255,0.22),
+                inset 0 -2px 12px color-mix(in srgb, var(--theme) 20%, rgba(0,0,0,0));
+}
+
+/* Subtle ring rotation when active */
+@keyframes slowSpin { to { transform: rotate(360deg); } }
+.friends-bell.has-requests::after, .messages-bell.has-unread::after { animation: slowSpin 12s linear infinite; }
+
+/* Responsive sizes */
+@media (max-width: 600px) {
+    .friends-bell, .messages-bell { width: 48px; height: 48px; }
+    .friends-bell .bell-icon, .messages-bell .bell-icon { width: 24px; height: 24px; }
+}
+@media (max-width: 420px) {
+    .friends-bell, .messages-bell { width: 44px; height: 44px; }
+    .friends-bell .bell-icon, .messages-bell .bell-icon { width: 22px; height: 22px; }
+}
+
+/* Compact variant for dense headers */
+.nav-compact .friends-bell, .nav-compact .messages-bell { width: 44px; height: 44px; }
+.nav-compact .friends-bell .bell-icon, .nav-compact .messages-bell .bell-icon { width: 22px; height: 22px; }
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .friends-bell, .messages-bell { transition: none; }
+    .friends-bell .shine, .messages-bell .shine { transition: none; transform: none; }
+    .ping { animation: none !important; }
+    .friends-bell.has-requests::after, .messages-bell.has-unread::after { animation: none !important; }
+    .friends-bell::before, .messages-bell::before { transition: none; }
+}
+
+.messages-bell::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    z-index: -1;
+}
+
+.messages-bell:hover::before {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.messages-bell:hover {
+    background: linear-gradient(135deg, 
+        rgba(34, 197, 94, 0.35) 0%, 
+        rgba(34, 197, 94, 0.3) 50%, 
+        rgba(34, 197, 94, 0.22) 100%);
+    border-color: rgba(34, 197, 94, 0.7);
+    color: #16a34a;
+    transform: translateY(-3px) scale(1.12);
+    animation: none; /* Pause breathing during hover */
+    box-shadow: 
+        0 12px 35px rgba(34, 197, 94, 0.45),
+        0 6px 20px rgba(34, 197, 94, 0.3),
+        0 0 30px rgba(34, 197, 94, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(16px) saturate(200%);
+}
+
+.messages-bell .bell-icon {
+    width: 26px;
+    height: 26px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    filter: drop-shadow(0 1px 2px rgba(34, 197, 94, 0.1));
+}
+
+.messages-bell:hover .bell-icon {
+    transform: rotate(-8deg) scale(1.15);
+    filter: drop-shadow(0 3px 6px rgba(34, 197, 94, 0.25));
+}
+
+.messages-bell:hover .status-indicator {
+    animation: none;
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+.messages-bell:hover .plus-icon {
+    animation: none;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.messages-bell:hover .message-dot {
+    animation: none;
+    opacity: 0.95;
+    transform: scale(1.2);
+}
+
+/* Active/pressed states for micro-interactions */
+.friends-bell:active,
+.messages-bell:active {
+    transform: translateY(-1px) scale(1.05);
+    transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 
+        0 4px 12px rgba(64, 181, 173, 0.3),
+        0 2px 6px rgba(64, 181, 173, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Focus states for accessibility */
+.friends-bell:focus,
+.messages-bell:focus {
+    outline: none;
+    box-shadow: 
+        0 8px 25px rgba(64, 181, 173, 0.3),
+        0 4px 15px rgba(64, 181, 173, 0.25),
+        0 0 0 3px rgba(64, 181, 173, 0.3);
+    animation: none; /* Pause breathing during focus */
+}
+
+/* Enhanced icon animation on hover */
+.friends-bell:hover .bell-icon {
+    transform: rotate(8deg) scale(1.15);
+    filter: drop-shadow(0 3px 6px rgba(64, 181, 173, 0.25));
+}
+
+.messages-bell:hover .bell-icon {
+    transform: rotate(-8deg) scale(1.15);
+    filter: drop-shadow(0 3px 6px rgba(64, 181, 173, 0.25));
+}
+
+/* Hidden count elements for friends and messages */
+.friends-count,
+.messages-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border-radius: 50%;
+    min-width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: none !important; /* Always hidden */
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #fff;
+    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.5);
+    animation: pulse 2s infinite;
+    line-height: 1;
+    font-family: 'Poppins', sans-serif;
+    z-index: 2;
+}
+
+/* Status Color Changes - Friends (Orange/Yellow for pending requests) */
+.friends-bell.has-requests {
+    color: #f59e0b !important;
+    background: linear-gradient(135deg, 
+        rgba(245, 158, 11, 0.2) 0%, 
+        rgba(245, 158, 11, 0.15) 50%, 
+        rgba(245, 158, 11, 0.1) 100%) !important;
+    border: 2px solid rgba(245, 158, 11, 0.4) !important;
+    box-shadow: 
+        0 4px 12px rgba(245, 158, 11, 0.3),
+        0 2px 4px rgba(245, 158, 11, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.friends-bell.has-requests::before {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%) !important;
+}
+
+.friends-bell.has-requests:hover {
+    background: linear-gradient(135deg, 
+        rgba(245, 158, 11, 0.4) 0%, 
+        rgba(245, 158, 11, 0.35) 50%, 
+        rgba(245, 158, 11, 0.25) 100%) !important;
+    border-color: rgba(245, 158, 11, 0.7) !important;
+    color: #d97706 !important;
+    transform: translateY(-3px) scale(1.15) !important;
+    animation: none !important; /* Pause breathing during hover */
+    box-shadow: 
+        0 12px 35px rgba(245, 158, 11, 0.5),
+        0 6px 20px rgba(245, 158, 11, 0.35),
+        0 0 30px rgba(245, 158, 11, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(16px) saturate(200%) !important;
+}
+
+/* Status Color Changes - Messages (Green for unread messages) */
+.messages-bell.has-unread {
+    color: #22c55e !important;
+    background: linear-gradient(135deg, 
+        rgba(34, 197, 94, 0.2) 0%, 
+        rgba(34, 197, 94, 0.15) 50%, 
+        rgba(34, 197, 94, 0.1) 100%) !important;
+    border: 2px solid rgba(34, 197, 94, 0.4) !important;
+    box-shadow: 
+        0 4px 12px rgba(34, 197, 94, 0.3),
+        0 2px 4px rgba(34, 197, 94, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.messages-bell.has-unread::before {
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, transparent 70%) !important;
+}
+
+.messages-bell.has-unread:hover {
+    background: linear-gradient(135deg, 
+        rgba(34, 197, 94, 0.4) 0%, 
+        rgba(34, 197, 94, 0.35) 50%, 
+        rgba(34, 197, 94, 0.25) 100%) !important;
+    border-color: rgba(34, 197, 94, 0.7) !important;
+    color: #16a34a !important;
+    transform: translateY(-3px) scale(1.15) !important;
+    animation: none !important; /* Pause breathing during hover */
+    box-shadow: 
+        0 12px 35px rgba(34, 197, 94, 0.5),
+        0 6px 20px rgba(34, 197, 94, 0.35),
+        0 0 30px rgba(34, 197, 94, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(16px) saturate(200%) !important;
+}
+
+/* Enhanced breathing animation for better visibility with performance optimization */
+.friends-bell,
+.messages-bell {
+    will-change: transform, box-shadow; /* Optimize for animation performance */
+}
+
+.friends-bell {
+    animation: friendsBellBreathing 4s ease-in-out infinite;
+}
+
+.messages-bell {
+    animation: messagesBellBreathing 4s ease-in-out infinite;
+}
+
+@keyframes friendsBellBreathing {
+    0%, 100% {
+        box-shadow: 
+            0 4px 12px rgba(245, 158, 11, 0.25),
+            0 2px 4px rgba(245, 158, 11, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 
+            0 6px 20px rgba(245, 158, 11, 0.3),
+            0 3px 8px rgba(245, 158, 11, 0.2),
+            0 0 15px rgba(245, 158, 11, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes messagesBellBreathing {
+    0%, 100% {
+        box-shadow: 
+            0 4px 12px rgba(34, 197, 94, 0.25),
+            0 2px 4px rgba(34, 197, 94, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 
+            0 6px 20px rgba(34, 197, 94, 0.3),
+            0 3px 8px rgba(34, 197, 94, 0.2),
+            0 0 15px rgba(34, 197, 94, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        transform: scale(1.02);
+    }
+}
+
+/* Enhanced glow for status states with attention-grabbing pulse */
+.friends-bell.has-requests {
+    animation: friendsStatusPulse 2.5s ease-in-out infinite;
+}
+
+.messages-bell.has-unread {
+    animation: messagesStatusPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes friendsStatusPulse {
+    0%, 70%, 100% {
+        box-shadow: 
+            0 4px 12px rgba(245, 158, 11, 0.3),
+            0 2px 4px rgba(245, 158, 11, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transform: scale(1);
+    }
+    35% {
+        box-shadow: 
+            0 8px 30px rgba(245, 158, 11, 0.5),
+            0 4px 15px rgba(245, 158, 11, 0.35),
+            0 0 25px rgba(245, 158, 11, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+}
+
+@keyframes messagesStatusPulse {
+    0%, 70%, 100% {
+        box-shadow: 
+            0 4px 12px rgba(34, 197, 94, 0.3),
+            0 2px 4px rgba(34, 197, 94, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transform: scale(1);
+    }
+    35% {
+        box-shadow: 
+            0 8px 30px rgba(34, 197, 94, 0.5),
+            0 4px 15px rgba(34, 197, 94, 0.35),
+            0 0 25px rgba(34, 197, 94, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+}
+
+/* Enhanced icon styling with individual animations and performance optimization */
+.friends-bell .bell-icon,
+.messages-bell .bell-icon {
+    animation: iconFloat 6s ease-in-out infinite;
+    will-change: transform; /* GPU acceleration for smooth animations */
+}
+
+/* Individual element animations with performance optimization */
+.friends-icon .status-indicator,
+.messages-icon .status-indicator {
+    transform-origin: center;
+    animation: statusPulse 3s ease-in-out infinite;
+    will-change: transform, opacity;
+}
+
+.friends-icon .plus-icon,
+.messages-icon .plus-icon {
+    transform-origin: center;
+    animation: plusGlow 4s ease-in-out infinite;
+    will-change: opacity, stroke-width;
+}
+
+.messages-icon .message-dot {
+    animation: dotPulse 2s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * 0.3s);
+    will-change: transform, opacity;
+}
+
+.messages-icon .message-dot:nth-child(4) { --i: 0; }
+.messages-icon .message-dot:nth-child(5) { --i: 1; }
+.messages-icon .message-dot:nth-child(6) { --i: 2; }
+
+@keyframes iconFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-1px) rotate(1deg);
+    }
+    50% {
+        transform: translateY(0) rotate(0deg);
+    }
+    75% {
+        transform: translateY(-0.5px) rotate(-0.5deg);
+    }
+}
+
+@keyframes statusPulse {
+    0%, 70%, 100% {
+        transform: scale(1);
+        opacity: 0.95;
+    }
+    35% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+@keyframes plusGlow {
+    0%, 60%, 100% {
+        opacity: 0.95;
+    }
+    30% {
+        opacity: 1;
+    }
+}
+
+@keyframes dotPulse {
+    0%, 60%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    30% {
+        opacity: 0.9;
+        transform: scale(1.15);
+    }
+}
+
+/* Status bell active states */
+.friends-bell.has-requests:active,
+.messages-bell.has-unread:active {
+    transform: translateY(-1px) scale(1.08) !important;
+    transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* Status bell focus states */
+.friends-bell.has-requests:focus {
+    outline: none;
+    box-shadow: 
+        0 8px 25px rgba(245, 158, 11, 0.35),
+        0 4px 15px rgba(245, 158, 11, 0.25),
+        0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+    animation: none !important;
+}
+
+.messages-bell.has-unread:focus {
+    outline: none;
+    box-shadow: 
+        0 8px 25px rgba(34, 197, 94, 0.35),
+        0 4px 15px rgba(34, 197, 94, 0.25),
+        0 0 0 3px rgba(34, 197, 94, 0.3) !important;
+    animation: none !important;
+}
+
+/* Enhanced status state styling */
+.friends-bell.has-requests .friends-icon .status-indicator {
+    fill: #f59e0b !important;
+    animation: statusAttentionPulse 2s ease-in-out infinite !important;
+}
+
+.messages-bell.has-unread .messages-icon .status-indicator {
+    fill: #22c55e !important;
+    animation: statusAttentionPulse 2s ease-in-out infinite !important;
+}
+
+.friends-bell.has-requests .friends-icon .plus-icon {
+    stroke: white !important;
+    opacity: 1 !important;
+    animation: plusAttentionGlow 2.5s ease-in-out infinite !important;
+}
+
+.messages-bell.has-unread .messages-icon .plus-icon {
+    stroke: white !important;
+    opacity: 1 !important;
+    animation: plusAttentionGlow 2.5s ease-in-out infinite !important;
+}
+
+@keyframes statusAttentionPulse {
+    0%, 60%, 100% {
+        transform: scale(1);
+        opacity: 0.95;
+    }
+    30% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+}
+
+@keyframes plusAttentionGlow {
+    0%, 70%, 100% {
+        opacity: 0.95;
+        stroke-width: 1.8;
+    }
+    35% {
+        opacity: 1;
+        stroke-width: 2.2;
+    }
+}
+
+/* Performance optimization: Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .friends-bell,
+    .messages-bell,
+    .friends-bell .bell-icon,
+    .messages-bell .bell-icon,
+    .friends-icon .status-indicator,
+    .messages-icon .status-indicator,
+    .friends-icon .plus-icon,
+    .messages-icon .plus-icon,
+    .messages-icon .message-dot {
+        animation: none !important;
+        transition: transform 0.3s ease, opacity 0.3s ease !important;
+    }
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    .friends-bell,
+    .messages-bell {
+        /* Reduce animation complexity on mobile for better performance */
+        animation-duration: 6s; /* Slower animations on mobile */
+    }
+    
+    .friends-bell .bell-icon,
+    .messages-bell .bell-icon {
+        animation-duration: 8s; /* Slower floating animation */
+    }
+    
+    /* Larger touch targets on mobile */
+    .friends-bell,
+    .messages-bell {
+        min-width: 52px;
+        min-height: 52px;
+        padding: 13px;
+    }
+    
+    .friends-bell .bell-icon,
+    .messages-bell .bell-icon {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+
+
+
+
+/* Dark mode styles for bells */
+body.dark-mode .friends-bell {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.08));
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+body.dark-mode .messages-bell {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.08));
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+body.dark-mode .friends-bell:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.15));
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+body.dark-mode .messages-bell:hover {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.15));
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+body.dark-mode .friends-bell::before {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+}
+
+body.dark-mode .messages-bell::before {
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.25) 0%, transparent 70%);
+}
+
+body.dark-mode .friends-count,
+body.dark-mode .messages-count {
+    border-color: #374151;
+}
+
+/* Responsive Design for Bell Icons */
+@media (max-width: 768px) {
+    .friends-bell,
+    .messages-bell {
+        width: 42px;
+        height: 42px;
+        margin-right: 0.3rem;
+    }
+    
+    .friends-bell svg,
+    .messages-bell svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .friends-bell,
+    .messages-bell {
+        width: 38px;
+        height: 38px;
+        margin-right: 0.2rem;
+    }
+    
+    .friends-bell svg,
+    .messages-bell svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Accessibility Improvements */
+.friends-bell:focus,
+.messages-bell:focus {
+    outline: 3px solid rgba(64, 181, 173, 0.5);
+    outline-offset: 2px;
+}
+
+.friends-bell:focus:not(:focus-visible),
+.messages-bell:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .friends-bell,
+    .messages-bell,
+    .friends-bell svg,
+    .messages-bell svg,
+    .friends-count,
+    .messages-count {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    .friends-bell:hover,
+    .messages-bell:hover {
+        transform: scale(1.02);
+    }
+    
+    .friends-bell:hover svg,
+    .messages-bell:hover svg {
+        transform: scale(1.05);
+    }
+}
+
+/* Dark mode status colors */
+body.dark-mode .friends-bell.has-requests {
+    color: #f59e0b !important;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.12)) !important;
+    border: 2px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+body.dark-mode .friends-bell.has-requests::before {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%) !important;
+}
+
+body.dark-mode .friends-bell.has-requests:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(245, 158, 11, 0.22)) !important;
+    border-color: rgba(245, 158, 11, 0.5) !important;
+}
+
+body.dark-mode .messages-bell.has-unread {
+    color: #22c55e !important;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.12)) !important;
+    border: 2px solid rgba(34, 197, 94, 0.35) !important;
+}
+
+body.dark-mode .messages-bell.has-unread::before {
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, transparent 70%) !important;
+}
+
+body.dark-mode .messages-bell.has-unread:hover {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.28), rgba(34, 197, 94, 0.22)) !important;
+    border-color: rgba(34, 197, 94, 0.5) !important;
+}
+
+
+
+/* User Menu Styles */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #40B5AD;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0f7fa;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #40B5AD;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.user-greeting {
+    color: #40B5AD;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .user-menu {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .user-info {
+        gap: 0.5rem;
+    }
+    
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .user-greeting {
+        font-size: 0.9rem;
+    }
+    
+    .user-actions {
+        gap: 0.25rem;
+    }
+    
+    .login-btn, .signup-btn {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Navbar */
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.04);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo h1 {
+    color: #40B5AD;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #232323;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover {
+    color: #40B5AD;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+/* Override gap for notification group specifically */
+.nav-right .notification-group {
+    margin-left: 0;
+    margin-right: 0;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.3rem;
+    flex-wrap: nowrap !important;
+}
+
+/* Force inline display for all child links */
+.nav-right .notification-group > a {
+    display: inline-flex !important;
+    float: none !important;
+    position: relative !important;
+}
+
+.search-bar {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    outline: none;
+    font-size: 1rem;
+    background: #f5f6f7;
+    color: #232323;
+    transition: border 0.2s;
+}
+
+.search-bar:focus {
+    border: 1.5px solid #40B5AD;
+}
+
+.login-btn, .signup-btn {
+    text-decoration: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+}
+
+.login-btn {
+    background: transparent;
+    color: #40B5AD;
+    border: 1px solid #40B5AD;
+}
+
+.login-btn:hover {
+    background: #40B5AD;
+    color: #fff;
+}
+
+.signup-btn {
+    background: #40B5AD;
+    color: #fff;
+    margin-left: 0.5rem;
+    border: none;
+}
+
+.signup-btn:hover {
+    background: #2e837e;
+}
+
+.toggle-mode {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    font-size: 1.4rem;
+    cursor: pointer;
+    margin-left: 0.8rem;
+    padding: 0.6rem;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.toggle-mode:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #2a7671 100%);
+    transform: scale(1.1) rotate(180deg);
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.5);
+}
+
+.toggle-mode:active {
+    transform: scale(0.95) rotate(180deg);
+    box-shadow: 0 1px 5px rgba(64, 181, 173, 0.4);
+}
+
+/* Dark mode toggle animation */
+body.dark-mode .toggle-mode {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #2d3748;
+    border-color: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+body.dark-mode .toggle-mode:hover {
+    background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+    transform: scale(1.1) rotate(-180deg);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+}
+
+/* Rotation animation for smooth transition */
+.toggle-mode {
+    animation: none;
+}
+
+.toggle-mode.rotating {
+    animation: rotate-toggle 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes rotate-toggle {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.2);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(100deg, #40B5AD 60%, #b2dfdb 100%);
+    color: #fff;
+    padding: 5rem 2rem 4rem 2rem;
+    text-align: center;
+    border-top: 2px solid #40B5AD;
+}
+
+.hero-content h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    background: #fff;
+    color: #40B5AD;
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.06);
+}
+
+.btn:hover {
+    background: #40B5AD;
+    color: #fff;
+}
+
+/* Events Section */
+.events {
+    padding: 4rem 2rem 2rem 2rem;
+    background: #f5f6f7;
+    text-align: center;
+    border-top: 2px solid #40B5AD;
+}
+
+.events h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+.event-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.event {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(64,181,173,0.07);
+    padding: 2rem 1.5rem;
+    width: 300px;
+    text-align: left;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.event:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 6px 24px rgba(64,181,173,0.13);
+}
+
+.event h3 {
+    color: #2e837e;
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.event p {
+    color: #555;
+    margin-bottom: 1rem;
+}
+
+.event a {
+    color: #40B5AD;
+    text-decoration: none;
+    font-weight: 500;
+    transition: text-decoration 0.2s;
+}
+
+.event a:hover {
+    text-decoration: underline;
+}
+
+.view-more {
+    margin-top: 1rem;
+}
+
+/* Reviews Section */
+.reviews {
+    background: #fff;
+    padding: 4rem 2rem;
+    text-align: center;
+    border-top: 2px solid #40B5AD;
+}
+
+.reviews h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+.review-list {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.review {
+    background: #f5f6f7;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    width: 300px;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.04);
+    font-style: italic;
+    color: #2e837e;
+}
+
+.review p:last-child {
+    font-style: normal;
+    color: #232323;
+    margin-top: 0.8rem;
+    font-weight: 500;
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    background: #232728;
+    color: #e0e0e0;
+}
+
+body.dark-mode nav {
+    background: #2d3233;
+    box-shadow: 0 2px 8px rgba(64,181,173,0.18);
+}
+
+body.dark-mode .logo h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .nav-links a {
+    color: #e0e0e0;
+}
+
+body.dark-mode .nav-links a:hover {
+    color: #40B5AD;
+}
+
+body.dark-mode .search-bar {
+    background: #232728;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+body.dark-mode .login-btn {
+    color: #40B5AD;
+    border: 1px solid #40B5AD;
+    background: transparent;
+}
+
+body.dark-mode .login-btn:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .signup-btn {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .signup-btn:hover {
+    background: #2e837e;
+}
+
+body.dark-mode .toggle-mode {
+    color: #40B5AD;
+}
+
+body.dark-mode .hero {
+    background: linear-gradient(100deg, #2d3233 60%, #40B5AD 100%);
+    color: #fff;
+}
+
+body.dark-mode .events {
+    background: #232728;
+}
+
+body.dark-mode .event {
+    background: #2d3233;
+    color: #e0e0e0;
+}
+
+body.dark-mode .event h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .event p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .event a {
+    color: #40B5AD;
+}
+
+body.dark-mode .reviews {
+    background: #2d3233;
+}
+
+body.dark-mode .review {
+    background: #232728;
+    color: #40B5AD;
+}
+
+body.dark-mode .review p:last-child {
+    color: #e0e0e0;
+}
+
+body.dark-mode footer {
+    background: #2d3233;
+    color: #40B5AD;
+}
+
+/* Dark Mode Card Styles */
+body.dark-mode .venue-card {
+    background: #2d3233;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .venue-card .venue-img {
+    background: #1e2324;
+}
+
+body.dark-mode .venue-card h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .venue-card p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .event-card {
+    background: #2d3233;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .event-card .event-img {
+    background: #1e2324;
+}
+
+body.dark-mode .event-card h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-card p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .event-meta,
+body.dark-mode .venue-meta {
+    background: #1e2324;
+    border-left-color: #40B5AD;
+}
+
+body.dark-mode .event-meta small,
+body.dark-mode .venue-meta small {
+    color: #b0b0b0;
+}
+
+body.dark-mode .event-meta .price,
+body.dark-mode .venue-meta .price {
+    color: #40B5AD;
+}
+
+body.dark-mode .no-content {
+    background: #2d3233;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .no-content p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .no-content .btn {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .no-content .btn:hover {
+    background: #2e837e;
+    color: #ffffff;
+}
+
+/* Dark Mode Auth Styles */
+body.dark-mode .auth-bg {
+    background: linear-gradient(135deg, #1a2f2e 0%, #232728 50%, #1e3635 100%);
+    min-height: 100vh;
+}
+
+body.dark-mode .auth-container {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(64, 181, 173, 0.3);
+    border-top: 3px solid #40B5AD;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+body.dark-mode .auth-container h2 {
+    color: #40B5AD;
+    text-shadow: 0 2px 4px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .auth-form label {
+    color: #40B5AD;
+    font-weight: 600;
+}
+
+body.dark-mode .auth-form input,
+body.dark-mode .auth-form select {
+    background: linear-gradient(135deg, #2d3233 0%, #232728 100%);
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .auth-form input:focus,
+body.dark-mode .auth-form select:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #232728 0%, #2d3233 100%);
+    transform: translateY(-1px);
+}
+
+body.dark-mode .auth-form input::placeholder {
+    color: #888;
+}
+
+body.dark-mode .auth-btn,
+body.dark-mode .auth-form .btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.4);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .auth-btn:hover,
+body.dark-mode .auth-form .btn:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #2a7671 100%);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.5);
+}
+
+body.dark-mode .auth-btn:active,
+body.dark-mode .auth-form .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .auth-switch {
+    color: #e0e0e0;
+    font-weight: 500;
+}
+
+body.dark-mode .auth-switch a {
+    color: #40B5AD;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .auth-switch a:hover {
+    color: #2e837e;
+    text-decoration: underline;
+    text-shadow: 0 1px 2px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .auth-errors .error-message {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(220, 53, 69, 0.15) 100%);
+    color: #ff6b6b;
+    border-left-color: #ff6b6b;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+body.dark-mode .auth-form select {
+    background: linear-gradient(135deg, #2d3233 0%, #232728 100%);
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .auth-form select:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #232728 0%, #2d3233 100%);
+    transform: translateY(-1px);
+}
+
+/* Dark Mode General Button Styles */
+body.dark-mode .btn {
+    background: #40B5AD;
+    color: #232728;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .btn:hover {
+    background: #2e837e;
+    color: #ffffff;
+}
+
+/* Dark Mode Form Elements */
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background: #2d3233;
+    border-color: #40B5AD;
+    color: #e0e0e0;
+}
+
+body.dark-mode input:focus,
+body.dark-mode textarea:focus,
+body.dark-mode select:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: #888;
+}
+
+/* Dark Mode Footer Newsletter */
+body.dark-mode .footer-newsletter {
+    background: #1e2324;
+}
+
+body.dark-mode .footer-newsletter h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .footer-newsletter input {
+    background: #2d3233;
+    border-color: #40B5AD;
+    color: #e0e0e0;
+}
+
+body.dark-mode .footer-newsletter button.btn {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .footer-newsletter button.btn:hover {
+    background: #2e837e;
+    color: #ffffff;
+}
+
+/* Dark Mode Footer Links */
+body.dark-mode .footer-brand h2 {
+    color: #40B5AD;
+}
+
+body.dark-mode .footer-tagline {
+    color: #40B5AD;
+}
+
+body.dark-mode .footer-links h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .footer-links ul li a {
+    color: #b0b0b0;
+}
+
+body.dark-mode .footer-links ul li a:hover {
+    color: #40B5AD;
+}
+
+body.dark-mode .footer-social a {
+    background: #40B5AD;
+}
+
+body.dark-mode .footer-social a:hover {
+    background: #2e837e;
+}
+
+body.dark-mode .footer-bottom {
+    background: #1e2324;
+    color: #b0b0b0;
+}
+
+body.dark-mode .footer-bottom p {
+    color: #b0b0b0;
+}
+
+/* Dark Mode General Container/Section Styles */
+body.dark-mode .container {
+    background: #232728;
+}
+
+body.dark-mode .section {
+    background: #232728;
+}
+
+body.dark-mode .card {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+body.dark-mode .card h1,
+body.dark-mode .card h2,
+body.dark-mode .card h3,
+body.dark-mode .card h4,
+body.dark-mode .card h5,
+body.dark-mode .card h6 {
+    color: #40B5AD;
+}
+
+body.dark-mode .card p,
+body.dark-mode .card span,
+body.dark-mode .card div {
+    color: #e0e0e0;
+}
+
+/* Dark Mode Table Styles */
+body.dark-mode table {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode th {
+    background: #1e2324;
+    color: #40B5AD;
+    border-bottom: 2px solid #40B5AD;
+}
+
+body.dark-mode td {
+    background: #2d3233;
+    color: #e0e0e0;
+    border-bottom: 1px solid rgba(64, 181, 173, 0.1);
+}
+
+body.dark-mode tr:hover td {
+    background: #323738;
+}
+
+/* Dark Mode Text Colors */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+    color: #40B5AD;
+}
+
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode div,
+body.dark-mode li {
+    color: #e0e0e0;
+}
+
+body.dark-mode a {
+    color: #40B5AD;
+}
+
+body.dark-mode a:hover {
+    color: #2e837e;
+}
+
+/* Dark Mode Messages */
+body.dark-mode .messages {
+    background: transparent;
+}
+
+body.dark-mode .message {
+    background: #40B5AD;
+    color: #232728;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .message.error {
+    background: #e74c3c;
+    color: white;
+}
+
+body.dark-mode .message.success {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .message.warning {
+    background: #f39c12;
+    color: #232728;
+}
+
+/* Dark Mode Specific Page Components */
+body.dark-mode .page-header,
+body.dark-mode .header-content,
+body.dark-mode .header-stats {
+    background: #232728;
+    color: #e0e0e0;
+}
+
+body.dark-mode .back-btn {
+    background: #2d3233;
+    color: #40B5AD;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .back-btn:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .stat-summary,
+body.dark-mode .stat-item {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .stat-number {
+    color: #40B5AD;
+}
+
+body.dark-mode .stat-label {
+    color: #b0b0b0;
+}
+
+body.dark-mode .section-header {
+    background: #232728;
+    color: #40B5AD;
+}
+
+body.dark-mode .events-grid,
+body.dark-mode .grid {
+    background: #232728;
+}
+
+/* Dark Mode Booking Components */
+body.dark-mode .booking-container,
+body.dark-mode .cancel-container {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+body.dark-mode .booking-header,
+body.dark-mode .cancel-header {
+    background: #1e2324;
+    color: #40B5AD;
+    border-bottom: 2px solid #40B5AD;
+}
+
+body.dark-mode .breadcrumb {
+    color: #b0b0b0;
+}
+
+body.dark-mode .breadcrumb a {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-summary,
+body.dark-mode .booking-summary {
+    background: #1e2324;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .event-info,
+body.dark-mode .event-details {
+    background: #2d3233;
+    color: #e0e0e0;
+}
+
+body.dark-mode .placeholder-image {
+    background: #1e2324;
+    color: #40B5AD;
+}
+
+body.dark-mode .price-info,
+body.dark-mode .checkout-summary {
+    background: #1e2324;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .price {
+    color: #40B5AD;
+}
+
+body.dark-mode .price.free {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .price.paid {
+    color: #40B5AD;
+}
+
+body.dark-mode .ticket-line-item {
+    background: #2d3233;
+    border-bottom: 1px solid rgba(64, 181, 173, 0.1);
+}
+
+body.dark-mode .warning-section {
+    background: rgba(243, 156, 18, 0.1);
+    border: 1px solid #f39c12;
+}
+
+body.dark-mode .warning-text {
+    color: #f39c12;
+}
+
+body.dark-mode .refund-info,
+body.dark-mode .impact-notice {
+    background: #1e2324;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .refund-details {
+    color: #e0e0e0;
+}
+
+body.dark-mode .refund-notice {
+    background: rgba(64, 181, 173, 0.1);
+    color: #40B5AD;
+}
+
+/* Dark Mode Form Actions */
+body.dark-mode .form-actions {
+    background: #232728;
+}
+
+body.dark-mode .btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+body.dark-mode .btn-danger:hover {
+    background: #c0392b;
+}
+
+body.dark-mode .btn-large {
+    padding: 1rem 2rem;
+}
+
+/* Dark Mode Additional Components */
+body.dark-mode .special-requests {
+    background: #1e2324;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .special-requests textarea {
+    background: #2d3233;
+    color: #e0e0e0;
+    border-color: #40B5AD;
+}
+
+/* Dark Mode Status Badges */
+body.dark-mode .status-badge {
+    color: white;
+}
+
+body.dark-mode .status-badge.upcoming {
+    background: #40B5AD;
+}
+
+body.dark-mode .status-badge.live {
+    background: #27ae60;
+}
+
+body.dark-mode .status-badge.completed {
+    background: #7f8c8d;
+}
+
+/* Dark Mode Home Page Cards */
+body.dark-mode .scroll-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .scroll-card:hover {
+    background: #1e3635; /* Slightly lighter dark teal on hover */
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .scroll-card h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .scroll-card .card-description {
+    color: #b0b0b0;
+}
+
+body.dark-mode .card-content h3 {
+    color: #40B5AD;
+}
+
+/* Dark Mode Event Status Tags */
+body.dark-mode .event-status-tag {
+    background: rgba(64, 181, 173, 0.9);
+    color: #232728;
+}
+
+body.dark-mode .event-status-tag.status-upcoming {
+    background: rgba(64, 181, 173, 0.9);
+    color: #232728;
+}
+
+body.dark-mode .event-status-tag.status-ongoing {
+    background: rgba(39, 174, 96, 0.9);
+    color: white;
+}
+
+body.dark-mode .event-status-tag.status-completed {
+    background: rgba(127, 140, 141, 0.9);
+    color: white;
+}
+
+/* Dark Mode Hero Section */
+body.dark-mode .hero-section {
+    background: linear-gradient(135deg, #1a2f2e 0%, #2d3233 50%, #232728 100%);
+}
+
+body.dark-mode .hero-background {
+    background: linear-gradient(135deg, #1a2f2e 0%, #1e3635 50%, #232728 100%);
+}
+
+body.dark-mode .hero-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .gradient-text {
+    background: linear-gradient(135deg, #40B5AD 0%, #5cc2bb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+body.dark-mode .hero-subtitle {
+    color: #b0b0b0;
+}
+
+body.dark-mode .hero-badge span {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .floating-card {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    color: #40B5AD;
+}
+
+body.dark-mode .card-icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .card-text {
+    color: #e0e0e0;
+}
+
+/* Dark Mode Venues Page Cards */
+body.dark-mode .venue-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .venue-card:hover {
+    background: #1e3635;
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .venue-card h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .venue-card p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .venue-content {
+    background: #1a2f2e;
+}
+
+body.dark-mode .venue-header h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .venue-header p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .venue-meta-item {
+    color: #b0b0b0;
+}
+
+body.dark-mode .venue-meta-item .icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .capacity-badge {
+    background: rgba(64, 181, 173, 0.9);
+    color: #232728;
+}
+
+body.dark-mode .price-tag {
+    background: #40B5AD;
+    color: #232728;
+}
+
+/* Dark Mode Events Page Cards */
+body.dark-mode .event-card {
+    background: #1a2f2e; /* Very dark shade of teal */
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .event-card:hover {
+    background: #1e3635;
+    border-color: #40B5AD;
+    box-shadow: 0 8px 30px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .event-header {
+    background: #232728;
+    border-bottom: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .event-content {
+    background: #1a2f2e;
+}
+
+body.dark-mode .event-title {
+    color: #40B5AD;
+}
+
+body.dark-mode .event-description {
+    color: #b0b0b0;
+}
+
+body.dark-mode .event-meta {
+    background: #232728;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .meta-item {
+    color: #b0b0b0;
+}
+
+body.dark-mode .meta-item strong {
+    color: #40B5AD;
+}
+
+/* Dark Mode Page Headers */
+body.dark-mode .page-header {
+    background: #232728;
+    border-bottom: 2px solid #40B5AD;
+}
+
+body.dark-mode .header-content h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .header-content p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .header-actions .btn {
+    background: #40B5AD;
+    color: #232728;
+    border: 1px solid #40B5AD;
+}
+
+body.dark-mode .header-actions .btn:hover {
+    background: #2e837e;
+    color: #ffffff;
+}
+
+body.dark-mode .header-actions .btn-secondary {
+    background: #2d3233;
+    color: #40B5AD;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .header-actions .btn-secondary:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+body.dark-mode .header-actions .btn-outline {
+    background: transparent;
+    color: #40B5AD;
+    border: 1px solid #40B5AD;
+}
+
+body.dark-mode .header-actions .btn-outline:hover {
+    background: #40B5AD;
+    color: #232728;
+}
+
+/* Dark Mode Filters Section */
+body.dark-mode .filters-section {
+    background: #2d3233;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .filters-form {
+    background: #2d3233;
+}
+
+body.dark-mode .form-control {
+    background: #1a2f2e;
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .form-control:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+/* Dark Mode Grids */
+body.dark-mode .venues-grid,
+body.dark-mode .events-grid {
+    background: #232728;
+}
+
+/* Themed Footer */
+footer {
+    background: #f5f6f7;
+    color: #232323;
+    margin-top: 2rem;
+    font-size: 1rem;
+    border-top: 2px solid #40B5AD;
+    box-shadow: 0 -2px 16px rgba(64,181,173,0.07);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.footer-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 2.5rem;
+    padding: 2.5rem 2rem 1.5rem 2rem;
+}
+
+.footer-brand {
+    flex: 1 1 220px;
+    min-width: 200px;
+}
+
+.footer-brand h2 {
+    color: #40B5AD;
+    font-size: 1.7rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.footer-tagline {
+    color: #2e837e;
+    font-size: 1rem;
+    margin-bottom: 1.2rem;
+}
+
+.footer-social {
+    display: flex;
+    gap: 0.7rem;
+    margin-top: 0.5rem;
+}
+
+.footer-social a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #40B5AD;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    transition: background 0.2s;
+}
+
+.footer-social a:hover {
+    background: #2e837e;
+}
+
+.footer-links {
+    flex: 1 1 160px;
+    min-width: 140px;
+}
+
+.footer-links h3 {
+    margin-bottom: 0.7rem;
+    font-size: 1.1rem;
+    color: #40B5AD;
+    letter-spacing: 1px;
+}
+
+.footer-links ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-links ul li a {
+    color: #2e837e;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.2s;
+}
+
+.footer-links ul li a:hover {
+    color: #40B5AD;
+}
+
+.footer-newsletter {
+    flex: 1 1 220px;
+    min-width: 200px;
+}
+
+.footer-newsletter h3 {
+    margin-bottom: 0.7rem;
+    font-size: 1.1rem;
+    color: #40B5AD;
+    letter-spacing: 1px;
+}
+
+.footer-newsletter form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.footer-newsletter input[type="email"] {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid #40B5AD;
+    outline: none;
+    font-size: 1rem;
+    background: #fff;
+    color: #232323;
+    min-width: 140px;
+    transition: border 0.2s;
+}
+
+.footer-newsletter input[type="email"]:focus {
+    border: 1.5px solid #2e837e;
+}
+
+.footer-newsletter button.btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    border: none;
+    background: #40B5AD;
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.footer-newsletter button.btn:hover {
+    background: #2e837e;
+    color: #fff;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding: 1rem 2rem 1.2rem 2rem;
+    background: transparent;
+    color: #2e837e;
+    font-size: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+    .event-list, .review-list {
+        flex-direction: column;
+        align-items: center;
+    }
+    nav {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .nav-links {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    .event, .review {
+        width: 90vw;
+        padding: 1rem;
+    }
+    nav {
+        padding: 1rem;
+    }
+    .events, .reviews {
+        padding: 2rem 1rem;
+    }
+}
+
+
+/* Venue Card Styles */
+.venue-card {
+    padding: 0 0 1.5rem 0;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 2px 16px rgba(64,181,173,0.07);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.2s;
+    margin-bottom: 1.5rem;
+}
+
+.venue-card .venue-img {
+    width: 100%;
+    height: 160px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    overflow: hidden;
+    background: #e0f7fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.venue-card .venue-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.venue-card h3 {
+    margin: 1rem 0 0.5rem 0;
+    color: #40B5AD;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.venue-card p {
+    color: #232323;
+    font-size: 1rem;
+    text-align: center;
+    margin: 0 1rem 1rem 1rem;
+}
+
+.venue-card .btn {
+    margin-top: auto;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+}
+
+
+/* Event Card Styles */
+.event-card {
+    padding: 0 0 1.5rem 0;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 2px 16px rgba(64,181,173,0.07);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.2s;
+    margin-bottom: 1.5rem;
+}
+
+.event-card .event-img {
+    width: 100%;
+    height: 160px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    overflow: hidden;
+    background: #e0f7fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-card .event-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.event-card h3 {
+    margin: 1rem 0 0.5rem 0;
+    color: #40B5AD;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.event-card p {
+    color: #232323;
+    font-size: 1rem;
+    text-align: center;
+    margin: 0 1rem 1rem 1rem;
+}
+
+.event-card .btn {
+    margin-top: auto;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* Event and Venue Metadata */
+.event-meta, .venue-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0.5rem 1rem 1rem 1rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #40B5AD;
+}
+
+.event-meta small, .venue-meta small {
+    font-size: 0.85rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.event-meta .price, .venue-meta .price {
+    font-weight: 600;
+    color: #40B5AD;
+}
+
+/* No Content Message */
+.no-content {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(64,181,173,0.07);
+    margin: 2rem 0;
+}
+
+.no-content p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.no-content .btn {
+    background: #40B5AD;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s;
+}
+
+.no-content .btn:hover {
+    background: #2e837e;
+}
+
+/* Auth Styles */
+.auth-bg {
+    background: linear-gradient(135deg, #f5f6f7 0%, #e8f5f4 50%, #f0f9f8 100%);
+    min-height: 100vh;
+}
+
+.auth-center {
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-container {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fdfc 100%);
+    padding: 2.5rem 2rem 2rem 2rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(64,181,173,0.15), 0 0 0 1px rgba(64,181,173,0.1);
+    max-width: 380px;
+    width: 100%;
+    margin: 2rem auto;
+    text-align: center;
+    border-top: 3px solid #40B5AD;
+    backdrop-filter: blur(10px);
+}
+
+.auth-container h2 {
+    color: #40B5AD;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(64, 181, 173, 0.1);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.auth-form label {
+    text-align: left;
+    color: #2e837e;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.auth-form input {
+    padding: 0.8rem 1.2rem;
+    border-radius: 22px;
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    background: linear-gradient(135deg, #f8fdfc 0%, #ffffff 100%);
+    font-size: 1rem;
+    color: #232323;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(64, 181, 173, 0.1);
+}
+
+.auth-form input:focus {
+    border: 2px solid #40B5AD;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fdfc 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.2), inset 0 2px 4px rgba(64, 181, 173, 0.1);
+}
+
+.auth-form input::placeholder {
+    color: #999;
+}
+
+.auth-btn, .auth-form .btn {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #fff;
+    border: none;
+    border-radius: 22px;
+    padding: 0.8rem 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(64,181,173,0.3);
+}
+
+.auth-btn:hover, .auth-form .btn:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #2a7671 100%);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64,181,173,0.4);
+}
+
+.auth-btn:active, .auth-form .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(64,181,173,0.2);
+}
+
+.auth-switch {
+    margin-top: 1.5rem;
+    color: #555;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.auth-switch a {
+    color: #40B5AD;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+    color: #2e837e;
+    text-shadow: 0 1px 2px rgba(64, 181, 173, 0.2);
+}
+
+.auth-errors {
+    margin-top: 1.2rem;
+    text-align: center;
+}
+
+.auth-errors .error-message {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(220, 53, 69, 0.1) 100%);
+    color: #e74c3c;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border-left: 4px solid #e74c3c;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+}
+
+.auth-form select {
+    padding: 0.8rem 1.2rem;
+    border-radius: 22px;
+    border: 2px solid rgba(64, 181, 173, 0.3);
+    background: linear-gradient(135deg, #f8fdfc 0%, #ffffff 100%);
+    font-size: 1rem;
+    color: #232323;
+    outline: none;
+    transition: all 0.3s ease;
+    margin-bottom: 0.3rem;
+    box-shadow: inset 0 2px 4px rgba(64, 181, 173, 0.1);
+}
+
+.auth-form select:focus {
+    border: 2px solid #40B5AD;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fdfc 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.2), inset 0 2px 4px rgba(64, 181, 173, 0.1);
+}
+
+@media (max-width: 600px) {
+    .auth-container {
+        padding: 1.5rem 0.7rem 1.2rem 0.7rem;
+    }
+}
+
+/* Responsive Styles for Circular Notification Buttons */
+@media (max-width: 768px) {
+    .notification-bell {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .notification-bell svg {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .notification-count {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+        top: -5px;
+        right: -5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-bell {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px;
+        min-height: 40px;
+    }
+    
+    .notification-bell svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .notification-count {
+        width: 18px;
+        height: 18px;
+        font-size: 9px;
+        top: -4px;
+        right: -4px;
+    }
+    
+    .notification-group {
+        gap: 0.3rem !important;
+    }
+}

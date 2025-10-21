@@ -1,0 +1,1359 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Messages - EventEase{% endblock %}
+
+{% block extra_css %}
+<style>
+.messaging-app {
+    height: calc(100vh - 100px);
+    display: flex;
+    background: #f0f2f5;
+    overflow: hidden;
+}
+
+/* Left Sidebar - Friends List */
+.friends-sidebar {
+    width: 380px;
+    background: white;
+    border-right: 1px solid #e4e6ea;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #e4e6ea;
+    background: #40B5AD;
+    color: white;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.search-container {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e4e6ea;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 14px;
+    background: #f0f2f5;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    background: white;
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+.friends-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.friend-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.friend-item:hover {
+    background-color: #f0f2f5;
+}
+
+.friend-item.active {
+    background-color: #40B5AD;
+    color: white;
+}
+
+.friend-avatar-sidebar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 12px;
+    position: relative;
+    background: linear-gradient(135deg, #40B5AD, #2e837e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+.friend-avatar-sidebar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-text {
+    font-size: 16px;
+}
+
+.online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #42b883;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+.friend-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.friend-name {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.last-message-preview {
+    font-size: 13px;
+    color: #65676b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friend-item.active .last-message-preview {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.message-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.message-time-sidebar {
+    font-size: 12px;
+    color: #65676b;
+}
+
+.friend-item.active .message-time-sidebar {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.unread-count {
+    background: #e74c3c;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Right Side - Chat Area */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.empty-chat-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #65676b;
+}
+
+.empty-chat-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-chat-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-chat-subtext {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.chat-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e4e6ea;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    color: #65676b;
+}
+
+.chat-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #40B5AD, #2e837e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+.chat-user-info h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1c1e21;
+}
+
+.chat-user-status {
+    margin: 0;
+    font-size: 12px;
+    color: #42b883;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f0f2f5;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 8px 12px;
+    border-radius: 18px;
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.message-sent {
+    background: #40B5AD;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+.message-received {
+    background: white;
+    color: #1c1e21;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.message-input-area {
+    padding: 15px 20px;
+    border-top: 1px solid #e4e6ea;
+    background: white;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.message-input {
+    flex: 1;
+    border: 1px solid #e4e6ea;
+    border-radius: 20px;
+    padding: 10px 15px;
+    font-size: 14px;
+    line-height: 1.4;
+    max-height: 100px;
+    min-height: 20px;
+    resize: none;
+    outline: none;
+    transition: all 0.3s ease;
+    background: #f0f2f5;
+}
+
+.message-input:focus {
+    border-color: #40B5AD;
+    background: white;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+.send-button {
+    background: #40B5AD;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.send-button:hover {
+    background: #2e837e;
+    transform: scale(1.05);
+}
+
+.send-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+#attachButton:hover {
+    background: #e4e6ea !important;
+    transform: scale(1.05);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .messaging-app {
+        height: calc(100vh - 60px);
+    }
+    
+    .friends-sidebar {
+        width: 100%;
+        position: absolute;
+        left: -100%;
+        z-index: 1000;
+        height: 100%;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .friends-sidebar.open {
+        left: 0;
+    }
+    
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
+    .chat-area {
+        width: 100%;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+}
+
+.messages-header {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.messages-header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.conversations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conversation-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    height: fit-content;
+}
+
+.conversation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.2);
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: white;
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.conversation-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2e837e;
+    margin: 0 0 0.5rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.last-message {
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.message-time {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.unread-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 50px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.no-conversations {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 3rem 1rem;
+    grid-column: 1 / -1;
+}
+
+.new-conversation-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 15px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.new-conversation-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 181, 173, 0.3);
+    color: white;
+}
+
+/* Dark mode styles */
+body.dark-mode .messaging-app {
+    background: #1f2937;
+}
+
+/* Friends Sidebar Dark Mode */
+body.dark-mode .friends-sidebar {
+    background: #111827;
+    border-right: 1px solid #374151;
+}
+
+body.dark-mode .sidebar-header {
+    background: #2d3748;
+    border-bottom: 1px solid #374151;
+}
+
+body.dark-mode .search-container {
+    border-bottom: 1px solid #374151;
+}
+
+body.dark-mode .search-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+body.dark-mode .search-input:focus {
+    background: #4b5563;
+    border-color: #40B5AD;
+    color: #f9fafb;
+}
+
+body.dark-mode .search-input::placeholder {
+    color: #9ca3af;
+}
+
+body.dark-mode .friend-item {
+    border-bottom: 1px solid #374151;
+}
+
+body.dark-mode .friend-item:hover {
+    background-color: #374151;
+}
+
+body.dark-mode .friend-item.active {
+    background-color: #40B5AD;
+    color: white;
+}
+
+body.dark-mode .friend-name {
+    color: #f9fafb;
+}
+
+body.dark-mode .last-message-preview {
+    color: #9ca3af;
+}
+
+body.dark-mode .message-time-sidebar {
+    color: #6b7280;
+}
+
+body.dark-mode .online-indicator {
+    border-color: #111827;
+}
+
+/* Chat Area Dark Mode */
+body.dark-mode .chat-area {
+    background: #1f2937;
+}
+
+body.dark-mode .empty-chat-state {
+    color: #9ca3af;
+}
+
+body.dark-mode .chat-header {
+    background: #111827;
+    border-bottom: 1px solid #374151;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .chat-user-info h3 {
+    color: #f9fafb;
+}
+
+body.dark-mode .chat-user-status {
+    color: #42b883;
+}
+
+body.dark-mode .mobile-menu-toggle {
+    color: #9ca3af;
+}
+
+body.dark-mode .chat-messages {
+    background: #1f2937;
+}
+
+body.dark-mode .message-received {
+    background: #374151;
+    color: #f9fafb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .message-input-area {
+    background: #111827;
+    border-top: 1px solid #374151;
+}
+
+body.dark-mode .message-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+body.dark-mode .message-input:focus {
+    background: #4b5563;
+    border-color: #40B5AD;
+}
+
+body.dark-mode .message-input::placeholder {
+    color: #9ca3af;
+}
+
+/* Conversation Cards Dark Mode */
+body.dark-mode .conversation-card {
+    background: #1f2937;
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .user-name {
+    color: #40B5AD;
+}
+
+body.dark-mode .last-message {
+    color: #9ca3af;
+}
+
+body.dark-mode .message-time {
+    color: #6b7280;
+}
+
+/* File Upload and Preview Dark Mode */
+body.dark-mode .message-file {
+    background: rgba(55, 65, 81, 0.5);
+    color: #f9fafb;
+}
+
+body.dark-mode .message-file:hover {
+    background: rgba(55, 65, 81, 0.8);
+}
+
+body.dark-mode #attachButton {
+    background: #374151;
+    border-color: #4b5563;
+    color: #9ca3af;
+}
+
+body.dark-mode #attachButton:hover {
+    background: #4b5563 !important;
+    color: #f9fafb;
+}
+
+/* Messages Header Dark Mode */
+body.dark-mode .messages-header {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border-radius: 20px;
+}
+
+body.dark-mode .messages-header h1 {
+    color: #40B5AD;
+}
+
+body.dark-mode .new-conversation-link {
+    background: linear-gradient(135deg, #40B5AD 0%, #2e837e 100%);
+}
+
+/* Scrollbar Dark Mode */
+body.dark-mode .friends-list::-webkit-scrollbar,
+body.dark-mode .chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+body.dark-mode .friends-list::-webkit-scrollbar-track,
+body.dark-mode .chat-messages::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+body.dark-mode .friends-list::-webkit-scrollbar-thumb,
+body.dark-mode .chat-messages::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+}
+
+body.dark-mode .friends-list::-webkit-scrollbar-thumb:hover,
+body.dark-mode .chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* Additional Dark Mode Enhancements */
+body.dark-mode .unread-count {
+    background: #dc2626;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+}
+
+body.dark-mode .unread-badge {
+    background: #dc2626;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+}
+
+/* Dark mode transitions for smooth switching */
+.messaging-app,
+.friends-sidebar,
+.chat-area,
+.chat-header,
+.message-input-area,
+.search-input,
+.message-input,
+.conversation-card {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode file preview enhancements */
+body.dark-mode #filePreview {
+    border-color: #374151;
+}
+
+body.dark-mode .send-button:disabled {
+    background: #4b5563;
+    color: #6b7280;
+}
+
+/* Dark mode no conversations state */
+body.dark-mode .no-conversations {
+    color: #9ca3af;
+}
+
+/* File preview styles */
+#filePreview {
+    padding: 8px 0;
+    max-width: 300px;
+    overflow-x: auto;
+}
+
+.message-file {
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 8px;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.message-file:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+@media (max-width: 768px) {
+    .messages-container {
+        padding: 0 1rem;
+        height: calc(100vh - 120px);
+    }
+    
+    .conversations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .messages-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .messages-header h1 {
+        font-size: 1.8rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="messaging-app">
+    <!-- Left Sidebar - Friends List -->
+    <div class="friends-sidebar" id="friendsSidebar">
+        <div class="sidebar-header">
+            <h2>💬 Messages</h2>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search conversations..." id="searchInput">
+        </div>
+        
+        <div class="friends-list" id="friendsList">
+            {% if conversations %}
+                {% for conversation in conversations %}
+                <div class="friend-item" data-user-id="{{ conversation.user.id }}" onclick="openChat('{{ conversation.user.id }}', '{{ conversation.user.get_full_name|default:conversation.user.username }}', '{% if conversation.user.profile.avatar %}{{ conversation.user.profile.avatar.url }}{% endif %}')">
+                    <div class="friend-avatar-sidebar">
+                        {% if conversation.user.profile.avatar %}
+                            <img src="{{ conversation.user.profile.avatar.url }}" alt="{{ conversation.user.get_full_name|default:conversation.user.username }}">
+                        {% else %}
+                            <div class="avatar-text">
+                                {{ conversation.user.first_name.0|default:conversation.user.username.0|upper }}{{ conversation.user.last_name.0|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="online-indicator"></div>
+                    </div>
+                    
+                    <div class="friend-info">
+                        <div class="friend-name">{{ conversation.user.get_full_name|default:conversation.user.username }}</div>
+                        <div class="last-message-preview">
+                            {% if conversation.last_message %}
+                                {% if conversation.last_message.sender == user %}
+                                    You: {{ conversation.last_message.content|truncatechars:30 }}
+                                {% else %}
+                                    {{ conversation.last_message.content|truncatechars:30 }}
+                                {% endif %}
+                            {% else %}
+                                Start a conversation...
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="message-meta">
+                        {% if conversation.last_message %}
+                            <div class="message-time-sidebar">{{ conversation.last_message.created_at|timesince }}</div>
+                        {% endif %}
+                        {% if conversation.unread_count > 0 %}
+                            <div class="unread-count">{{ conversation.unread_count }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="padding: 40px 20px; text-align: center; color: #65676b;">
+                    <p>No conversations yet.</p>
+                    <p>Start messaging your friends!</p>
+                    <a href="{% url 'users:friends' %}" style="color: #40B5AD; text-decoration: none;">👥 Go to Friends</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Right Side - Chat Area -->
+    <div class="chat-area" id="chatArea">
+        <div class="empty-chat-state" id="emptyChatState">
+            <div class="empty-chat-icon">💬</div>
+            <div class="empty-chat-text">Select a conversation</div>
+            <div class="empty-chat-subtext">Choose from your existing conversations or start a new one</div>
+        </div>
+        
+        <!-- Chat Interface (Hidden initially) -->
+        <div id="chatInterface" style="display: none; height: 100%; flex-direction: column;">
+            <div class="chat-header" id="chatHeader">
+                <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                <div class="chat-user-avatar" id="chatUserAvatar"></div>
+                <div class="chat-user-info">
+                    <h3 id="chatUserName"></h3>
+                    <p class="chat-user-status">Online</p>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be loaded here dynamically -->
+                <div id="newMessageIndicator" style="
+                    position: absolute;
+                    bottom: 80px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #40B5AD;
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    display: none;
+                    font-size: 14px;
+                    z-index: 100;
+                " onclick="scrollToBottom()">
+                    ↓ New messages
+                </div>
+            </div>
+            
+            <div class="message-input-area">
+                <input type="file" id="fileInput" multiple style="display:none;" />
+                <div id="filePreview" style="display:flex; gap:8px; align-items:center;"></div>
+                <textarea class="message-input" id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+                <button class="send-button" id="attachButton" title="Attach files" onclick="document.getElementById('fileInput').click()" style="background:#f0f2f5; color:#40B5AD; width:36px; height:36px; margin-right:5px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.31 2.69 6 6 6s6-2.69 6-6V6h-2.5z"/>
+                    </svg>
+                </button>
+                <button class="send-button" id="sendButton" onclick="sendMessage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const CURRENT_USER_ID = parseInt('{{ user.id }}');
+let currentChatUserId = null;
+let messagePollingInterval = null;
+
+// Open chat with specific user
+function openChat(userId, userName, avatarUrl) {
+    currentChatUserId = userId;
+    
+    // Hide empty state and show chat interface
+    document.getElementById('emptyChatState').style.display = 'none';
+    const chatInterface = document.getElementById('chatInterface');
+    chatInterface.style.display = 'flex';
+    
+    // Update chat header
+    document.getElementById('chatUserName').textContent = userName;
+    const avatarContainer = document.getElementById('chatUserAvatar');
+    if (avatarUrl) {
+        avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="${userName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    } else {
+        const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2);
+        avatarContainer.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #40B5AD, #2e837e); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; border-radius: 50%;">${initials}</div>`;
+    }
+    
+    // Update active state
+    document.querySelectorAll('.friend-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelector(`[data-user-id="${userId}"]`).classList.add('active');
+    
+    // Load messages and scroll to bottom when opening chat
+    loadMessages(userId, true);
+    
+    // Start polling for new messages (don't force scroll)
+    if (messagePollingInterval) {
+        clearInterval(messagePollingInterval);
+    }
+    messagePollingInterval = setInterval(() => loadMessages(userId, false), 3000);
+    
+    // Close sidebar on mobile
+    if (window.innerWidth <= 768) {
+        document.getElementById('friendsSidebar').classList.remove('open');
+    }
+}
+
+// Load messages for current chat
+function loadMessages(userId, forceScrollToBottom = false) {
+    fetch(`/auth/api/messages/${userId}/`)
+        .then(response => response.json())
+        .then(data => {
+            const messagesContainer = document.getElementById('chatMessages');
+            const newMessageIndicator = document.getElementById('newMessageIndicator');
+            
+            // Check if user was scrolled to bottom before updating
+            const wasAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+            
+            // Store current message count to detect new messages
+            const previousMessageCount = messagesContainer.children.length - 1; // -1 for indicator
+            const currentMessageCount = data.messages.length;
+            
+            // Store current scroll position
+            const currentScrollTop = messagesContainer.scrollTop;
+            
+            // Clear messages but keep the indicator
+            Array.from(messagesContainer.children).forEach(child => {
+                if (child.id !== 'newMessageIndicator') {
+                    child.remove();
+                }
+            });
+            
+            data.messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message-bubble ${message.sender === CURRENT_USER_ID ? 'message-sent' : 'message-received'}`;
+                
+                // Add text content if present
+                if (message.content && message.content.trim()) {
+                    const textNode = document.createElement('div');
+                    textNode.textContent = message.content;
+                    textNode.style.marginBottom = (message.files && message.files.length > 0) ? '8px' : '0';
+                    messageDiv.appendChild(textNode);
+                }
+                
+                // Add file attachments if present
+                if (message.files && message.files.length > 0) {
+                    message.files.forEach(file => {
+                        const fileDiv = document.createElement('div');
+                        fileDiv.style.marginTop = '4px';
+                        fileDiv.style.padding = '8px';
+                        fileDiv.style.background = message.sender === CURRENT_USER_ID ? 'rgba(255,255,255,0.15)' : 'rgba(64,181,173,0.1)';
+                        fileDiv.style.borderRadius = '8px';
+                        fileDiv.style.cursor = 'pointer';
+                        fileDiv.style.border = '1px solid rgba(255,255,255,0.2)';
+                        
+                        if (file.file_type && file.file_type.startsWith('image/')) {
+                            const img = document.createElement('img');
+                            img.src = file.url;
+                            img.style.maxWidth = '200px';
+                            img.style.maxHeight = '200px';
+                            img.style.borderRadius = '4px';
+                            img.style.display = 'block';
+                            img.onclick = () => showImageModal(file.url, file.original_name);
+                            fileDiv.appendChild(img);
+                            
+                            // Add filename below image
+                            if (file.original_name) {
+                                const nameDiv = document.createElement('div');
+                                nameDiv.textContent = file.original_name;
+                                nameDiv.style.fontSize = '11px';
+                                nameDiv.style.marginTop = '4px';
+                                nameDiv.style.opacity = '0.8';
+                                nameDiv.style.textAlign = 'center';
+                                fileDiv.appendChild(nameDiv);
+                            }
+                        } else {
+                            fileDiv.innerHTML = `
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div style="width:32px;height:32px;background:${message.sender === CURRENT_USER_ID ? '#fff' : '#40B5AD'};color:${message.sender === CURRENT_USER_ID ? '#40B5AD' : '#fff'};border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:10px;">
+                                        ${file.original_name ? file.original_name.split('.').pop().toUpperCase().substring(0,3) : 'FILE'}
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:600;font-size:13px;color:${message.sender === CURRENT_USER_ID ? '#fff' : (document.body.classList.contains('dark-mode') ? '#f9fafb' : '#333')};">${file.original_name || 'Attachment'}</div>
+                                        <div style="font-size:11px;opacity:0.7;color:${message.sender === CURRENT_USER_ID ? '#fff' : (document.body.classList.contains('dark-mode') ? '#9ca3af' : '#666')};">${file.file_size ? (file.file_size / 1024).toFixed(1) + ' KB' : ''}</div>
+                                    </div>
+                                    <div style="color:${message.sender === CURRENT_USER_ID ? '#fff' : '#40B5AD'};font-size:18px;">⬇</div>
+                                </div>
+                            `;
+                            fileDiv.onclick = () => downloadFile(file.url, file.original_name);
+                        }
+                        
+                        messageDiv.appendChild(fileDiv);
+                    });
+                }
+                
+                // If message has no content and no files, don't display it
+                if ((!message.content || !message.content.trim()) && (!message.files || message.files.length === 0)) {
+                    return;
+                }
+                
+                messagesContainer.appendChild(messageDiv);
+            });
+            
+            // Handle scrolling and new message indicator
+            if (wasAtBottom || forceScrollToBottom) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                newMessageIndicator.style.display = 'none';
+            } else {
+                // Show indicator if there are new messages and user is not at bottom
+                if (currentMessageCount > previousMessageCount && !forceScrollToBottom) {
+                    newMessageIndicator.style.display = 'block';
+                }
+            }
+        })
+        .catch(error => console.error('Error loading messages:', error));
+}
+
+// Send message
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    
+    if (!currentChatUserId) return;
+
+    const files = document.getElementById('fileInput').files;
+
+    // If files are present, send multipart/form-data
+    if (files && files.length > 0) {
+        const formData = new FormData();
+        formData.append('receiver_id', currentChatUserId);
+        formData.append('content', content);
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+
+        fetch('/auth/api/send-message-files/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+                document.getElementById('fileInput').value = '';
+                clearFilePreview();
+                loadMessages(currentChatUserId, true); // Force scroll to bottom after sending
+            }
+        })
+        .catch(error => console.error('Error sending message with files:', error));
+
+        return;
+    }
+
+    // Otherwise, send as JSON text message
+    if (!content) return;
+
+    fetch('/auth/api/send-message/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            receiver_id: currentChatUserId,
+            content: content
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            loadMessages(currentChatUserId, true); // Force scroll to bottom after sending
+        }
+    })
+    .catch(error => console.error('Error sending message:', error));
+}
+
+// File preview helpers
+const fileInput = document.getElementById('fileInput');
+fileInput.addEventListener('change', function() {
+    renderFilePreview(this.files);
+});
+
+function renderFilePreview(files) {
+    const preview = document.getElementById('filePreview');
+    preview.innerHTML = '';
+    if (files.length === 0) {
+        preview.style.display = 'none';
+        return;
+    }
+    
+    preview.style.display = 'flex';
+    preview.style.padding = '8px 0';
+    preview.style.borderTop = '1px solid #e4e6ea';
+    preview.style.marginTop = '8px';
+    
+    for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const el = document.createElement('div');
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+        el.style.alignItems = 'center';
+        el.style.fontSize = '12px';
+        el.style.padding = '8px';
+        el.style.border = '1px solid #e4e6ea';
+        el.style.borderRadius = '8px';
+        el.style.background = '#f8f9fa';
+        el.style.position = 'relative';
+        el.style.minWidth = '80px';
+
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '×';
+        removeBtn.style.position = 'absolute';
+        removeBtn.style.top = '-5px';
+        removeBtn.style.right = '-5px';
+        removeBtn.style.width = '20px';
+        removeBtn.style.height = '20px';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.border = 'none';
+        removeBtn.style.background = '#ff4757';
+        removeBtn.style.color = 'white';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.style.fontSize = '14px';
+        removeBtn.style.display = 'flex';
+        removeBtn.style.alignItems = 'center';
+        removeBtn.style.justifyContent = 'center';
+        removeBtn.onclick = () => removeFileAtIndex(i);
+        el.appendChild(removeBtn);
+
+        if (f.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.style.width = '48px';
+            img.style.height = '48px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '6px';
+            img.src = URL.createObjectURL(f);
+            el.appendChild(img);
+        } else {
+            const icon = document.createElement('div');
+            icon.style.width = '48px';
+            icon.style.height = '48px';
+            icon.style.display = 'flex';
+            icon.style.alignItems = 'center';
+            icon.style.justifyContent = 'center';
+            icon.style.background = '#40B5AD';
+            icon.style.color = 'white';
+            icon.style.borderRadius = '6px';
+            icon.style.fontWeight = '600';
+            icon.style.fontSize = '10px';
+            icon.textContent = f.name.split('.').pop().toUpperCase().substring(0,3);
+            el.appendChild(icon);
+        }
+
+        const name = document.createElement('div');
+        name.textContent = f.name.length > 12 ? f.name.substring(0, 12) + '...' : f.name;
+        name.style.maxWidth = '80px';
+        name.style.overflow = 'hidden';
+        name.style.textOverflow = 'ellipsis';
+        name.style.whiteSpace = 'nowrap';
+        name.style.marginTop = '4px';
+        name.style.fontSize = '10px';
+        name.style.textAlign = 'center';
+        el.appendChild(name);
+
+        // File size
+        const size = document.createElement('div');
+        size.textContent = (f.size / 1024).toFixed(1) + ' KB';
+        size.style.fontSize = '9px';
+        size.style.color = '#666';
+        size.style.marginTop = '2px';
+        el.appendChild(size);
+
+        preview.appendChild(el);
+    }
+}
+
+function removeFileAtIndex(index) {
+    const fileInput = document.getElementById('fileInput');
+    const dt = new DataTransfer();
+    
+    // Copy all files except the one at the specified index
+    for (let i = 0; i < fileInput.files.length; i++) {
+        if (i !== index) {
+            dt.items.add(fileInput.files[i]);
+        }
+    }
+    
+    fileInput.files = dt.files;
+    renderFilePreview(fileInput.files);
+}
+
+function clearFilePreview() {
+    const preview = document.getElementById('filePreview');
+    preview.innerHTML = '';
+    preview.style.display = 'none';
+}
+
+// Toggle mobile sidebar
+function toggleSidebar() {
+    document.getElementById('friendsSidebar').classList.toggle('open');
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const query = this.value.toLowerCase();
+    const friendItems = document.querySelectorAll('.friend-item');
+    
+    friendItems.forEach(item => {
+        const name = item.querySelector('.friend-name').textContent.toLowerCase();
+        if (name.includes(query)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Auto-resize message input
+document.getElementById('messageInput').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+
+// Send message on Enter (but not Shift+Enter)
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Image modal functions
+function showImageModal(imageUrl, fileName) {
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        cursor: pointer;
+    `;
+    
+    // Create image element
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.cssText = `
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    `;
+    
+    modal.appendChild(img);
+    modal.onclick = () => document.body.removeChild(modal);
+    document.body.appendChild(modal);
+}
+
+function downloadFile(fileUrl, fileName) {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = fileName || 'download';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function scrollToBottom() {
+    const messagesContainer = document.getElementById('chatMessages');
+    const newMessageIndicator = document.getElementById('newMessageIndicator');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    newMessageIndicator.style.display = 'none';
+}
+
+// Add scroll listener to hide new message indicator when user scrolls to bottom
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.getElementById('chatMessages');
+    if (messagesContainer) {
+        messagesContainer.addEventListener('scroll', function() {
+            const newMessageIndicator = document.getElementById('newMessageIndicator');
+            const isAtBottom = this.scrollHeight - this.scrollTop <= this.clientHeight + 50;
+            if (isAtBottom && newMessageIndicator) {
+                newMessageIndicator.style.display = 'none';
+            }
+        });
+    }
+});
+
+// Add CSRF token
+document.addEventListener('DOMContentLoaded', function() {
+    if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        document.body.appendChild(csrfToken);
+    }
+});
+</script>
+{% endblock %}

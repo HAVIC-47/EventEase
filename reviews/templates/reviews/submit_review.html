@@ -1,0 +1,1324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if existing_review %}Edit Your Review{% else %}Submit a Review{% endif %} - EventEase
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<!-- EventEase Theme Review Submission Page -->
+<div class="review-submission-page">
+    <!-- Subtle Pattern Background -->
+    <div class="page-pattern"></div>
+    
+    <div class="container">
+        <!-- Landscape-Optimized Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-header-section">
+                    <div class="header-content">
+                        <div class="header-badge">
+                            {% if existing_review %}
+                                <i class="fas fa-edit"></i>
+                                <span>Edit Review</span>
+                            {% else %}
+                                <i class="fas fa-star"></i>
+                                <span>New Review</span>
+                            {% endif %}
+                        </div>
+                        <h1 class="page-title">
+                            {% if existing_review %}
+                                Update Your Review
+                            {% else %}
+                                Share Your Experience
+                            {% endif %}
+                        </h1>
+                        <p class="page-subtitle">
+                            Help others discover amazing events through your feedback
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Landscape Form Layout -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <div class="review-form-container">
+                    <div class="form-card">
+                        
+                        {% if existing_review %}
+                        <div class="update-notice">
+                            <div class="notice-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="notice-content">
+                                <h6>Update Mode</h6>
+                                <p>You're editing your existing review</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <form method="post" id="reviewForm" class="eventease-form">
+                            {% csrf_token %}
+                            
+                            <!-- Rating Section with EventEase Style -->
+                            <div class="form-group rating-section">
+                                <div class="group-header">
+                                    <div class="header-icon">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="header-text">
+                                        <h3>Rate Your Experience</h3>
+                                        <p>How would you rate this event overall?</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="rating-container">
+                                    <div class="star-rating" id="starRating">
+                                        {% for i in "12345" %}
+                                        <button type="button" class="star-button" data-rating="{{ i }}">
+                                            <i class="fas fa-star"></i>
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="rating-label" id="ratingText">
+                                        Select a rating
+                                    </div>
+                                    
+                                    <!-- Hidden rating input -->
+                                    <div class="d-none">
+                                        {{ form.rating }}
+                                    </div>
+                                </div>
+                                
+                                {% if form.rating.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>{{ form.rating.errors.0 }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Title Section -->
+                            <div class="form-group">
+                                <div class="group-header">
+                                    <div class="header-icon">
+                                        <i class="fas fa-heading"></i>
+                                    </div>
+                                    <div class="header-text">
+                                        <h3>Review Title</h3>
+                                        <p>Give your review a descriptive title</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="input-wrapper">
+                                    {{ form.title }}
+                                    <div class="input-underline"></div>
+                                </div>
+                                {% if form.title.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>{{ form.title.errors.0 }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Content Section -->
+                            <div class="form-group">
+                                <div class="group-header">
+                                    <div class="header-icon">
+                                        <i class="fas fa-pen-fancy"></i>
+                                    </div>
+                                    <div class="header-text">
+                                        <h3>Your Review</h3>
+                                        <p>Share your detailed thoughts and experience</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="textarea-wrapper">
+                                    {{ form.content }}
+                                    <div class="input-underline"></div>
+                                    <div class="character-count" id="charCounter">
+                                        <span id="charCount">0</span> characters
+                                    </div>
+                                </div>
+                                {% if form.content.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>{{ form.content.errors.0 }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Submit Actions -->
+                            <div class="form-actions">
+                                <div class="button-row">
+                                    <a href="{% url 'home' %}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i>
+                                        <span>Back to Home</span>
+                                    </a>
+                                    
+                                    <button type="submit" class="btn btn-primary" id="submitButton">
+                                        <span class="btn-text">
+                                            <i class="fas fa-paper-plane"></i>
+                                            <span>{% if existing_review %}Update Review{% else %}Submit Review{% endif %}</span>
+                                        </span>
+                                        <span class="btn-loading">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            <span>Submitting...</span>
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        {% if existing_review %}
+                        <div class="danger-zone">
+                            <div class="danger-header">
+                                <div class="danger-icon">
+                                    <i class="fas fa-trash-alt"></i> 
+                                </div>
+                                <div class="danger-content">
+                                    <h4>Delete Review</h4>
+                                    <p>Permanently remove this review from the system</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-danger" data-review-id="{{ existing_review.id }}" onclick="confirmDelete({{ existing_review.id }})">
+                                <i class="fas fa-trash"></i>
+                                <span>Delete Review</span>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* EventEase Theme Review Submission Page */
+* {
+    box-sizing: border-box;
+}
+
+.review-submission-page {
+    min-height: 100vh;
+    background: #f5f6f7;
+    position: relative;
+    padding: 2rem 0;
+    border-top: 2px solid #40B5AD;
+}
+
+/* Subtle Pattern Background */
+.page-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2340b5ad' fill-opacity='0.04'%3E%3Cpath d='M30 30c0-16.569 13.431-30 30-30v60C43.431 60 30 46.569 30 30zM0 30C0 13.431 13.431 0 30 0v60C13.431 60 0 46.569 0 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* EventEase Header Section */
+.page-header-section {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
+}
+
+.header-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(64, 181, 173, 0.1);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    color: #40B5AD;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.header-badge:hover {
+    background: rgba(64, 181, 173, 0.15);
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+.page-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #40B5AD;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: 400;
+    margin: 0;
+}
+
+/* EventEase Form Container */
+.review-form-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+.form-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 2.5rem;
+    box-shadow: 0 2px 16px rgba(64, 181, 173, 0.07);
+    border: 1px solid rgba(64, 181, 173, 0.1);
+    transition: all 0.2s ease;
+}
+
+.form-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 4px 24px rgba(64, 181, 173, 0.12);
+    border-color: rgba(64, 181, 173, 0.15);
+}
+
+/* Update Notice */
+.update-notice {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(64, 181, 173, 0.05);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.update-notice::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #40B5AD;
+    border-radius: 3px 0 0 3px;
+}
+
+.notice-icon {
+    color: #40B5AD;
+    font-size: 1.25rem;
+}
+
+.notice-content h6 {
+    color: #40B5AD;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+
+.notice-content p {
+    color: #666;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* EventEase Form */
+.eventease-form {
+    position: relative;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 2.5rem;
+    position: relative;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.header-icon {
+    width: 45px;
+    height: 45px;
+    background: #40B5AD;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.header-text h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #232323;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.01em;
+}
+
+.header-text p {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* EventEase Rating System */
+.rating-section {
+    text-align: center;
+}
+
+.rating-container {
+    padding: 2.5rem;
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
+    border-radius: 24px;
+    border: 2px solid rgba(64, 181, 173, 0.1);
+    box-shadow: 0 8px 32px rgba(64, 181, 173, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.rating-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #40B5AD, transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    box-shadow: inset 0 2px 8px rgba(64, 181, 173, 0.1);
+}
+
+.star-button {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid rgba(226, 232, 240, 0.8);
+    cursor: pointer;
+    padding: 1rem;
+    font-size: 2.2rem;
+    color: #cbd5e1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    transform-origin: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.star-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.star-button:hover::before {
+    left: 100%;
+}
+
+.star-button:hover {
+    color: #FFD700;
+    transform: scale(1.15) rotate(5deg);
+    border-color: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.star-button.active {
+    color: #FFD700;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #40B5AD;
+    box-shadow: 0 8px 24px rgba(64, 181, 173, 0.3);
+    transform: scale(1.1);
+}
+
+.star-button.active i {
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+
+.rating-label {
+    font-size: 1.2rem;
+    color: #475569;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1.5rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+}
+
+/* Hidden rating input */
+#id_rating {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+
+/* EventEase Input Fields */
+.input-wrapper,
+.textarea-wrapper {
+    position: relative;
+}
+
+.input-wrapper input[type="text"],
+.textarea-wrapper textarea {
+    width: 100%;
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    color: #232323;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper input[type="text"]:focus,
+.textarea-wrapper textarea:focus {
+    outline: none;
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 3px rgba(64, 181, 173, 0.1);
+}
+
+.input-wrapper input[type="text"]::placeholder,
+.textarea-wrapper textarea::placeholder {
+    color: #999;
+    font-weight: 400;
+}
+
+.input-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    background: #40B5AD;
+    border-radius: 0 0 12px 12px;
+    transition: width 0.2s ease;
+}
+
+.input-wrapper input[type="text"]:focus + .input-underline,
+.textarea-wrapper textarea:focus + .input-underline {
+    width: 100%;
+}
+
+/* Textarea Specific */
+.textarea-wrapper textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+    padding-bottom: 2.5rem;
+}
+
+.character-count {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 1rem;
+    font-size: 0.8rem;
+    color: #999;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(64, 181, 173, 0.1);
+}
+
+#charCount {
+    font-weight: 600;
+    color: #40B5AD;
+}
+
+/* Modern Action Buttons */
+.form-actions {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.actions-wrapper {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    position: relative;
+    border: none;
+    border-radius: 16px;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px;
+    backdrop-filter: blur(10px);
+}
+
+.secondary-btn {
+    background: rgba(248, 250, 252, 0.8);
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+}
+
+.secondary-btn:hover {
+    background: rgba(226, 232, 240, 0.9);
+    color: #475569;
+    border-color: #cbd5e1;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #40B5AD, #369891);
+    color: white;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 15px rgba(64, 181, 173, 0.3);
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 181, 173, 0.4);
+    background: linear-gradient(135deg, #369891, #2d7a73);
+}
+
+.primary-btn:active {
+    transform: translateY(-1px);
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.btn-loading {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.primary-btn.loading .btn-content {
+    display: none;
+}
+
+.primary-btn.loading .btn-loading {
+    display: flex;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 2px solid white;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-ripple {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    transform: scale(0);
+    border-radius: inherit;
+    transition: transform 0.6s ease-out;
+}
+
+.action-btn:active .btn-ripple {
+    transform: scale(4);
+}
+
+/* Deletion Section */
+.deletion-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.deletion-warning {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(254, 242, 242, 0.8);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.warning-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    animation: warning-pulse 2s ease-in-out infinite;
+}
+
+@keyframes warning-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.warning-content h4 {
+    color: #ef4444;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+}
+
+.warning-content p {
+    color: #7f1d1d;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0 auto;
+    backdrop-filter: blur(10px);
+}
+
+.delete-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.delete-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.delete-ripple {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    transform: scale(0);
+    border-radius: inherit;
+    transition: transform 0.6s ease-out;
+}
+
+.delete-btn:active .delete-ripple {
+    transform: scale(4);
+}
+
+/* Error Messages */
+.field-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ef4444;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(254, 242, 242, 0.8);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.field-error i {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .review-page-wrapper {
+        padding: 1rem 0;
+    }
+    
+    .main-title {
+        font-size: 2.5rem;
+    }
+    
+    .main-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .glass-card {
+        padding: 2rem 1.5rem;
+        border-radius: 20px;
+    }
+    
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .section-header h3 {
+        font-size: 1.25rem;
+    }
+    
+    .section-header p {
+        font-size: 0.9rem;
+    }
+    
+    .modern-stars {
+        gap: 0.5rem;
+    }
+    
+    .star-inner {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .star-icon {
+        font-size: 1.5rem;
+    }
+    
+    .rating-emoji {
+        font-size: 2rem;
+    }
+    
+    .rating-label {
+        font-size: 1rem;
+    }
+    
+    .field-wrapper input[type="text"],
+    .field-wrapper textarea {
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+    }
+    
+    .textarea-field textarea {
+        min-height: 120px;
+    }
+    
+    .actions-wrapper {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .action-btn {
+        width: 100%;
+        padding: 1rem 2rem;
+    }
+    
+    .deletion-warning {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .warning-icon {
+        align-self: center;
+    }
+}
+
+/* Dark Mode Support - EventEase Theme */
+body.dark-mode .review-page-wrapper {
+    background: linear-gradient(135deg, #1a2026 0%, #232728 50%, #1e2b2a 100%);
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+
+body.dark-mode .form-container {
+    background: rgba(26, 47, 46, 0.95);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(64, 181, 173, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+body.dark-mode .form-card {
+    background: rgba(45, 50, 51, 0.7);
+    border: 1px solid rgba(64, 181, 173, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .hero-section {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.1) 0%, rgba(26, 47, 46, 0.3) 100%);
+    border-bottom: 1px solid rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .page-header h1 {
+    color: #40B5AD;
+    text-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .page-header p,
+body.dark-mode .page-subtitle {
+    color: #b8c4c0;
+}
+
+body.dark-mode .group-header h3 {
+    color: #40B5AD;
+}
+
+body.dark-mode .group-header p {
+    color: #b0b0b0;
+}
+
+body.dark-mode .header-icon {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.2) 0%, rgba(64, 181, 173, 0.1) 100%);
+    color: #40B5AD;
+    box-shadow: 0 2px 8px rgba(64, 181, 173, 0.3);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode .page-badge {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.2) 0%, rgba(64, 181, 173, 0.1) 100%);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    color: #40B5AD;
+}
+
+body.dark-mode .input-wrapper input[type="text"],
+body.dark-mode .textarea-wrapper textarea {
+    background: #2d3233;
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+}
+
+body.dark-mode .input-wrapper input[type="text"]:focus,
+body.dark-mode .textarea-wrapper textarea:focus {
+    border-color: #40B5AD;
+    box-shadow: 0 0 0 2px rgba(64, 181, 173, 0.2);
+}
+
+body.dark-mode .input-wrapper input[type="text"]::placeholder,
+body.dark-mode .textarea-wrapper textarea::placeholder {
+    color: #888;
+}
+
+body.dark-mode .character-count {
+    background: #2d3233;
+    color: #b0b0b0;
+    border-color: rgba(64, 181, 173, 0.3);
+}
+
+body.dark-mode #charCount {
+    color: #40B5AD;
+}
+
+body.dark-mode .rating-label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .rating-container {
+    background: linear-gradient(135deg, rgba(45, 50, 51, 0.8) 0%, rgba(26, 47, 46, 0.6) 100%);
+    border-color: rgba(64, 181, 173, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .star-rating {
+    background: rgba(35, 39, 40, 0.5);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .star-button {
+    background: linear-gradient(135deg, #2d3233 0%, #353a3b 100%);
+    border: 2px solid rgba(64, 181, 173, 0.2);
+    color: #9ca3af;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.dark-mode .star-button::before {
+    background: linear-gradient(90deg, transparent, rgba(64, 181, 173, 0.2), transparent);
+}
+
+body.dark-mode .star-button:hover {
+    color: #FFD700;
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.15) 0%, rgba(45, 50, 51, 0.8) 100%);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(64, 181, 173, 0.3);
+    transform: scale(1.15) rotate(5deg);
+}
+
+body.dark-mode .star-button.active {
+    color: #FFD700;
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.2) 0%, rgba(45, 50, 51, 0.8) 100%);
+    border-color: #40B5AD;
+    box-shadow: 0 8px 24px rgba(64, 181, 173, 0.4);
+}
+
+body.dark-mode .rating-label {
+    background: rgba(45, 50, 51, 0.8);
+    border-color: rgba(64, 181, 173, 0.3);
+    color: #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+
+body.dark-mode .btn.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+}
+
+body.dark-mode .btn.btn-secondary:hover {
+    background: #5a6268;
+}
+
+body.dark-mode .btn.btn-primary {
+    background: linear-gradient(135deg, #40B5AD 0%, #369691 100%);
+    color: #232728;
+}
+
+body.dark-mode .btn.btn-primary:hover {
+    background: linear-gradient(135deg, #2e837e 0%, #2a7671 100%);
+    color: #ffffff;
+}
+
+body.dark-mode .update-notice {
+    background: linear-gradient(135deg, rgba(64, 181, 173, 0.1) 0%, rgba(64, 181, 173, 0.05) 100%);
+    border: 1px solid rgba(64, 181, 173, 0.3);
+    color: #b8c4c0;
+}
+
+body.dark-mode .notice-icon {
+    color: #40B5AD;
+}
+
+body.dark-mode .notice-content h6 {
+    color: #40B5AD;
+}
+
+body.dark-mode .rating-stars-container {
+    background: rgba(45, 50, 51, 0.5);
+    border: 1px solid rgba(64, 181, 173, 0.2);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ff6b6b;
+}
+
+body.dark-mode .danger-zone {
+    background: rgba(127, 29, 29, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+body.dark-mode .danger-header h4 {
+    color: #fca5a5;
+}
+
+body.dark-mode .danger-header p {
+    color: #dc2626;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Star Rating System
+    const starButtons = document.querySelectorAll('.star-button');
+    const ratingInput = document.getElementById('id_rating');
+    const ratingLabel = document.getElementById('ratingText');
+    
+    const ratingData = {
+        1: { label: 'Poor', color: '#ef4444' },
+        2: { label: 'Fair', color: '#f59e0b' },
+        3: { label: 'Good', color: '#10b981' },
+        4: { label: 'Very Good', color: '#3b82f6' },
+        5: { label: 'Excellent!', color: '#40B5AD' }
+    };
+    
+    if (!ratingInput || !ratingLabel || starButtons.length === 0) {
+        console.error('Rating system elements not found');
+        return;
+    }
+    
+    // Initialize - show default message
+    ratingLabel.textContent = 'Select a rating';
+    ratingLabel.style.color = '#666';
+    
+    // Clear any existing value first
+    ratingInput.value = '';
+    
+    // Only update if there's an existing rating (for edit mode)
+    const existingRating = ratingInput.value ? parseInt(ratingInput.value) : 0;
+    if (existingRating >= 1 && existingRating <= 5) {
+        updateStars(existingRating);
+        updateLabel(existingRating);
+    } else {
+        // Ensure no stars are highlighted initially
+        updateStars(0);
+    }
+    
+    // Star interactions
+    starButtons.forEach((button, index) => {
+        const rating = index + 1;
+        
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Star clicked:', rating);
+            ratingInput.value = rating;
+            updateStars(rating);
+            updateLabel(rating);
+            
+            // Add visual feedback
+            button.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 150);
+        });
+        
+        button.addEventListener('mouseenter', () => {
+            highlightStars(rating);
+            updateLabel(rating);
+        });
+        
+        button.addEventListener('mouseleave', () => {
+            const current = ratingInput.value ? parseInt(ratingInput.value) : 0;
+            updateStars(current);
+            if (current === 0) {
+                ratingLabel.textContent = 'Select a rating';
+                ratingLabel.style.color = '#666';
+            } else {
+                updateLabel(current);
+            }
+        });
+    });
+    
+    function highlightStars(rating) {
+        starButtons.forEach((btn, i) => {
+            if (i < rating) {
+                btn.classList.add('active');
+                btn.querySelector('i').style.color = '#FFD700';
+            } else {
+                btn.classList.remove('active');
+                btn.querySelector('i').style.color = '';
+            }
+        });
+    }
+    
+    function updateStars(rating) {
+        highlightStars(rating);
+        console.log('Stars updated for rating:', rating);
+    }
+    
+    function updateLabel(rating) {
+        if (ratingData[rating]) {
+            ratingLabel.textContent = ratingData[rating].label;
+            ratingLabel.style.color = ratingData[rating].color;
+        }
+    }
+    
+    // Character counter
+    const textarea = document.querySelector('textarea[name="content"]');
+    const charCount = document.getElementById('charCount');
+    
+    if (textarea && charCount) {
+        function updateCounter() {
+            charCount.textContent = textarea.value.length;
+        }
+        textarea.addEventListener('input', updateCounter);
+        updateCounter();
+    }
+    
+    // Form validation
+    const reviewForm = document.getElementById('reviewForm');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            const rating = ratingInput.value;
+            
+            if (!rating || rating === '') {
+                e.preventDefault();
+                
+                // Shake animation for rating section
+                const ratingSection = document.querySelector('.rating-section');
+                ratingSection.style.animation = 'shake 0.5s ease-in-out';
+                
+                // Update label to show error
+                ratingLabel.textContent = 'Please select a rating';
+                ratingLabel.style.color = '#ef4444';
+                ratingLabel.style.fontWeight = 'bold';
+                
+                // Show notification
+                showNotification('Please select a rating before submitting your review', 'error');
+                
+                // Reset animation
+                setTimeout(() => {
+                    ratingSection.style.animation = '';
+                    ratingLabel.style.color = '#666';
+                    ratingLabel.style.fontWeight = '600';
+                    ratingLabel.textContent = 'Select a rating';
+                }, 2000);
+                
+                return false;
+            }
+            
+            console.log('Form submitted with rating:', rating);
+        });
+    }
+});
+
+// Simple notification function for EventEase theme
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: ${type === 'success' ? '#40B5AD' : '#ef4444'};
+        color: white;
+        border-radius: 8px;
+        z-index: 9999;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        document.body.removeChild(notification);
+    }, 3000);
+}
+
+// Delete Confirmation Functions
+function confirmDelete(reviewId) {
+    if (confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+        // Show loading state
+        const deleteBtn = document.querySelector(`[onclick="confirmDelete(${reviewId})"]`);
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+        }
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // Send POST request to delete
+        fetch(`/reviews/delete/${reviewId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (response.ok) {
+                showNotification('Review deleted successfully!', 'success');
+                // Redirect to home after a short delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            } else {
+                throw new Error('Failed to delete review');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to delete review. Please try again.', 'error');
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> <span>Delete Review</span>';
+            }
+        });
+    }
+}
+
+function showDeleteConfirmation(reviewId) {
+    return confirmDelete(reviewId);
+}
+
+</script>
+{% endblock %}
